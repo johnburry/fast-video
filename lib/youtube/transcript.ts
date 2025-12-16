@@ -1,4 +1,4 @@
-import { getYouTubeClient } from './client';
+import { YoutubeTranscript } from 'youtube-transcript';
 
 export interface TranscriptSegment {
   text: string;
@@ -10,84 +10,35 @@ export async function getVideoTranscript(videoId: string): Promise<TranscriptSeg
   try {
     console.log(`[TRANSCRIPT] Fetching transcript for video ${videoId}...`);
 
-    const youtube = await getYouTubeClient();
+    // Use youtube-transcript library which is simpler and more reliable
+    // than youtubei.js for transcript fetching
+    const transcriptItems = await YoutubeTranscript.fetchTranscript(videoId);
 
-    // Try to fetch transcript directly using the transcript API
-    // This bypasses the getInfo() call that's causing type mismatch errors
-    let transcriptInfo;
-    try {
-      // Use the getTranscript method directly on the client
-      const transcriptData = await youtube.getTranscript(videoId);
-
-      if (!transcriptData || !transcriptData.transcript) {
-        console.log(`[TRANSCRIPT] No transcript data returned for video ${videoId}`);
-        return null;
-      }
-
-      transcriptInfo = transcriptData;
-      console.log(`[TRANSCRIPT] Successfully fetched transcript data for video ${videoId}`);
-    } catch (transcriptError: any) {
-      // Handle cases where transcripts are not available
-      if (transcriptError.message?.includes('400') ||
-          transcriptError.message?.includes('Precondition check failed') ||
-          transcriptError.message?.includes('Transcript panel not found') ||
-          transcriptError.message?.includes('no transcript')) {
-        console.log(`[TRANSCRIPT] Transcript not available for video ${videoId}: ${transcriptError.message}`);
-        return null;
-      }
-      console.error(`[TRANSCRIPT] Unexpected error getting transcript for video ${videoId}:`, transcriptError);
-      throw transcriptError;
-    }
-
-    console.log(`Transcript info keys: ${transcriptInfo ? Object.keys(transcriptInfo) : 'null'}`);
-
-    if (!transcriptInfo) {
-      console.log(`No transcriptInfo for video ${videoId}`);
+    if (!transcriptItems || transcriptItems.length === 0) {
+      console.log(`[TRANSCRIPT] No transcript items returned for video ${videoId}`);
       return null;
     }
 
-    // Log the structure to understand the API response
-    console.log(`transcriptInfo.transcript exists: ${!!transcriptInfo.transcript}`);
+    console.log(`[TRANSCRIPT] Got ${transcriptItems.length} transcript items for video ${videoId}`);
 
-    if (!transcriptInfo.transcript) {
-      console.log(`No transcript object for video ${videoId}`);
-      return null;
-    }
-
-    console.log(`transcript.content exists: ${!!transcriptInfo.transcript.content}`);
-
-    if (!transcriptInfo.transcript.content) {
-      console.log(`No transcript content for video ${videoId}`);
-      return null;
-    }
-
-    console.log(`transcript.content.body exists: ${!!transcriptInfo.transcript.content.body}`);
-    console.log(`transcript.content keys: ${Object.keys(transcriptInfo.transcript.content)}`);
-
-    const segments = transcriptInfo.transcript.content.body?.initial_segments || [];
-
-    if (segments.length === 0) {
-      console.log(`No transcript segments found for video ${videoId}`);
-      // Log the body structure if it exists
-      if (transcriptInfo.transcript.content.body) {
-        console.log(`body keys: ${Object.keys(transcriptInfo.transcript.content.body)}`);
-      }
-      return null;
-    }
-
-    console.log(`[TRANSCRIPT] Got ${segments.length} transcript segments for video ${videoId}`);
-    console.log(`[TRANSCRIPT] First segment keys: ${Object.keys(segments[0])}`);
-    console.log(`[TRANSCRIPT] First segment: ${JSON.stringify(segments[0])}`);
-
-    const result = segments.map((segment: any) => ({
-      text: segment.snippet?.text || '',
-      startTime: parseFloat(segment.start_ms || '0') / 1000,
-      duration: parseFloat(segment.end_ms || '0') / 1000 - parseFloat(segment.start_ms || '0') / 1000,
+    // Convert from youtube-transcript format to our format
+    const result: TranscriptSegment[] = transcriptItems.map((item: any) => ({
+      text: item.text || '',
+      startTime: item.offset / 1000, // Convert milliseconds to seconds
+      duration: item.duration / 1000, // Convert milliseconds to seconds
     }));
 
     console.log(`[TRANSCRIPT] Successfully processed ${result.length} segments for video ${videoId}`);
     return result;
-  } catch (error) {
+  } catch (error: any) {
+    // Handle cases where transcripts are not available
+    if (error.message?.includes('Could not find captions') ||
+        error.message?.includes('Transcript is disabled') ||
+        error.message?.includes('No transcripts available')) {
+      console.log(`[TRANSCRIPT] Transcript not available for video ${videoId}: ${error.message}`);
+      return null;
+    }
+
     console.error(`[TRANSCRIPT] Error fetching transcript for video ${videoId}:`, error);
     return null;
   }
