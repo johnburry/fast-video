@@ -215,65 +215,65 @@ export default function ChannelPage({
 
           {/* Search Results */}
           {searchResults.length > 0 && (
-          <div className="space-y-6">
-            <h2 className="text-2xl font-bold text-gray-900">
-              Search Results ({searchResults.length})
-            </h2>
+            <div className="space-y-6">
+              <h2 className="text-2xl font-bold text-gray-900">
+                Search Results ({searchResults.length})
+              </h2>
 
-            {searchResults.map((result) => (
-              <div
-                key={result.videoId}
-                className="bg-white rounded-lg shadow-md overflow-hidden"
-              >
-                <div className="flex flex-col md:flex-row">
-                  <div className="md:w-80 flex-shrink-0">
-                    <img
-                      src={result.thumbnail}
-                      alt={result.title}
-                      className="w-full h-48 object-cover cursor-pointer hover:opacity-90 transition-opacity"
-                      onClick={() => openVideo(result.youtubeVideoId)}
-                    />
-                  </div>
-                  <div className="p-6 flex-1">
-                    <h3
-                      className="text-xl font-semibold text-gray-900 mb-2 cursor-pointer hover:text-blue-600 transition-colors"
-                      onClick={() => openVideo(result.youtubeVideoId)}
-                    >
-                      {result.title}
-                    </h3>
-                    <p className="text-sm text-gray-500 mb-4">
-                      {new Date(result.publishedAt).toLocaleDateString()}
-                    </p>
+              {searchResults.map((result) => (
+                <div
+                  key={result.videoId}
+                  className="bg-white rounded-lg shadow-md overflow-hidden"
+                >
+                  <div className="flex flex-col md:flex-row">
+                    <div className="md:w-80 flex-shrink-0">
+                      <img
+                        src={result.thumbnail}
+                        alt={result.title}
+                        className="w-full h-48 object-cover cursor-pointer hover:opacity-90 transition-opacity"
+                        onClick={() => openVideo(result.youtubeVideoId)}
+                      />
+                    </div>
+                    <div className="p-6 flex-1">
+                      <h3
+                        className="text-xl font-semibold text-gray-900 mb-2 cursor-pointer hover:text-blue-600 transition-colors"
+                        onClick={() => openVideo(result.youtubeVideoId)}
+                      >
+                        {result.title}
+                      </h3>
+                      <p className="text-sm text-gray-500 mb-4">
+                        {new Date(result.publishedAt).toLocaleDateString()}
+                      </p>
 
-                    <div className="space-y-3">
-                      {result.matches.slice(0, 3).map((match) => (
-                        <div
-                          key={match.transcriptId}
-                          className="border-l-4 border-blue-500 pl-4 py-2 hover:bg-gray-50 cursor-pointer transition-colors"
-                          onClick={() =>
-                            openVideo(result.youtubeVideoId, match.startTime)
-                          }
-                        >
-                          <div className="flex items-center justify-between mb-1">
-                            <span className="text-sm font-medium text-blue-600">
-                              {formatTimestamp(match.startTime)}
-                            </span>
+                      <div className="space-y-3">
+                        {result.matches.slice(0, 3).map((match) => (
+                          <div
+                            key={match.transcriptId}
+                            className="border-l-4 border-blue-500 pl-4 py-2 hover:bg-gray-50 cursor-pointer transition-colors"
+                            onClick={() =>
+                              openVideo(result.youtubeVideoId, match.startTime)
+                            }
+                          >
+                            <div className="flex items-center justify-between mb-1">
+                              <span className="text-sm font-medium text-blue-600">
+                                {formatTimestamp(match.startTime)}
+                              </span>
+                            </div>
+                            <p className="text-gray-700">{match.text}</p>
                           </div>
-                          <p className="text-gray-700">{match.text}</p>
-                        </div>
-                      ))}
-                      {result.matches.length > 3 && (
-                        <p className="text-sm text-gray-500">
-                          + {result.matches.length - 3} more matches
-                        </p>
-                      )}
+                        ))}
+                        {result.matches.length > 3 && (
+                          <p className="text-sm text-gray-500">
+                            + {result.matches.length - 3} more matches
+                          </p>
+                        )}
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
-            ))}
-          </div>
-        )}
+              ))}
+            </div>
+          )}
 
         {/* No Results */}
         {searchQuery && searchResults.length === 0 && !loading && (
