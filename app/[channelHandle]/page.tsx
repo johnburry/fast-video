@@ -159,8 +159,8 @@ export default function ChannelPage({
               />
             )}
             <div>
-              <p className="text-lg text-gray-600 mb-2">
-                Now search everything said in the videos made by:
+              <p className="text-lg text-orange-500 font-bold mb-2">
+                Fast video search for:
               </p>
               <h1
                 className="text-5xl font-sans text-gray-900 cursor-pointer hover:text-blue-600 transition-colors flex items-center gap-3"
