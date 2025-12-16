@@ -1,4 +1,4 @@
-import { YoutubeTranscript } from 'youtube-transcript';
+import { getYouTubeClient } from './client';
 
 export interface TranscriptSegment {
   text: string;
@@ -9,19 +9,31 @@ export interface TranscriptSegment {
 export async function getVideoTranscript(videoId: string): Promise<TranscriptSegment[] | null> {
   try {
     console.log(`Fetching transcript for video ${videoId}...`);
-    const transcript = await YoutubeTranscript.fetchTranscript(videoId);
 
-    if (!transcript || transcript.length === 0) {
+    const youtube = await getYouTubeClient();
+    const info = await youtube.getInfo(videoId);
+
+    // Get transcript from the video info
+    const transcriptInfo = await info.getTranscript();
+
+    if (!transcriptInfo || !transcriptInfo.transcript || !transcriptInfo.transcript.content) {
       console.log(`No transcript available for video ${videoId}`);
       return null;
     }
 
-    console.log(`Got ${transcript.length} transcript segments for video ${videoId}`);
+    const segments = transcriptInfo.transcript.content.body?.initial_segments || [];
 
-    return transcript.map((segment) => ({
-      text: segment.text,
-      startTime: segment.offset / 1000, // Convert milliseconds to seconds
-      duration: segment.duration / 1000, // Convert milliseconds to seconds
+    if (segments.length === 0) {
+      console.log(`No transcript segments found for video ${videoId}`);
+      return null;
+    }
+
+    console.log(`Got ${segments.length} transcript segments for video ${videoId}`);
+
+    return segments.map((segment: any) => ({
+      text: segment.snippet?.text || '',
+      startTime: parseFloat(segment.start_ms || '0') / 1000,
+      duration: parseFloat(segment.end_ms || '0') / 1000 - parseFloat(segment.start_ms || '0') / 1000,
     }));
   } catch (error) {
     console.error(`Error fetching transcript for video ${videoId}:`, error);
