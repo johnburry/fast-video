@@ -131,7 +131,9 @@ export default function AdminPage() {
                   </div>
                   <div className="mt-4 pt-4 border-t border-green-200">
                     <a
-                      href={`/${result.channel.handle}`}
+                      href={`https://${result.channel.handle}.fast.video`}
+                      target="_blank"
+                      rel="noopener noreferrer"
                       className="text-blue-600 hover:text-blue-800 font-medium"
                     >
                       View channel page →
