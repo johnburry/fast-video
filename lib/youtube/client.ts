@@ -1,0 +1,124 @@
+import { Innertube } from 'youtubei.js';
+
+let youtubeClient: Innertube | null = null;
+
+export async function getYouTubeClient() {
+  if (!youtubeClient) {
+    youtubeClient = await Innertube.create();
+  }
+  return youtubeClient;
+}
+
+export interface YouTubeChannelInfo {
+  channelId: string;
+  handle: string;
+  name: string;
+  description: string;
+  thumbnailUrl: string;
+  subscriberCount: number;
+  videoCount: number;
+}
+
+export interface YouTubeVideoInfo {
+  videoId: string;
+  title: string;
+  description: string;
+  thumbnailUrl: string;
+  durationSeconds: number;
+  publishedAt: string;
+  viewCount: number;
+  likeCount: number;
+  commentCount: number;
+}
+
+export async function getChannelByHandle(handle: string): Promise<YouTubeChannelInfo | null> {
+  try {
+    const youtube = await getYouTubeClient();
+
+    // Remove @ if present
+    const cleanHandle = handle.startsWith('@') ? handle.slice(1) : handle;
+
+    const channel = await youtube.getChannel(`@${cleanHandle}`);
+
+    if (!channel) {
+      return null;
+    }
+
+    // Type guard for channel header
+    const header = channel.header as any;
+
+    return {
+      channelId: header?.author?.id || '',
+      handle: cleanHandle,
+      name: header?.author?.name || '',
+      description: header?.author?.description || '',
+      thumbnailUrl: header?.author?.best_thumbnail?.url || '',
+      subscriberCount: header?.subscribers?.value || 0,
+      videoCount: 0, // Will be updated when fetching videos
+    };
+  } catch (error) {
+    console.error('Error fetching channel:', error);
+    return null;
+  }
+}
+
+export async function getChannelVideos(channelId: string): Promise<YouTubeVideoInfo[]> {
+  try {
+    const youtube = await getYouTubeClient();
+    const channel = await youtube.getChannel(channelId);
+
+    const videos: YouTubeVideoInfo[] = [];
+
+    // Get videos from the channel's uploads
+    const uploads = await channel.getVideos();
+
+    for (const video of uploads.videos) {
+      // Type guard for video object
+      const v = video as any;
+      if (!v.id) continue;
+
+      videos.push({
+        videoId: v.id,
+        title: v.title?.text || '',
+        description: v.description || '',
+        thumbnailUrl: v.best_thumbnail?.url || '',
+        durationSeconds: v.duration?.seconds || 0,
+        publishedAt: v.published?.text || '',
+        viewCount: v.view_count?.value || 0,
+        likeCount: 0, // Not available in list view
+        commentCount: 0, // Not available in list view
+      });
+    }
+
+    return videos;
+  } catch (error) {
+    console.error('Error fetching channel videos:', error);
+    return [];
+  }
+}
+
+export async function getVideoDetails(videoId: string): Promise<YouTubeVideoInfo | null> {
+  try {
+    const youtube = await getYouTubeClient();
+    const info = await youtube.getInfo(videoId);
+
+    if (!info) {
+      return null;
+    }
+
+    return {
+      videoId: info.basic_info.id || '',
+      title: info.basic_info.title || '',
+      description: info.basic_info.short_description || '',
+      thumbnailUrl: info.basic_info.thumbnail?.[0]?.url || '',
+      durationSeconds: info.basic_info.duration || 0,
+      publishedAt: info.basic_info.start_timestamp?.toISOString() || '',
+      viewCount: info.basic_info.view_count || 0,
+      likeCount: info.basic_info.like_count || 0,
+      commentCount: 0, // Not directly available
+    };
+  } catch (error) {
+    console.error('Error fetching video details:', error);
+    return null;
+  }
+}

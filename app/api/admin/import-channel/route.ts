@@ -1,0 +1,207 @@
+import { NextRequest, NextResponse } from 'next/server';
+import { supabaseAdmin } from '@/lib/supabase/server';
+import { getChannelByHandle, getChannelVideos } from '@/lib/youtube/client';
+import { getVideoTranscript } from '@/lib/youtube/transcript';
+import type { Database } from '@/lib/supabase/database.types';
+
+export async function POST(request: NextRequest) {
+  try {
+    const { channelHandle } = await request.json();
+
+    if (!channelHandle) {
+      return NextResponse.json(
+        { error: 'Channel handle is required' },
+        { status: 400 }
+      );
+    }
+
+    // Fetch channel info from YouTube
+    const channelInfo = await getChannelByHandle(channelHandle);
+
+    if (!channelInfo) {
+      return NextResponse.json(
+        { error: 'Channel not found' },
+        { status: 404 }
+      );
+    }
+
+    // Check if channel already exists
+    const { data: existingChannels } = await supabaseAdmin
+      .from('channels')
+      .select('id, channel_handle')
+      .eq('channel_handle', channelInfo.handle)
+      .limit(1);
+
+    let channelId: string;
+
+    if (existingChannels && existingChannels.length > 0) {
+      // @ts-ignore - Supabase type inference issue
+      channelId = existingChannels[0].id;
+      console.log(`Channel @${channelInfo.handle} already exists, updating...`);
+
+      // Update existing channel
+      await supabaseAdmin.from('channels').update({
+          channel_name: channelInfo.name,
+          channel_description: channelInfo.description,
+          thumbnail_url: channelInfo.thumbnailUrl,
+          subscriber_count: channelInfo.subscriberCount,
+          last_synced_at: new Date().toISOString(),
+        })
+        .eq('id', channelId);
+    } else {
+      // Create new channel
+      const { data: newChannel, error: channelError } = await supabaseAdmin
+        .from('channels')
+        .insert({
+          youtube_channel_id: channelInfo.channelId,
+          channel_handle: channelInfo.handle,
+          channel_name: channelInfo.name,
+          channel_description: channelInfo.description,
+          thumbnail_url: channelInfo.thumbnailUrl,
+          subscriber_count: channelInfo.subscriberCount,
+          last_synced_at: new Date().toISOString(),
+        })
+        .select('id')
+        .single();
+
+      if (channelError || !newChannel) {
+        console.error('Error creating channel:', channelError);
+        return NextResponse.json(
+          { error: 'Failed to create channel' },
+          { status: 500 }
+        );
+      }
+
+      channelId = newChannel.id;
+    }
+
+    // Fetch videos from YouTube
+    console.log(`Fetching videos for @${channelInfo.handle}...`);
+    const videos = await getChannelVideos(channelInfo.channelId);
+
+    console.log(`Found ${videos.length} videos`);
+
+    // Update channel video count
+    await supabaseAdmin
+      .from('channels')
+      .update({ video_count: videos.length })
+      .eq('id', channelId);
+
+    let processedCount = 0;
+    let transcriptCount = 0;
+
+    // Process each video
+    for (const video of videos) {
+      try {
+        // Check if video already exists
+        const { data: existingVideos } = await supabaseAdmin
+          .from('videos')
+          .select('id, has_transcript')
+          .eq('youtube_video_id', video.videoId)
+          .limit(1);
+
+        let videoId: string;
+
+        if (existingVideos && existingVideos.length > 0) {
+          // @ts-ignore - Supabase type inference issue
+          videoId = existingVideos[0].id;
+
+          // Skip if transcript already exists
+          // @ts-ignore - Supabase type inference issue
+          if (existingVideos[0].has_transcript) {
+            processedCount++;
+            transcriptCount++;
+            continue;
+          }
+
+          // Update video info
+          await supabaseAdmin
+            .from('videos')
+            .update({
+              title: video.title,
+              description: video.description,
+              thumbnail_url: video.thumbnailUrl,
+              duration_seconds: video.durationSeconds,
+              view_count: video.viewCount,
+            })
+            .eq('id', videoId);
+        } else {
+          // Create new video
+          const { data: newVideo, error: videoError } = await supabaseAdmin
+            .from('videos')
+            .insert({
+              channel_id: channelId,
+              youtube_video_id: video.videoId,
+              title: video.title,
+              description: video.description,
+              thumbnail_url: video.thumbnailUrl,
+              duration_seconds: video.durationSeconds,
+              published_at: video.publishedAt,
+              view_count: video.viewCount,
+              like_count: video.likeCount,
+              comment_count: video.commentCount,
+            })
+            .select('id')
+            .single();
+
+          if (videoError || !newVideo) {
+            console.error(`Error creating video ${video.videoId}:`, videoError);
+            continue;
+          }
+
+          videoId = newVideo.id;
+        }
+
+        // Fetch and save transcript
+        const transcript = await getVideoTranscript(video.videoId);
+
+        if (transcript && transcript.length > 0) {
+          // Save transcript segments
+          const transcriptRecords = transcript.map((segment) => ({
+            video_id: videoId,
+            text: segment.text,
+            start_time: segment.startTime,
+            duration: segment.duration,
+          }));
+
+          const { error: transcriptError } = await supabaseAdmin
+            .from('transcripts')
+            .insert(transcriptRecords);
+
+          if (transcriptError) {
+            console.error(`Error saving transcript for video ${video.videoId}:`, transcriptError);
+          } else {
+            // Update video to mark transcript as available
+            await supabaseAdmin
+              .from('videos')
+              .update({
+                has_transcript: true,
+                transcript_language: 'en',
+              })
+              .eq('id', videoId);
+
+            transcriptCount++;
+          }
+        }
+
+        processedCount++;
+        console.log(`Processed ${processedCount}/${videos.length} videos`);
+      } catch (error) {
+        console.error(`Error processing video ${video.videoId}:`, error);
+      }
+    }
+
+    return NextResponse.json({
+      success: true,
+      channel: channelInfo,
+      videosProcessed: processedCount,
+      transcriptsDownloaded: transcriptCount,
+    });
+  } catch (error) {
+    console.error('Error importing channel:', error);
+    return NextResponse.json(
+      { error: 'Failed to import channel' },
+      { status: 500 }
+    );
+  }
+}
