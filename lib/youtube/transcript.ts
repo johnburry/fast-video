@@ -4,43 +4,43 @@ export interface TranscriptSegment {
   duration: number;
 }
 
-interface YouTubeTranscriptIOSegment {
+interface SupadataTranscriptSegment {
   text: string;
-  start: string;
-  dur: string;
+  offset: number;
+  duration: number;
 }
 
-interface YouTubeTranscriptIOResponse {
-  success?: Array<{
-    text?: string;
-    id?: string;
-    tracks?: Array<{
-      language: string;
-      transcript: YouTubeTranscriptIOSegment[];
-    }>;
-  }>;
+interface SupadataTranscriptResponse {
+  segments?: SupadataTranscriptSegment[];
+  text?: string;
+  language?: string;
+  error?: string;
 }
 
 export async function getVideoTranscript(videoId: string): Promise<TranscriptSegment[] | null> {
   try {
     console.log(`[TRANSCRIPT] Fetching transcript for video ${videoId}...`);
 
-    const apiToken = process.env.YOUTUBE_TRANSCRIPT_API_TOKEN;
-    if (!apiToken) {
-      console.error('[TRANSCRIPT] YOUTUBE_TRANSCRIPT_API_TOKEN not set in environment');
+    const apiKey = process.env.SUPADATA_API_KEY;
+    if (!apiKey) {
+      console.error('[TRANSCRIPT] SUPADATA_API_KEY not set in environment');
       return null;
     }
 
-    // Use youtube-transcript.io commercial API v2
-    const response = await fetch('https://www.youtube-transcript.io/api/transcripts/v2', {
-      method: 'POST',
+    // Construct YouTube URL
+    const videoUrl = `https://www.youtube.com/watch?v=${videoId}`;
+
+    // Use supadata.ai API
+    const url = new URL('https://api.supadata.ai/v1/transcript');
+    url.searchParams.append('url', videoUrl);
+    url.searchParams.append('mode', 'auto'); // Try native first, then generate if needed
+
+    const response = await fetch(url.toString(), {
+      method: 'GET',
       headers: {
-        'Authorization': `Basic ${apiToken}`,
+        'x-api-key': apiKey,
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({
-        ids: [videoId],
-      }),
     });
 
     if (!response.ok) {
@@ -50,46 +50,40 @@ export async function getVideoTranscript(videoId: string): Promise<TranscriptSeg
       return null;
     }
 
-    const data: YouTubeTranscriptIOResponse = await response.json();
+    const data: SupadataTranscriptResponse = await response.json();
 
-    // The v2 API returns {success: [{tracks: [...]}]}
-    if (!data.success || data.success.length === 0) {
-      console.log(`[TRANSCRIPT] No success array in response for video ${videoId}`);
+    // Check for error in response
+    if (data.error) {
+      console.error(`[TRANSCRIPT] API returned error: ${data.error}`);
       return null;
     }
 
-    const videoData = data.success[0];
-    if (!videoData.tracks || videoData.tracks.length === 0) {
-      console.log(`[TRANSCRIPT] No tracks in response for video ${videoId}`);
+    // Check if we have segments
+    if (!data.segments || data.segments.length === 0) {
+      console.log(`[TRANSCRIPT] No segments in response for video ${videoId}`);
       return null;
     }
 
-    const track = videoData.tracks[0]; // Use first track (usually English)
-    if (!track.transcript || track.transcript.length === 0) {
-      console.log(`[TRANSCRIPT] No transcript segments in track for video ${videoId}`);
-      return null;
-    }
+    console.log(`[TRANSCRIPT] Got ${data.segments.length} transcript segments for video ${videoId}`);
 
-    console.log(`[TRANSCRIPT] Got ${track.transcript.length} transcript segments for video ${videoId}`);
-
-    // Convert from youtube-transcript.io format to our format
+    // Convert from supadata.ai format to our format
     // Filter out segments with invalid data (empty text, null/NaN timing)
-    const result: TranscriptSegment[] = track.transcript
+    const result: TranscriptSegment[] = data.segments
       .filter((segment) => {
         const text = segment.text?.trim();
-        const start = parseFloat(segment.start);
-        const dur = parseFloat(segment.dur);
+        const offset = segment.offset;
+        const duration = segment.duration;
 
         // Skip segments with empty text or invalid timing
-        return text && text.length > 0 && !isNaN(start) && !isNaN(dur);
+        return text && text.length > 0 && !isNaN(offset) && !isNaN(duration);
       })
       .map((segment) => ({
         text: segment.text.trim(),
-        startTime: parseFloat(segment.start),
-        duration: parseFloat(segment.dur),
+        startTime: segment.offset,
+        duration: segment.duration,
       }));
 
-    console.log(`[TRANSCRIPT] Successfully processed ${result.length} segments for video ${videoId} (filtered from ${track.transcript.length})`);
+    console.log(`[TRANSCRIPT] Successfully processed ${result.length} segments for video ${videoId} (filtered from ${data.segments.length})`);
     return result;
   } catch (error: any) {
     console.error(`[TRANSCRIPT] Error fetching transcript for video ${videoId}:`, error);
