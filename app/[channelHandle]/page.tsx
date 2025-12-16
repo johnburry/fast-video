@@ -152,8 +152,15 @@ export default function ChannelPage({
     <div className="min-h-screen bg-black">
       {/* Back Button Bar (shown when search results exist) */}
       {searchResults.length > 0 && (
-        <div style={{ backgroundColor: '#165DFC', paddingTop: 'env(safe-area-inset-top)' }}>
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
+        <div
+          style={{
+            backgroundColor: '#165DFC',
+            paddingTop: 'max(env(safe-area-inset-top), 20px)',
+            paddingBottom: '12px'
+          }}
+          className="sticky top-0 z-50"
+        >
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <button
               onClick={resetSearch}
               className="flex items-center gap-2 hover:opacity-80 transition-opacity font-medium text-white"
