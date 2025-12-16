@@ -146,7 +146,7 @@ export default function ChannelPage({
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-black">
       {/* Channel Header */}
       <div className="border-b border-gray-200" style={{ backgroundColor: '#222529' }}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
