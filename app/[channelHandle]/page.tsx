@@ -148,7 +148,7 @@ export default function ChannelPage({
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Channel Header */}
-      <div className="bg-white border-b border-gray-200">
+      <div className="border-b border-gray-200" style={{ backgroundColor: '#222529' }}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="flex items-center space-x-4">
             {channelData?.channel.thumbnail && (
@@ -163,19 +163,19 @@ export default function ChannelPage({
                 Fast video search for:
               </p>
               <h1
-                className="text-5xl font-black text-gray-900 cursor-pointer hover:text-blue-600 transition-colors flex items-center gap-3"
+                className="text-5xl font-black text-white cursor-pointer hover:text-blue-400 transition-colors flex items-center gap-3"
                 onClick={resetSearch}
               >
                 <span className="text-5xl">🔍</span>
                 {channelData?.channel.name}
               </h1>
-              <p className="text-lg text-gray-600 mt-2">
-                <span className="text-gray-500">YouTube Channel: </span>
+              <p className="text-lg text-gray-300 mt-2">
+                <span className="text-gray-400">YouTube Channel: </span>
                 <a
                   href={`https://www.youtube.com/@${channelData?.channel.handle}`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="cursor-pointer hover:text-blue-600 transition-colors"
+                  className="cursor-pointer hover:text-blue-400 transition-colors"
                 >
                   @{channelData?.channel.handle}
                 </a>
@@ -183,7 +183,7 @@ export default function ChannelPage({
             </div>
           </div>
           {channelData?.channel.description && (
-            <p className="mt-4 text-gray-700 max-w-3xl">
+            <p className="mt-4 text-gray-300 max-w-3xl">
               {channelData.channel.description}
             </p>
           )}
