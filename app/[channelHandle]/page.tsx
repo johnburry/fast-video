@@ -160,13 +160,13 @@ export default function ChannelPage({
             )}
             <div>
               <h1
-                className="text-5xl font-black text-white cursor-pointer hover:text-blue-400 transition-colors flex items-center gap-3"
+                className="text-5xl font-black text-white cursor-pointer hover:text-blue-400 transition-colors"
                 onClick={resetSearch}
               >
-                <span className="text-5xl">🔍</span>
                 {channelData?.channel.name}
               </h1>
-              <p className="text-4xl text-orange-500 font-bold mb-2">
+              <p className="text-4xl text-orange-500 font-bold mb-2 flex items-center gap-3">
+                <span className="text-4xl">🔍</span>
                 FAST VIDEO SEARCH
               </p>
               <p className="text-lg text-gray-300 mt-2 flex items-center gap-2">
