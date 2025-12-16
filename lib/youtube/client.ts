@@ -104,7 +104,7 @@ export async function getChannelVideos(channelId: string, limit: number = 50): P
     const videos: YouTubeVideoInfo[] = [];
 
     // Get videos from the channel's uploads
-    let uploads = await channel.getVideos();
+    let uploads: any = await channel.getVideos();
 
     // Fetch videos until we reach the limit or run out of videos
     while (videos.length < limit) {
