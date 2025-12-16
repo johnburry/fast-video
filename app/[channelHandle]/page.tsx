@@ -152,7 +152,7 @@ export default function ChannelPage({
     <div className="min-h-screen bg-black">
       {/* Back Button Bar (shown when search results exist) */}
       {searchResults.length > 0 && (
-        <div style={{ backgroundColor: '#165DFC' }}>
+        <div style={{ backgroundColor: '#165DFC', paddingTop: 'env(safe-area-inset-top)' }}>
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
             <button
               onClick={resetSearch}
