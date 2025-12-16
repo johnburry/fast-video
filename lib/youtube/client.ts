@@ -80,8 +80,20 @@ export async function getChannelByHandle(handle: string): Promise<YouTubeChannel
     console.log('[CHANNEL] Checking header.content for banner...');
     const headerContent = header?.content as any;
 
+    if (headerContent) {
+      console.log('[CHANNEL] Header content type:', headerContent?.type);
+      console.log('[CHANNEL] Header content keys:', Object.keys(headerContent || {}));
+
+      // Check if there's a banner in the content
+      if (headerContent?.banner) {
+        console.log('[CHANNEL] Found banner in content:', JSON.stringify(headerContent.banner).substring(0, 200));
+      }
+    }
+
     // Extract banner URL from multiple possible locations
+    // Try to get the largest banner available
     const bannerUrl = metadata?.banner?.thumbnails?.[0]?.url ||
+                      headerContent?.banner?.image?.thumbnails?.[headerContent?.banner?.image?.thumbnails?.length - 1]?.url ||
                       headerContent?.banner?.thumbnails?.[0]?.url ||
                       header?.banner?.thumbnails?.[0]?.url ||
                       header?.tv_banner?.thumbnails?.[0]?.url ||
