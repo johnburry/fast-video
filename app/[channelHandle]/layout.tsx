@@ -19,6 +19,9 @@ export async function generateMetadata({
     if (!channel) {
       return {
         title: 'Channel Not Found',
+        icons: {
+          icon: '/icon.svg',
+        },
       }
     }
 
