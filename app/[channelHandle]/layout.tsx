@@ -22,7 +22,7 @@ export async function generateMetadata({
       }
     }
 
-    const title = `🔍 ${channel.channel_name} - Fast Video Search`
+    const title = `🔍 ${channel.channel_name} - Fast Video Transcript Search`
     const description = channel.channel_description || `Search transcripts for ${channel.channel_name} videos`
     // Use banner image if available, otherwise fall back to thumbnail
     const image = channel.banner_url || channel.thumbnail_url || ''
@@ -46,7 +46,7 @@ export async function generateMetadata({
   } catch (error) {
     console.error('Error generating metadata:', error)
     return {
-      title: 'Fast Video Search',
+      title: 'Fast Video Transcript Search',
     }
   }
 }

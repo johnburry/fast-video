@@ -62,7 +62,7 @@ export default function AllChannelsPage() {
           <div className="text-center">
             <p className="text-2xl md:text-4xl text-orange-500 font-bold mb-3 flex items-center justify-center gap-3">
               <span>🔍</span>
-              FAST VIDEO SEARCH
+              FAST VIDEO TRANSCRIPT SEARCH
             </p>
             <h1 className="text-3xl md:text-6xl font-black text-white mb-4">
               All Fast Video Channels

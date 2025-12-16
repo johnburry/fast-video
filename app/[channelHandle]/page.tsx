@@ -67,7 +67,7 @@ export default function ChannelPage({
 
   useEffect(() => {
     if (channelData?.channel.handle) {
-      document.title = `@${channelData.channel.handle} Fast Video Search`;
+      document.title = `@${channelData.channel.handle} Fast Video Transcript Search`;
     }
   }, [channelData]);
 
@@ -218,7 +218,7 @@ export default function ChannelPage({
               <div>
                 <p className="text-lg md:text-3xl text-orange-500 font-bold mb-2 flex items-center gap-2 md:gap-3">
                   <span className="text-lg md:text-3xl">🔍</span>
-                  FAST VIDEO SEARCH
+                  FAST VIDEO TRANSCRIPT SEARCH
                 </p>
                 <h1
                   className="text-2xl md:text-5xl font-black text-white cursor-pointer hover:text-blue-400 transition-colors"
