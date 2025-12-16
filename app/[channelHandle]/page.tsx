@@ -110,6 +110,11 @@ export default function ChannelPage({
     setSelectedVideo({ youtubeVideoId, startTime });
   };
 
+  const resetSearch = () => {
+    setSearchQuery('');
+    setSearchResults([]);
+  };
+
   if (channelLoading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -154,10 +159,13 @@ export default function ChannelPage({
               />
             )}
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">
+              <h1
+                className="text-5xl font-sans text-gray-900 cursor-pointer hover:text-blue-600 transition-colors"
+                onClick={resetSearch}
+              >
                 {channelData?.channel.name}
               </h1>
-              <p className="text-gray-600">@{channelData?.channel.handle}</p>
+              <p className="text-lg text-gray-600 mt-2">@{channelData?.channel.handle}</p>
               <p className="text-sm text-gray-500 mt-1">
                 {channelData?.channel.videoCount} videos •{' '}
                 {channelData?.channel.subscriberCount?.toLocaleString()} subscribers
