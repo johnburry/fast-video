@@ -12,28 +12,27 @@ export async function getVideoTranscript(videoId: string): Promise<TranscriptSeg
 
     const youtube = await getYouTubeClient();
 
-    // Try to get video info, but handle parsing errors gracefully
-    let info;
-    try {
-      info = await youtube.getInfo(videoId);
-    } catch (infoError: any) {
-      // If it's a type mismatch error, the video metadata has unexpected fields
-      // but we can still try to get the transcript directly
-      if (infoError.message?.includes('Type mismatch') || infoError.message?.includes('ExpandableMetadata')) {
-        console.log(`[TRANSCRIPT] Type mismatch error for video ${videoId}, skipping...`);
-        return null;
-      }
-      throw infoError;
-    }
-
-    // Get transcript from the video info
+    // Try to fetch transcript directly using the transcript API
+    // This bypasses the getInfo() call that's causing type mismatch errors
     let transcriptInfo;
     try {
-      transcriptInfo = await info.getTranscript();
+      // Use the getTranscript method directly on the client
+      const transcriptData = await youtube.getTranscript(videoId);
+
+      if (!transcriptData || !transcriptData.transcript) {
+        console.log(`[TRANSCRIPT] No transcript data returned for video ${videoId}`);
+        return null;
+      }
+
+      transcriptInfo = transcriptData;
+      console.log(`[TRANSCRIPT] Successfully fetched transcript data for video ${videoId}`);
     } catch (transcriptError: any) {
       // Handle cases where transcripts are not available
-      if (transcriptError.message?.includes('400') || transcriptError.message?.includes('Precondition check failed')) {
-        console.log(`[TRANSCRIPT] Transcript not available for video ${videoId} (precondition failed)`);
+      if (transcriptError.message?.includes('400') ||
+          transcriptError.message?.includes('Precondition check failed') ||
+          transcriptError.message?.includes('Transcript panel not found') ||
+          transcriptError.message?.includes('no transcript')) {
+        console.log(`[TRANSCRIPT] Transcript not available for video ${videoId}: ${transcriptError.message}`);
         return null;
       }
       console.error(`[TRANSCRIPT] Unexpected error getting transcript for video ${videoId}:`, transcriptError);
