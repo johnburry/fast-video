@@ -96,7 +96,7 @@ export async function getChannelByHandle(handle: string): Promise<YouTubeChannel
   }
 }
 
-export async function getChannelVideos(channelId: string): Promise<YouTubeVideoInfo[]> {
+export async function getChannelVideos(channelId: string, limit: number = 50): Promise<YouTubeVideoInfo[]> {
   try {
     const youtube = await getYouTubeClient();
     const channel = await youtube.getChannel(channelId);
@@ -104,26 +104,40 @@ export async function getChannelVideos(channelId: string): Promise<YouTubeVideoI
     const videos: YouTubeVideoInfo[] = [];
 
     // Get videos from the channel's uploads
-    const uploads = await channel.getVideos();
+    let uploads = await channel.getVideos();
 
-    for (const video of uploads.videos) {
-      // Type guard for video object
-      const v = video as any;
-      if (!v.id) continue;
+    // Fetch videos until we reach the limit or run out of videos
+    while (videos.length < limit) {
+      for (const video of uploads.videos) {
+        // Type guard for video object
+        const v = video as any;
+        if (!v.id) continue;
 
-      videos.push({
-        videoId: v.id,
-        title: v.title?.text || '',
-        description: v.description || '',
-        thumbnailUrl: v.best_thumbnail?.url || '',
-        durationSeconds: v.duration?.seconds || 0,
-        publishedAt: v.published?.text || '',
-        viewCount: v.view_count?.value || 0,
-        likeCount: 0, // Not available in list view
-        commentCount: 0, // Not available in list view
-      });
+        videos.push({
+          videoId: v.id,
+          title: v.title?.text || '',
+          description: v.description || '',
+          thumbnailUrl: v.best_thumbnail?.url || '',
+          durationSeconds: v.duration?.seconds || 0,
+          publishedAt: v.published?.text || '',
+          viewCount: v.view_count?.value || 0,
+          likeCount: 0, // Not available in list view
+          commentCount: 0, // Not available in list view
+        });
+
+        // Stop if we've reached the limit
+        if (videos.length >= limit) break;
+      }
+
+      // Check if there are more videos to fetch
+      if (videos.length < limit && uploads.has_continuation) {
+        uploads = await uploads.getContinuation();
+      } else {
+        break;
+      }
     }
 
+    console.log(`[YOUTUBE] Fetched ${videos.length} videos for channel ${channelId}`);
     return videos;
   } catch (error) {
     console.error('Error fetching channel videos:', error);
