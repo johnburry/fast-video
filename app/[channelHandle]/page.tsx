@@ -163,9 +163,10 @@ export default function ChannelPage({
                 Now search everything said in the videos made by:
               </p>
               <h1
-                className="text-5xl font-sans text-gray-900 cursor-pointer hover:text-blue-600 transition-colors"
+                className="text-5xl font-sans text-gray-900 cursor-pointer hover:text-blue-600 transition-colors flex items-center gap-3"
                 onClick={resetSearch}
               >
+                <span className="text-5xl">🔍</span>
                 {channelData?.channel.name}
               </h1>
               <p className="text-lg text-gray-600 mt-2">
