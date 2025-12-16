@@ -47,8 +47,11 @@ export async function getVideoTranscript(videoId: string): Promise<TranscriptSeg
 
     const data: YouTubeTranscriptIOResponse = await response.json();
 
+    // Log the full response to understand the API structure
+    console.log(`[TRANSCRIPT] API response for video ${videoId}:`, JSON.stringify(data, null, 2));
+
     if (!data.transcripts || data.transcripts.length === 0) {
-      console.log(`[TRANSCRIPT] No transcripts returned for video ${videoId}`);
+      console.log(`[TRANSCRIPT] No transcripts array in response for video ${videoId}`);
       return null;
     }
 
