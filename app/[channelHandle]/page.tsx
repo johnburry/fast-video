@@ -167,8 +167,7 @@ export default function ChannelPage({
               </h1>
               <p className="text-lg text-gray-600 mt-2">@{channelData?.channel.handle}</p>
               <p className="text-sm text-gray-500 mt-1">
-                {channelData?.channel.videoCount} videos •{' '}
-                {channelData?.channel.subscriberCount?.toLocaleString()} subscribers
+                {channelData?.channel.videoCount} videos
               </p>
             </div>
           </div>
