@@ -53,6 +53,7 @@ export default function ChannelPage({
   const [error, setError] = useState<string | null>(null);
   const [hasSearched, setHasSearched] = useState(false);
   const [expandedVideos, setExpandedVideos] = useState<Set<string>>(new Set());
+  const [visibleVideoCount, setVisibleVideoCount] = useState(20);
   const [selectedVideo, setSelectedVideo] = useState<{
     youtubeVideoId: string;
     startTime?: number;
@@ -141,6 +142,10 @@ export default function ChannelPage({
       }
       return newSet;
     });
+  };
+
+  const loadMoreVideos = () => {
+    setVisibleVideoCount((prev) => prev + 30);
   };
 
   if (channelLoading) {
@@ -361,7 +366,7 @@ export default function ChannelPage({
                 Videos ({channelData.recentVideos.length})
               </h2>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {channelData.recentVideos.map((video) => (
+                {channelData.recentVideos.slice(0, visibleVideoCount).map((video) => (
                   <div
                     key={video.id}
                     className="bg-white rounded-lg shadow-md overflow-hidden cursor-pointer hover:shadow-lg transition-shadow"
@@ -388,6 +393,16 @@ export default function ChannelPage({
                   </div>
                 ))}
               </div>
+              {visibleVideoCount < channelData.recentVideos.length && (
+                <div className="mt-8 text-center">
+                  <button
+                    onClick={loadMoreVideos}
+                    className="bg-blue-600 text-white px-8 py-3 rounded-lg font-medium hover:bg-blue-700 transition-colors"
+                  >
+                    Load More ({Math.min(30, channelData.recentVideos.length - visibleVideoCount)} more)
+                  </button>
+                </div>
+              )}
             </div>
           )}
         </div>
