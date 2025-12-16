@@ -163,7 +163,7 @@ export default function ChannelPage({
                 Fast video search for:
               </p>
               <h1
-                className="text-5xl font-sans text-gray-900 cursor-pointer hover:text-blue-600 transition-colors flex items-center gap-3"
+                className="text-5xl font-black text-gray-900 cursor-pointer hover:text-blue-600 transition-colors flex items-center gap-3"
                 onClick={resetSearch}
               >
                 <span className="text-5xl">🔍</span>
@@ -217,7 +217,7 @@ export default function ChannelPage({
           {/* Search Results */}
           {searchResults.length > 0 && (
             <div className="space-y-6">
-              <h2 className="text-2xl font-bold text-gray-900">
+              <h2 className="text-2xl font-bold text-white">
                 Search Results ({searchResults.length})
               </h2>
 
