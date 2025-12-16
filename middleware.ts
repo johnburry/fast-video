@@ -32,16 +32,24 @@ export function middleware(request: NextRequest) {
     return NextResponse.redirect('https://reorbit.com')
   }
 
-  // If we have a subdomain and we're on the root path, rewrite to /{subdomain}
-  if (subdomain && url.pathname === '/') {
-    url.pathname = `/${subdomain}`
-    return NextResponse.rewrite(url)
-  }
+  // If we have a subdomain, check if we're accessing a special path that should NOT be rewritten
+  if (subdomain) {
+    // Allow /admin to pass through without subdomain prefix
+    if (url.pathname.startsWith('/admin') || url.pathname.startsWith('/api')) {
+      return NextResponse.next()
+    }
 
-  // If we have a subdomain and we're on any other path, prepend the subdomain to the path
-  if (subdomain && !url.pathname.startsWith(`/${subdomain}`)) {
-    url.pathname = `/${subdomain}${url.pathname}`
-    return NextResponse.rewrite(url)
+    // If we're on the root path, rewrite to /{subdomain}
+    if (url.pathname === '/') {
+      url.pathname = `/${subdomain}`
+      return NextResponse.rewrite(url)
+    }
+
+    // If we're on any other path, prepend the subdomain to the path
+    if (!url.pathname.startsWith(`/${subdomain}`)) {
+      url.pathname = `/${subdomain}${url.pathname}`
+      return NextResponse.rewrite(url)
+    }
   }
 
   return NextResponse.next()
