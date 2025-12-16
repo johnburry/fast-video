@@ -223,7 +223,7 @@ export default function ChannelPage({
                 />
               )}
               <div>
-                <p className="text-lg md:text-3xl font-bold mb-2 flex items-center gap-2 md:gap-3" style={{ color: '#165DFC' }}>
+                <p className="text-lg md:text-3xl font-bold mb-2 flex items-center gap-2 md:gap-3" style={{ color: '#B2071D' }}>
                   <svg className="w-6 h-6 md:w-8 md:h-8" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <circle cx="27" cy="27" r="12" stroke="currentColor" strokeWidth="4" fill="none"/>
                     <line x1="35" y1="35" x2="48" y2="48" stroke="currentColor" strokeWidth="4" strokeLinecap="round"/>
