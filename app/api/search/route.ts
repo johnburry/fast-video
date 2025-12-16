@@ -91,19 +91,27 @@ export async function GET(request: NextRequest) {
     // Fetch previous segments for each match to get better start times
     const matchesWithPrevious = await Promise.all(
       (data || []).map(async (result) => {
-        // Get the segment immediately before this one
-        const { data: prevSegment } = await supabase
+        // Get previous segments that contain spoken text (not music)
+        // Filter out segments with music indicators: [music], [Music], ♪, etc.
+        const { data: prevSegments } = await supabase
           .from('transcripts')
-          .select('start_time')
+          .select('start_time, text')
           .eq('video_id', result.video_id)
           .lt('start_time', result.start_time)
           .order('start_time', { ascending: false })
-          .limit(1)
-          .single();
+          .limit(10); // Get last 10 segments to find a non-music one
+
+        // Find the first segment that doesn't contain music indicators
+        const nonMusicSegment = prevSegments?.find(seg => {
+          const text = seg.text?.toLowerCase() || '';
+          return !text.includes('[music]') &&
+                 !text.includes('♪') &&
+                 !text.match(/^\[.*\]$/); // Skip segments that are only brackets
+        });
 
         return {
           ...result,
-          previousStartTime: prevSegment?.start_time || result.start_time,
+          previousStartTime: nonMusicSegment?.start_time || result.start_time,
         };
       })
     );
