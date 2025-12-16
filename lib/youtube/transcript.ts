@@ -4,17 +4,14 @@ export interface TranscriptSegment {
   duration: number;
 }
 
-interface YouTubeTranscriptIOResponse {
-  transcripts: Array<{
-    id: string;
-    title: string;
-    segments: Array<{
-      text: string;
-      start: number;
-      duration: number;
-    }>;
-  }>;
+interface YouTubeTranscriptIOSegment {
+  text: string;
+  start: number;
+  duration: number;
 }
+
+// The API returns an array of segments directly, not nested in a transcripts object
+type YouTubeTranscriptIOResponse = YouTubeTranscriptIOSegment[];
 
 export async function getVideoTranscript(videoId: string): Promise<TranscriptSegment[] | null> {
   try {
@@ -47,24 +44,16 @@ export async function getVideoTranscript(videoId: string): Promise<TranscriptSeg
 
     const data: YouTubeTranscriptIOResponse = await response.json();
 
-    // Log the full response to understand the API structure
-    console.log(`[TRANSCRIPT] API response for video ${videoId}:`, JSON.stringify(data, null, 2));
-
-    if (!data.transcripts || data.transcripts.length === 0) {
-      console.log(`[TRANSCRIPT] No transcripts array in response for video ${videoId}`);
+    // The API returns an array of segments directly
+    if (!data || !Array.isArray(data) || data.length === 0) {
+      console.log(`[TRANSCRIPT] No segments in response for video ${videoId}`);
       return null;
     }
 
-    const transcript = data.transcripts[0];
-    if (!transcript.segments || transcript.segments.length === 0) {
-      console.log(`[TRANSCRIPT] No segments in transcript for video ${videoId}`);
-      return null;
-    }
-
-    console.log(`[TRANSCRIPT] Got ${transcript.segments.length} transcript segments for video ${videoId}`);
+    console.log(`[TRANSCRIPT] Got ${data.length} transcript segments for video ${videoId}`);
 
     // Convert from youtube-transcript.io format to our format
-    const result: TranscriptSegment[] = transcript.segments.map((segment) => ({
+    const result: TranscriptSegment[] = data.map((segment) => ({
       text: segment.text || '',
       startTime: segment.start,
       duration: segment.duration,
