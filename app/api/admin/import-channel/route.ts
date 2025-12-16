@@ -53,34 +53,45 @@ function parseRelativeTime(relativeTime: string): string | null {
 }
 
 export async function POST(request: NextRequest) {
-  try {
-    const { channelHandle } = await request.json();
+  const { channelHandle } = await request.json();
 
-    if (!channelHandle) {
-      return NextResponse.json(
-        { error: 'Channel handle is required' },
-        { status: 400 }
-      );
-    }
+  if (!channelHandle) {
+    return NextResponse.json(
+      { error: 'Channel handle is required' },
+      { status: 400 }
+    );
+  }
 
-    // Fetch channel info from YouTube
-    const channelInfo = await getChannelByHandle(channelHandle);
+  // Create a streaming response
+  const encoder = new TextEncoder();
+  const stream = new ReadableStream({
+    async start(controller) {
+      const sendProgress = (data: any) => {
+        controller.enqueue(encoder.encode(JSON.stringify(data) + '\n'));
+      };
 
-    if (!channelInfo) {
-      return NextResponse.json(
-        { error: 'Channel not found' },
-        { status: 404 }
-      );
-    }
+      try {
 
-    console.log('[IMPORT] Channel info:', {
-      name: channelInfo.name,
-      handle: channelInfo.handle,
-      bannerUrl: channelInfo.bannerUrl,
-    });
+        // Fetch channel info from YouTube
+        sendProgress({ type: 'status', message: 'Fetching channel info...' });
+        const channelInfo = await getChannelByHandle(channelHandle);
 
-    // Check if channel already exists
-    const { data: existingChannels } = await supabaseAdmin
+        if (!channelInfo) {
+          sendProgress({ type: 'error', message: 'Channel not found' });
+          controller.close();
+          return;
+        }
+
+        console.log('[IMPORT] Channel info:', {
+          name: channelInfo.name,
+          handle: channelInfo.handle,
+          bannerUrl: channelInfo.bannerUrl,
+        });
+
+        sendProgress({ type: 'status', message: 'Setting up channel...' });
+
+        // Check if channel already exists
+        const { data: existingChannels } = await supabaseAdmin
       .from('channels')
       .select('id, channel_handle')
       .eq('channel_handle', channelInfo.handle)
@@ -131,14 +142,19 @@ export async function POST(request: NextRequest) {
       channelId = newChannel.id;
     }
 
-    // Fetch videos from YouTube
-    console.log(`Fetching videos for @${channelInfo.handle}...`);
-    const allVideos = await getChannelVideos(channelInfo.channelId);
+        // Fetch videos from YouTube
+        sendProgress({ type: 'status', message: 'Fetching videos from YouTube...' });
+        console.log(`Fetching videos for @${channelInfo.handle}...`);
+        const allVideos = await getChannelVideos(channelInfo.channelId);
 
-    // Import first 50 videos and fetch transcripts for all
-    const videos = allVideos.slice(0, 50);
+        // Import first 50 videos and fetch transcripts for all
+        const videos = allVideos.slice(0, 50);
 
-    console.log(`Found ${allVideos.length} videos, processing first ${videos.length} videos`);
+        console.log(`Found ${allVideos.length} videos, processing first ${videos.length} videos`);
+        sendProgress({
+          type: 'status',
+          message: `Found ${videos.length} videos. Starting import...`
+        });
 
     // Update channel video count
     await supabaseAdmin
@@ -149,9 +165,15 @@ export async function POST(request: NextRequest) {
     let processedCount = 0;
     let transcriptCount = 0;
 
-    // Process each video
-    for (const video of videos) {
-      try {
+        // Process each video
+        for (const video of videos) {
+          try {
+            sendProgress({
+              type: 'progress',
+              current: processedCount + 1,
+              total: videos.length,
+              videoTitle: video.title,
+            });
         // Check if video already exists
         const { data: existingVideos } = await supabaseAdmin
           .from('videos')
@@ -249,24 +271,33 @@ export async function POST(request: NextRequest) {
           console.log(`[IMPORT] No transcript found for ${video.videoId} - transcript was null or empty`);
         }
 
-        processedCount++;
-        console.log(`Processed ${processedCount}/${videos.length} videos`);
-      } catch (error) {
-        console.error(`Error processing video ${video.videoId}:`, error);
-      }
-    }
+            processedCount++;
+            console.log(`Processed ${processedCount}/${videos.length} videos`);
+          } catch (error) {
+            console.error(`Error processing video ${video.videoId}:`, error);
+          }
+        }
 
-    return NextResponse.json({
-      success: true,
-      channel: channelInfo,
-      videosProcessed: processedCount,
-      transcriptsDownloaded: transcriptCount,
-    });
-  } catch (error) {
-    console.error('Error importing channel:', error);
-    return NextResponse.json(
-      { error: 'Failed to import channel' },
-      { status: 500 }
-    );
-  }
+        sendProgress({
+          type: 'complete',
+          channel: channelInfo,
+          videosProcessed: processedCount,
+          transcriptsDownloaded: transcriptCount,
+        });
+
+        controller.close();
+      } catch (error) {
+        console.error('Error importing channel:', error);
+        sendProgress({ type: 'error', message: 'Failed to import channel' });
+        controller.close();
+      }
+    },
+  });
+
+  return new Response(stream, {
+    headers: {
+      'Content-Type': 'text/plain; charset=utf-8',
+      'Transfer-Encoding': 'chunked',
+    },
+  });
 }

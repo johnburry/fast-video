@@ -10,6 +10,8 @@ export default function AdminPage() {
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<any>(null);
   const [error, setError] = useState<string | null>(null);
+  const [progressStatus, setProgressStatus] = useState<string>('');
+  const [currentVideo, setCurrentVideo] = useState<{ current: number; total: number; title: string } | null>(null);
 
   useEffect(() => {
     // Extract subdomain from hostname
@@ -65,6 +67,8 @@ export default function AdminPage() {
     setLoading(true);
     setError(null);
     setResult(null);
+    setProgressStatus('');
+    setCurrentVideo(null);
 
     try {
       const response = await fetch('/api/admin/import-channel', {
@@ -75,18 +79,49 @@ export default function AdminPage() {
         body: JSON.stringify({ channelHandle }),
       });
 
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || 'Failed to import channel');
+      if (!response.body) {
+        throw new Error('No response body');
       }
 
-      setResult(data);
-      setChannelHandle('');
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        const chunk = decoder.decode(value);
+        const lines = chunk.split('\n').filter(line => line.trim());
+
+        for (const line of lines) {
+          try {
+            const data = JSON.parse(line);
+
+            if (data.type === 'status') {
+              setProgressStatus(data.message);
+            } else if (data.type === 'progress') {
+              setCurrentVideo({
+                current: data.current,
+                total: data.total,
+                title: data.videoTitle,
+              });
+            } else if (data.type === 'complete') {
+              setResult(data);
+              setChannelHandle('');
+            } else if (data.type === 'error') {
+              throw new Error(data.message);
+            }
+          } catch (parseErr) {
+            console.error('Error parsing progress:', parseErr);
+          }
+        }
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred');
     } finally {
       setLoading(false);
+      setProgressStatus('');
+      setCurrentVideo(null);
     }
   };
 
@@ -186,10 +221,20 @@ export default function AdminPage() {
 
           {loading && (
             <div className="mt-8 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-              <p className="text-blue-800 font-medium">
-                Importing channel... This may take several minutes depending on the number of videos.
+              <p className="text-blue-800 font-medium mb-3">
+                {progressStatus || 'Importing channel...'}
               </p>
-              <p className="text-blue-600 text-sm mt-2">
+              {currentVideo && (
+                <div className="space-y-2">
+                  <p className="text-blue-900 font-semibold">
+                    Processing {currentVideo.current} of {currentVideo.total}
+                  </p>
+                  <p className="text-blue-700 text-sm">
+                    {currentVideo.title}
+                  </p>
+                </div>
+              )}
+              <p className="text-blue-600 text-sm mt-3">
                 Please keep this page open while the import is in progress.
               </p>
             </div>
