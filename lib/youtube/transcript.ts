@@ -52,6 +52,10 @@ export async function getVideoTranscript(videoId: string): Promise<TranscriptSeg
 
     const data: SupadataTranscriptResponse = await response.json();
 
+    // Log the full response to debug
+    console.log(`[TRANSCRIPT] Full API response for ${videoId}:`, JSON.stringify(data).substring(0, 500));
+    console.log(`[TRANSCRIPT] Response keys:`, Object.keys(data));
+
     // Check for error in response
     if (data.error) {
       console.error(`[TRANSCRIPT] API returned error: ${data.error}`);
@@ -61,6 +65,7 @@ export async function getVideoTranscript(videoId: string): Promise<TranscriptSeg
     // Check if we have segments
     if (!data.segments || data.segments.length === 0) {
       console.log(`[TRANSCRIPT] No segments in response for video ${videoId}`);
+      console.log(`[TRANSCRIPT] data.segments:`, data.segments);
       return null;
     }
 
