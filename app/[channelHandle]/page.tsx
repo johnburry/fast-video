@@ -338,7 +338,7 @@ export default function ChannelPage({
               <button
                 onClick={() => setSelectedVideo(null)}
                 className="px-4 py-2 text-white rounded hover:opacity-80 transition-opacity"
-                style={{ backgroundColor: '#007AFF' }}
+                style={{ backgroundColor: '#165DFC' }}
               >
                 Close
               </button>
