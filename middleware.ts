@@ -73,7 +73,9 @@ export const config = {
      * - _next/image (image optimization files)
      * - favicon.ico (favicon file)
      * - icon.svg (favicon SVG)
+     * - apple-icon (apple touch icons)
+     * - icon (Next.js generated icons)
      */
-    '/((?!api|_next/static|_next/image|favicon.ico|icon.svg).*)',
+    '/((?!api|_next/static|_next/image|favicon.ico|icon.svg|apple-icon|icon).*)',
   ],
 }
