@@ -15,14 +15,15 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Search transcripts
+    // Search transcripts - also get video_id for fetching previous segments
     let transcriptSearchQuery = supabase
       .from('search_results')
-      .select('*')
+      .select('*, video_id')
       .textSearch('text', query, {
         type: 'websearch',
         config: 'english',
-      });
+      })
+      .order('start_time', { ascending: true });
 
     // Filter by channel if specified
     if (channelHandle) {
@@ -87,8 +88,28 @@ export async function GET(request: NextRequest) {
     // Group results by video
     const resultsByVideo = new Map<string, any>();
 
+    // Fetch previous segments for each match to get better start times
+    const matchesWithPrevious = await Promise.all(
+      (data || []).map(async (result) => {
+        // Get the segment immediately before this one
+        const { data: prevSegment } = await supabase
+          .from('transcripts')
+          .select('start_time')
+          .eq('video_id', result.video_id)
+          .lt('start_time', result.start_time)
+          .order('start_time', { ascending: false })
+          .limit(1)
+          .single();
+
+        return {
+          ...result,
+          previousStartTime: prevSegment?.start_time || result.start_time,
+        };
+      })
+    );
+
     // Add transcript search results
-    data?.forEach((result) => {
+    matchesWithPrevious.forEach((result) => {
       if (!resultsByVideo.has(result.video_id)) {
         resultsByVideo.set(result.video_id, {
           videoId: result.video_id,
@@ -110,7 +131,8 @@ export async function GET(request: NextRequest) {
       resultsByVideo.get(result.video_id).matches.push({
         transcriptId: result.transcript_id,
         text: result.text,
-        startTime: result.start_time,
+        startTime: result.previousStartTime, // Use previous segment's start time
+        actualStartTime: result.start_time, // Keep original for reference
         duration: result.duration,
       });
     });
