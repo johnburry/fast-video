@@ -52,6 +52,7 @@ export default function ChannelPage({
   const [channelLoading, setChannelLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [hasSearched, setHasSearched] = useState(false);
+  const [expandedVideos, setExpandedVideos] = useState<Set<string>>(new Set());
   const [selectedVideo, setSelectedVideo] = useState<{
     youtubeVideoId: string;
     startTime?: number;
@@ -119,6 +120,19 @@ export default function ChannelPage({
     setSearchQuery('');
     setSearchResults([]);
     setHasSearched(false);
+    setExpandedVideos(new Set());
+  };
+
+  const toggleExpandMatches = (videoId: string) => {
+    setExpandedVideos((prev) => {
+      const newSet = new Set(prev);
+      if (newSet.has(videoId)) {
+        newSet.delete(videoId);
+      } else {
+        newSet.add(videoId);
+      }
+      return newSet;
+    });
   };
 
   if (channelLoading) {
@@ -280,7 +294,10 @@ export default function ChannelPage({
                       </p>
 
                       <div className="space-y-3">
-                        {result.matches.slice(0, 3).map((match) => (
+                        {(expandedVideos.has(result.videoId)
+                          ? result.matches
+                          : result.matches.slice(0, 3)
+                        ).map((match) => (
                           <div
                             key={match.transcriptId}
                             className="border-l-4 border-blue-500 pl-4 py-2 hover:bg-gray-50 cursor-pointer transition-colors"
@@ -297,9 +314,14 @@ export default function ChannelPage({
                           </div>
                         ))}
                         {result.matches.length > 3 && (
-                          <p className="text-sm text-gray-500">
-                            + {result.matches.length - 3} more matches
-                          </p>
+                          <button
+                            onClick={() => toggleExpandMatches(result.videoId)}
+                            className="text-sm text-blue-600 hover:text-blue-800 font-medium cursor-pointer"
+                          >
+                            {expandedVideos.has(result.videoId)
+                              ? 'Show less'
+                              : `+ ${result.matches.length - 3} more matches`}
+                          </button>
                         )}
                       </div>
                     </div>
