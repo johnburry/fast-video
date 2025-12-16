@@ -34,7 +34,16 @@ export function middleware(request: NextRequest) {
 
   // If we have a subdomain, check if we're accessing a special path that should NOT be rewritten
   if (subdomain) {
-    // Allow /admin to pass through without subdomain prefix
+    // Special case: 'all' subdomain routes to /all page
+    if (subdomain === 'all') {
+      if (url.pathname === '/') {
+        url.pathname = '/all'
+        return NextResponse.rewrite(url)
+      }
+      return NextResponse.next()
+    }
+
+    // Allow /admin and /api to pass through without subdomain prefix
     if (url.pathname.startsWith('/admin') || url.pathname.startsWith('/api')) {
       return NextResponse.next()
     }
