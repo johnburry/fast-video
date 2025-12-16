@@ -331,18 +331,16 @@ export default function ChannelPage({
           onClick={() => setSelectedVideo(null)}
         >
           <div
-            className="bg-white rounded-lg overflow-hidden max-w-5xl w-full"
+            className="bg-white rounded-lg overflow-hidden max-w-5xl w-full relative"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="p-4 flex justify-end">
-              <button
-                onClick={() => setSelectedVideo(null)}
-                className="px-4 py-2 text-white rounded hover:opacity-80 transition-opacity"
-                style={{ backgroundColor: '#165DFC' }}
-              >
-                Close
-              </button>
-            </div>
+            <button
+              onClick={() => setSelectedVideo(null)}
+              className="absolute top-0 right-0 px-6 py-2 text-white rounded-tl-lg z-10 hover:opacity-80 transition-opacity"
+              style={{ backgroundColor: '#165DFC' }}
+            >
+              Close
+            </button>
             <div className="aspect-video">
               <iframe
                 src={`https://www.youtube.com/embed/${selectedVideo.youtubeVideoId}${
