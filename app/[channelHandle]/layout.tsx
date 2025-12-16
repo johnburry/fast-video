@@ -30,6 +30,9 @@ export async function generateMetadata({
     return {
       title,
       description,
+      icons: {
+        icon: '/icon.svg',
+      },
       openGraph: {
         title,
         description,
@@ -47,6 +50,9 @@ export async function generateMetadata({
     console.error('Error generating metadata:', error)
     return {
       title: 'Fast Video Transcript Search',
+      icons: {
+        icon: '/icon.svg',
+      },
     }
   }
 }
