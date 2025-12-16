@@ -176,9 +176,6 @@ export default function ChannelPage({
                   @{channelData?.channel.handle}
                 </a>
               </p>
-              <p className="text-sm text-gray-500 mt-1">
-                {channelData?.channel.videoCount} videos
-              </p>
             </div>
           </div>
           {channelData?.channel.description && (
