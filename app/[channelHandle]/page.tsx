@@ -189,31 +189,32 @@ export default function ChannelPage({
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Search Bar */}
-        <div className="mb-8">
-          <form onSubmit={handleSearch} className="max-w-3xl mx-auto">
-            <div className="flex gap-4">
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search transcripts..."
-                className="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-lg"
-              />
-              <button
-                type="submit"
-                disabled={loading}
-                className="bg-blue-600 text-white px-8 py-3 rounded-lg font-medium hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
-              >
-                {loading ? 'Searching...' : 'Search'}
-              </button>
-            </div>
-          </form>
-        </div>
+      <div className="bg-black">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          {/* Search Bar */}
+          <div className="mb-8">
+            <form onSubmit={handleSearch} className="max-w-3xl mx-auto">
+              <div className="flex gap-4">
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Search transcripts..."
+                  className="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-lg"
+                />
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="bg-blue-600 text-white px-8 py-3 rounded-lg font-medium hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
+                >
+                  {loading ? 'Searching...' : 'Search'}
+                </button>
+              </div>
+            </form>
+          </div>
 
-        {/* Search Results */}
-        {searchResults.length > 0 && (
+          {/* Search Results */}
+          {searchResults.length > 0 && (
           <div className="space-y-6">
             <h2 className="text-2xl font-bold text-gray-900">
               Search Results ({searchResults.length})
@@ -277,7 +278,7 @@ export default function ChannelPage({
         {/* No Results */}
         {searchQuery && searchResults.length === 0 && !loading && (
           <div className="text-center py-12">
-            <p className="text-gray-600 text-lg">
+            <p className="text-white text-lg">
               No results found for "{searchQuery}"
             </p>
           </div>
@@ -286,7 +287,7 @@ export default function ChannelPage({
         {/* Recent Videos (shown when no search) */}
         {!searchQuery && channelData?.recentVideos && (
           <div>
-            <h2 className="text-2xl font-bold text-gray-900 mb-6">
+            <h2 className="text-2xl font-bold text-white mb-6">
               Recent Videos
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
