@@ -62,6 +62,12 @@ export default function ChannelPage({
     fetchChannelData();
   }, [channelHandle]);
 
+  useEffect(() => {
+    if (channelData?.channel.handle) {
+      document.title = `@${channelData.channel.handle}`;
+    }
+  }, [channelData]);
+
   const fetchChannelData = async () => {
     try {
       setChannelLoading(true);
