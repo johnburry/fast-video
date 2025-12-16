@@ -23,8 +23,8 @@ export async function getVideoTranscript(videoId: string): Promise<TranscriptSeg
       return null;
     }
 
-    // Use youtube-transcript.io commercial API
-    const response = await fetch('https://www.youtube-transcript.io/api/transcripts', {
+    // Use youtube-transcript.io commercial API v2 endpoint for segment data
+    const response = await fetch('https://www.youtube-transcript.io/api/transcripts/v2', {
       method: 'POST',
       headers: {
         'Authorization': `Basic ${apiToken}`,
