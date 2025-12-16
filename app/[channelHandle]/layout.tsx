@@ -72,10 +72,17 @@ export async function generateMetadata({
   }
 }
 
+import HeadLinks from './head-links'
+
 export default function ChannelLayout({
   children,
 }: {
   children: React.ReactNode
 }) {
-  return children
+  return (
+    <>
+      <HeadLinks />
+      {children}
+    </>
+  )
 }
