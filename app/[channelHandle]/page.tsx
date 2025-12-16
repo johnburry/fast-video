@@ -184,16 +184,15 @@ export default function ChannelPage({
       {searchResults.length > 0 && (
         <div
           style={{
-            backgroundColor: '#165DFC',
             paddingTop: 'calc(env(safe-area-inset-top) + 11px)',
             paddingBottom: '12px'
           }}
-          className="sticky top-0 z-50"
+          className="sticky top-0 z-50 bg-black"
         >
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <button
               onClick={resetSearch}
-              className="flex items-center gap-2 hover:opacity-80 transition-opacity font-medium text-white"
+              className="flex items-center gap-2 bg-blue-600 text-white px-6 py-2 rounded-lg font-medium hover:bg-blue-700 transition-colors"
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
