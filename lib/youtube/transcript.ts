@@ -73,13 +73,23 @@ export async function getVideoTranscript(videoId: string): Promise<TranscriptSeg
     console.log(`[TRANSCRIPT] Got ${track.transcript.length} transcript segments for video ${videoId}`);
 
     // Convert from youtube-transcript.io format to our format
-    const result: TranscriptSegment[] = track.transcript.map((segment) => ({
-      text: segment.text || '',
-      startTime: parseFloat(segment.start),
-      duration: parseFloat(segment.dur),
-    }));
+    // Filter out segments with invalid data (empty text, null/NaN timing)
+    const result: TranscriptSegment[] = track.transcript
+      .filter((segment) => {
+        const text = segment.text?.trim();
+        const start = parseFloat(segment.start);
+        const dur = parseFloat(segment.dur);
 
-    console.log(`[TRANSCRIPT] Successfully processed ${result.length} segments for video ${videoId}`);
+        // Skip segments with empty text or invalid timing
+        return text && text.length > 0 && !isNaN(start) && !isNaN(dur);
+      })
+      .map((segment) => ({
+        text: segment.text.trim(),
+        startTime: parseFloat(segment.start),
+        duration: parseFloat(segment.dur),
+      }));
+
+    console.log(`[TRANSCRIPT] Successfully processed ${result.length} segments for video ${videoId} (filtered from ${track.transcript.length})`);
     return result;
   } catch (error: any) {
     console.error(`[TRANSCRIPT] Error fetching transcript for video ${videoId}:`, error);
