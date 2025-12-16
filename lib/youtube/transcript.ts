@@ -6,12 +6,18 @@ export interface TranscriptSegment {
 
 interface YouTubeTranscriptIOSegment {
   text: string;
-  start: number;
-  duration: number;
+  start: string;
+  dur: string;
 }
 
-// The API returns an array of segments directly, not nested in a transcripts object
-type YouTubeTranscriptIOResponse = YouTubeTranscriptIOSegment[];
+interface YouTubeTranscriptIOResponse {
+  text?: string;
+  id?: string;
+  tracks?: Array<{
+    language: string;
+    transcript: YouTubeTranscriptIOSegment[];
+  }>;
+}
 
 export async function getVideoTranscript(videoId: string): Promise<TranscriptSegment[] | null> {
   try {
@@ -23,8 +29,8 @@ export async function getVideoTranscript(videoId: string): Promise<TranscriptSeg
       return null;
     }
 
-    // Use youtube-transcript.io commercial API v2 endpoint for segment data
-    const response = await fetch('https://www.youtube-transcript.io/api/transcripts/v2', {
+    // Use youtube-transcript.io commercial API
+    const response = await fetch('https://www.youtube-transcript.io/api/transcripts', {
       method: 'POST',
       headers: {
         'Authorization': `Basic ${apiToken}`,
@@ -42,27 +48,28 @@ export async function getVideoTranscript(videoId: string): Promise<TranscriptSeg
       return null;
     }
 
-    const data = await response.json();
+    const data: YouTubeTranscriptIOResponse = await response.json();
 
-    console.log(`[TRANSCRIPT] Raw API response for video ${videoId}:`, JSON.stringify(data).substring(0, 500));
-
-    // The API returns an array of segments directly
-    if (!data || !Array.isArray(data) || data.length === 0) {
-      console.log(`[TRANSCRIPT] No segments in response for video ${videoId}, response type: ${typeof data}, isArray: ${Array.isArray(data)}`);
+    // The API returns an object with tracks array containing transcript segments
+    if (!data.tracks || data.tracks.length === 0) {
+      console.log(`[TRANSCRIPT] No tracks in response for video ${videoId}`);
       return null;
     }
 
-    console.log(`[TRANSCRIPT] Got ${data.length} transcript segments for video ${videoId}`);
-    console.log(`[TRANSCRIPT] First segment structure:`, JSON.stringify(data[0], null, 2));
+    const track = data.tracks[0]; // Use first track (usually English)
+    if (!track.transcript || track.transcript.length === 0) {
+      console.log(`[TRANSCRIPT] No transcript segments in track for video ${videoId}`);
+      return null;
+    }
+
+    console.log(`[TRANSCRIPT] Got ${track.transcript.length} transcript segments for video ${videoId}`);
 
     // Convert from youtube-transcript.io format to our format
-    const result: TranscriptSegment[] = data.map((segment) => ({
+    const result: TranscriptSegment[] = track.transcript.map((segment) => ({
       text: segment.text || '',
-      startTime: segment.start,
-      duration: segment.duration,
+      startTime: parseFloat(segment.start),
+      duration: parseFloat(segment.dur),
     }));
-
-    console.log(`[TRANSCRIPT] First mapped segment:`, JSON.stringify(result[0], null, 2));
 
     console.log(`[TRANSCRIPT] Successfully processed ${result.length} segments for video ${videoId}`);
     return result;
