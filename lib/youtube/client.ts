@@ -38,7 +38,16 @@ export async function getChannelByHandle(handle: string): Promise<YouTubeChannel
     // Remove @ if present
     const cleanHandle = handle.startsWith('@') ? handle.slice(1) : handle;
 
-    const channel = await youtube.getChannel(`@${cleanHandle}`);
+    // Resolve the handle URL to get the channel endpoint
+    const resolved = await youtube.resolveURL(`https://www.youtube.com/@${cleanHandle}`);
+
+    if (!resolved || resolved.payload?.browseId === undefined) {
+      console.error('Could not resolve channel handle:', cleanHandle);
+      return null;
+    }
+
+    const channelId = resolved.payload.browseId;
+    const channel = await youtube.getChannel(channelId);
 
     if (!channel) {
       return null;
@@ -48,7 +57,7 @@ export async function getChannelByHandle(handle: string): Promise<YouTubeChannel
     const header = channel.header as any;
 
     return {
-      channelId: header?.author?.id || '',
+      channelId: channelId,
       handle: cleanHandle,
       name: header?.author?.name || '',
       description: header?.author?.description || '',
