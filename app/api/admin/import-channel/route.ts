@@ -202,9 +202,11 @@ export async function POST(request: NextRequest) {
         }
 
         // Fetch and save transcript
+        console.log(`Fetching transcript for ${video.videoId} (${video.title})...`);
         const transcript = await getVideoTranscript(video.videoId);
 
         if (transcript && transcript.length > 0) {
+          console.log(`Saving ${transcript.length} transcript segments for ${video.videoId}...`);
           // Save transcript segments
           const transcriptRecords = transcript.map((segment) => ({
             video_id: videoId,
@@ -231,6 +233,8 @@ export async function POST(request: NextRequest) {
 
             transcriptCount++;
           }
+        } else {
+          console.log(`No transcript found for ${video.videoId}`);
         }
 
         processedCount++;

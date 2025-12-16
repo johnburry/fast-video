@@ -8,11 +8,15 @@ export interface TranscriptSegment {
 
 export async function getVideoTranscript(videoId: string): Promise<TranscriptSegment[] | null> {
   try {
+    console.log(`Fetching transcript for video ${videoId}...`);
     const transcript = await YoutubeTranscript.fetchTranscript(videoId);
 
     if (!transcript || transcript.length === 0) {
+      console.log(`No transcript available for video ${videoId}`);
       return null;
     }
+
+    console.log(`Got ${transcript.length} transcript segments for video ${videoId}`);
 
     return transcript.map((segment) => ({
       text: segment.text,
