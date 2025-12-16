@@ -57,23 +57,40 @@ export async function getChannelByHandle(handle: string): Promise<YouTubeChannel
     // Type guard for channel header
     const header = channel.header as any;
 
-    // Extract banner URL from header
-    const bannerUrl = header?.banner?.thumbnails?.[0]?.url ||
+    console.log('[CHANNEL] Full header keys:', Object.keys(header || {}));
+    console.log('[CHANNEL] Header type:', header?.type);
+
+    // Try to get metadata from channel.metadata (more reliable)
+    const metadata = channel.metadata as any;
+    console.log('[CHANNEL] Metadata keys:', Object.keys(metadata || {}));
+
+    // Extract name and description
+    const name = metadata?.title || header?.author?.name || '';
+    const description = metadata?.description || header?.author?.description || '';
+    const thumbnailUrl = metadata?.avatar?.thumbnails?.[0]?.url ||
+                         header?.author?.best_thumbnail?.url || '';
+
+    // Extract banner URL from multiple possible locations
+    const bannerUrl = metadata?.banner?.thumbnails?.[0]?.url ||
+                      header?.banner?.thumbnails?.[0]?.url ||
                       header?.tv_banner?.thumbnails?.[0]?.url ||
                       header?.mobile_banner?.thumbnails?.[0]?.url ||
                       '';
 
-    console.log('[CHANNEL] Banner URL extracted:', bannerUrl);
-    console.log('[CHANNEL] Full header keys:', Object.keys(header || {}));
+    console.log('[CHANNEL] Extracted data:', {
+      name,
+      thumbnailUrl: thumbnailUrl?.substring(0, 50),
+      bannerUrl: bannerUrl?.substring(0, 50),
+    });
 
     return {
       channelId: channelId,
       handle: cleanHandle,
-      name: header?.author?.name || '',
-      description: header?.author?.description || '',
-      thumbnailUrl: header?.author?.best_thumbnail?.url || '',
+      name: name,
+      description: description,
+      thumbnailUrl: thumbnailUrl,
       bannerUrl: bannerUrl,
-      subscriberCount: header?.subscribers?.value || 0,
+      subscriberCount: metadata?.subscriber_count?.value || header?.subscribers?.value || 0,
       videoCount: 0, // Will be updated when fetching videos
     };
   } catch (error) {
