@@ -90,8 +90,8 @@ export async function getVideoTranscript(videoId: string): Promise<TranscriptSeg
       })
       .map((segment) => ({
         text: segment.text.trim(),
-        startTime: segment.offset,
-        duration: segment.duration,
+        startTime: segment.offset / 1000, // Convert milliseconds to seconds
+        duration: segment.duration / 1000, // Convert milliseconds to seconds
       }));
 
     console.log(`[TRANSCRIPT] Successfully processed ${result.length} segments for video ${videoId} (filtered from ${segments.length})`);
@@ -103,13 +103,9 @@ export async function getVideoTranscript(videoId: string): Promise<TranscriptSeg
 }
 
 export function formatTimestamp(seconds: number): string {
-  const hours = Math.floor(seconds / 3600);
-  const minutes = Math.floor((seconds % 3600) / 60);
+  const minutes = Math.floor(seconds / 60);
   const secs = Math.floor(seconds % 60);
 
-  if (hours > 0) {
-    return `${hours}:${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
-  }
   return `${minutes}:${secs.toString().padStart(2, '0')}`;
 }
 
