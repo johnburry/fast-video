@@ -73,6 +73,12 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    console.log('[IMPORT] Channel info:', {
+      name: channelInfo.name,
+      handle: channelInfo.handle,
+      bannerUrl: channelInfo.bannerUrl,
+    });
+
     // Check if channel already exists
     const { data: existingChannels } = await supabaseAdmin
       .from('channels')

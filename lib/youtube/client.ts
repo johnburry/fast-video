@@ -63,6 +63,9 @@ export async function getChannelByHandle(handle: string): Promise<YouTubeChannel
                       header?.mobile_banner?.thumbnails?.[0]?.url ||
                       '';
 
+    console.log('[CHANNEL] Banner URL extracted:', bannerUrl);
+    console.log('[CHANNEL] Full header keys:', Object.keys(header || {}));
+
     return {
       channelId: channelId,
       handle: cleanHandle,
