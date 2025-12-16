@@ -61,7 +61,10 @@ export default function AllChannelsPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="text-center">
             <p className="text-2xl md:text-4xl text-orange-500 font-bold mb-3 flex items-center justify-center gap-3">
-              <span>🔍</span>
+              <svg className="w-8 h-8 md:w-10 md:h-10" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="27" cy="27" r="12" stroke="currentColor" strokeWidth="4" fill="none"/>
+                <line x1="35" y1="35" x2="48" y2="48" stroke="currentColor" strokeWidth="4" strokeLinecap="round"/>
+              </svg>
               FAST VIDEO TRANSCRIPT SEARCH
             </p>
             <h1 className="text-3xl md:text-6xl font-black text-white mb-4">
