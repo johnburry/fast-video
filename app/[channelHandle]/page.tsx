@@ -354,11 +354,11 @@ export default function ChannelPage({
             </div>
           )}
 
-          {/* Recent Videos (shown when no search) */}
+          {/* All Videos (shown when no search) */}
           {!searchQuery && channelData?.recentVideos && (
             <div>
               <h2 className="text-2xl font-bold text-white mb-6">
-                Recent Videos
+                Videos ({channelData.recentVideos.length})
               </h2>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {channelData.recentVideos.map((video) => (

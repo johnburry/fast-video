@@ -30,13 +30,12 @@ export async function GET(
       );
     }
 
-    // Get video count and recent videos
+    // Get all videos for the channel
     const { data: videos, error: videosError } = await supabase
       .from('videos')
       .select('id, youtube_video_id, title, thumbnail_url, published_at, duration_seconds, view_count, has_transcript')
       .eq('channel_id', channel.id)
-      .order('published_at', { ascending: false })
-      .limit(12);
+      .order('published_at', { ascending: false });
 
     if (videosError) {
       console.error('Error fetching videos:', videosError);
