@@ -56,6 +56,8 @@ export default function ChannelPage({
   const [selectedVideo, setSelectedVideo] = useState<{
     youtubeVideoId: string;
     startTime?: number;
+    matchText?: string;
+    videoTitle?: string;
   } | null>(null);
 
   useEffect(() => {
@@ -118,8 +120,8 @@ export default function ChannelPage({
     }
   };
 
-  const openVideo = (youtubeVideoId: string, startTime?: number) => {
-    setSelectedVideo({ youtubeVideoId, startTime });
+  const openVideo = (youtubeVideoId: string, startTime?: number, matchText?: string, videoTitle?: string) => {
+    setSelectedVideo({ youtubeVideoId, startTime, matchText, videoTitle });
   };
 
   const resetSearch = () => {
@@ -308,7 +310,7 @@ export default function ChannelPage({
                             key={match.transcriptId}
                             className="border-l-4 border-blue-500 pl-4 py-2 hover:bg-gray-50 cursor-pointer transition-colors"
                             onClick={() =>
-                              openVideo(result.youtubeVideoId, match.startTime)
+                              openVideo(result.youtubeVideoId, match.startTime, match.text, result.title)
                             }
                           >
                             <div className="flex items-center gap-2 mb-1">
@@ -395,7 +397,7 @@ export default function ChannelPage({
           className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4"
           onClick={() => setSelectedVideo(null)}
         >
-          <div className="max-w-5xl w-full" onClick={(e) => e.stopPropagation()}>
+          <div className="max-w-7xl w-full" onClick={(e) => e.stopPropagation()}>
             <div className="flex justify-end mb-2">
               <button
                 onClick={() => setSelectedVideo(null)}
@@ -405,18 +407,46 @@ export default function ChannelPage({
                 Close
               </button>
             </div>
-            <div className="bg-white rounded-lg overflow-hidden">
-              <div className="aspect-video">
-                <iframe
-                  src={`https://www.youtube.com/embed/${selectedVideo.youtubeVideoId}${
-                    selectedVideo.startTime
-                      ? `?start=${Math.floor(selectedVideo.startTime)}`
-                      : ''
-                  }`}
-                  className="w-full h-full"
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                  allowFullScreen
-                />
+            <div className="flex gap-4">
+              {/* Context sidebar - only show if we have match text */}
+              {selectedVideo.matchText && (
+                <div className="w-80 bg-white rounded-lg p-4 flex-shrink-0">
+                  <h3 className="font-semibold text-gray-900 mb-2 text-sm">
+                    Playing from:
+                  </h3>
+                  {selectedVideo.videoTitle && (
+                    <p className="text-sm font-medium text-gray-700 mb-3">
+                      {selectedVideo.videoTitle}
+                    </p>
+                  )}
+                  <div className="border-l-4 border-blue-500 pl-3 py-2 bg-gray-50">
+                    <div className="flex items-center gap-2 mb-2">
+                      <span className="text-sm font-medium text-blue-600">
+                        {selectedVideo.startTime ? formatTimestamp(selectedVideo.startTime) : '0:00'}
+                      </span>
+                      <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+                      </svg>
+                      <span className="text-sm text-gray-600">Play from here</span>
+                    </div>
+                    <p className="text-sm text-gray-700">{selectedVideo.matchText}</p>
+                  </div>
+                </div>
+              )}
+              {/* Video player */}
+              <div className="flex-1 bg-white rounded-lg overflow-hidden">
+                <div className="aspect-video">
+                  <iframe
+                    src={`https://www.youtube.com/embed/${selectedVideo.youtubeVideoId}${
+                      selectedVideo.startTime
+                        ? `?start=${Math.floor(selectedVideo.startTime)}`
+                        : ''
+                    }`}
+                    className="w-full h-full"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowFullScreen
+                  />
+                </div>
               </div>
             </div>
           </div>
