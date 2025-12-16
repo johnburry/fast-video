@@ -179,7 +179,14 @@ export default function ChannelPage({
   }
 
   return (
-    <div className="min-h-screen bg-black">
+    <div className="min-h-screen bg-black relative">
+      {/* Invisible navigation button to all.fast.video */}
+      <a
+        href="https://all.fast.video"
+        className="fixed top-0 left-0 w-5 h-5 z-[100] opacity-0 hover:opacity-0"
+        aria-label="View all channels"
+      />
+
       {/* Back Button Bar (shown when search results exist) */}
       {searchResults.length > 0 && (
         <div
