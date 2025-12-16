@@ -237,11 +237,6 @@ export default function ChannelPage({
               </p>
             </div>
           </div>
-          {channelData?.channel.description && (
-            <p className="mt-4 text-gray-300 max-w-3xl">
-              {channelData.channel.description}
-            </p>
-          )}
         </div>
       </div>
 
