@@ -90,8 +90,8 @@ export async function getVideoTranscript(videoId: string): Promise<TranscriptSeg
       })
       .map((segment) => ({
         text: segment.text.trim(),
-        startTime: segment.offset, // supadata.ai already returns seconds
-        duration: segment.duration, // supadata.ai already returns seconds
+        startTime: segment.offset / 1000, // Convert milliseconds to seconds
+        duration: segment.duration / 1000, // Convert milliseconds to seconds
       }));
 
     console.log(`[TRANSCRIPT] Successfully processed ${result.length} segments for video ${videoId} (filtered from ${segments.length})`);
