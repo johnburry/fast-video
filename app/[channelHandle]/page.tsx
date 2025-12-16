@@ -291,12 +291,14 @@ export default function ChannelPage({
                 >
                   <div className="flex flex-col md:flex-row">
                     <div className="md:w-80 flex-shrink-0" style={{ backgroundColor: '#222529' }}>
-                      <img
-                        src={result.thumbnail}
-                        alt={result.title}
-                        className="w-full h-48 object-cover cursor-pointer hover:opacity-90 transition-opacity"
-                        onClick={() => openVideo(result.youtubeVideoId)}
-                      />
+                      <div className="relative w-full" style={{ paddingBottom: '56.25%' }}>
+                        <img
+                          src={result.thumbnail}
+                          alt={result.title}
+                          className="absolute top-0 left-0 w-full h-full object-contain cursor-pointer hover:opacity-90 transition-opacity"
+                          onClick={() => openVideo(result.youtubeVideoId)}
+                        />
+                      </div>
                     </div>
                     <div className="p-6 flex-1">
                       <h3
@@ -373,11 +375,13 @@ export default function ChannelPage({
                     className="bg-white rounded-lg shadow-md overflow-hidden cursor-pointer hover:shadow-lg transition-shadow"
                     onClick={() => openVideo(video.youtube_video_id)}
                   >
-                    <img
-                      src={video.thumbnail_url}
-                      alt={video.title}
-                      className="w-full h-48 object-cover"
-                    />
+                    <div className="relative w-full bg-black" style={{ paddingBottom: '56.25%' }}>
+                      <img
+                        src={video.thumbnail_url}
+                        alt={video.title}
+                        className="absolute top-0 left-0 w-full h-full object-contain"
+                      />
+                    </div>
                     <div className="p-4">
                       <h3 className="font-semibold text-gray-900 mb-2 line-clamp-2">
                         {video.title}
