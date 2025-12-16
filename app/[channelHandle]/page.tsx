@@ -99,6 +99,9 @@ export default function ChannelPage({
 
       const data = await response.json();
       setSearchResults(data.results);
+
+      // Scroll to top when search results are loaded
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Search failed');
     } finally {
