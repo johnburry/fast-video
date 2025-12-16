@@ -89,19 +89,19 @@ export default function AllChannelsPage() {
                   <Link
                     key={channel.id}
                     href={`https://${channel.handle}.fast.video`}
-                    className="bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-shadow cursor-pointer"
+                    className="bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-shadow cursor-pointer flex flex-col"
                   >
-                    <div className="p-6">
-                      <div className="flex items-center space-x-4 mb-4">
+                    <div className="p-6 flex flex-col flex-1">
+                      <div className="flex items-start space-x-4 mb-4">
                         {channel.thumbnail && (
                           <img
                             src={channel.thumbnail}
                             alt={channel.name}
-                            className="w-16 h-16 rounded-full"
+                            className="w-16 h-16 rounded-full flex-shrink-0"
                           />
                         )}
                         <div className="flex-1 min-w-0">
-                          <h3 className="text-xl font-bold text-gray-900 truncate">
+                          <h3 className="text-xl font-bold text-gray-900 line-clamp-3 mb-2" style={{ minHeight: '4.5rem' }}>
                             {channel.name}
                           </h3>
                           <p className="text-sm text-gray-600">
@@ -110,13 +110,15 @@ export default function AllChannelsPage() {
                         </div>
                       </div>
 
-                      {channel.description && (
-                        <p className="text-gray-700 text-sm mb-4 line-clamp-3">
-                          {channel.description}
-                        </p>
-                      )}
+                      <div className="flex-1 mb-4" style={{ minHeight: '4.5rem' }}>
+                        {channel.description && (
+                          <p className="text-gray-700 text-sm line-clamp-3">
+                            {channel.description}
+                          </p>
+                        )}
+                      </div>
 
-                      <div className="flex items-center justify-between text-sm text-gray-500">
+                      <div className="flex items-center justify-between text-sm text-gray-500 mt-auto">
                         <span>{channel.videoCount || 0} videos</span>
                         {channel.subscriberCount > 0 && (
                           <span>
