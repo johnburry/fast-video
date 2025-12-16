@@ -212,7 +212,7 @@ export default function ChannelPage({
 
       {/* Channel Header - only show when no search results */}
       {searchResults.length === 0 && (
-        <div style={{ backgroundColor: '#222529' }}>
+        <div style={{ backgroundColor: '#ffffff' }}>
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
             <div className="flex items-center space-x-4">
               {channelData?.channel.thumbnail && (
@@ -235,12 +235,13 @@ export default function ChannelPage({
                   <div>TRANSCRIPT SEARCH</div>
                 </div>
                 <h1
-                  className="text-2xl md:text-5xl font-black text-white cursor-pointer hover:text-blue-400 transition-colors"
+                  className="text-2xl md:text-5xl font-black cursor-pointer transition-colors"
+                  style={{ color: '#000000' }}
                   onClick={resetSearch}
                 >
                   {channelData?.channel.name}
                 </h1>
-                <p className="text-xs md:text-lg text-gray-300 mt-2 flex items-center gap-1 md:gap-2">
+                <p className="text-xs md:text-lg mt-2 flex items-center gap-1 md:gap-2" style={{ color: '#777777' }}>
                   <svg className="w-6 h-6" viewBox="0 0 24 24" fill="currentColor">
                     <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
                   </svg>
@@ -248,7 +249,7 @@ export default function ChannelPage({
                     href={`https://www.youtube.com/@${channelData?.channel.handle}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-gray-400 underline cursor-pointer hover:text-blue-400 transition-colors"
+                    className="underline cursor-pointer hover:text-blue-400 transition-colors"
                   >
                     YouTube Channel:
                   </a>
