@@ -155,7 +155,7 @@ export default function ChannelPage({
         <div
           style={{
             backgroundColor: '#165DFC',
-            paddingTop: 'max(env(safe-area-inset-top), 20px)',
+            paddingTop: 'calc(env(safe-area-inset-top) + 6px)',
             paddingBottom: '12px'
           }}
           className="sticky top-0 z-50"
