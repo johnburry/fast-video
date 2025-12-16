@@ -279,7 +279,7 @@ export default function ChannelPage({
 
           {/* Search Results */}
           {searchResults.length > 0 && (
-            <div className="space-y-6">
+            <div className="space-y-8">
               <h2 className="text-2xl font-bold text-white">
                 Search Results ({searchResults.length})
               </h2>
