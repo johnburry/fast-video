@@ -8,9 +8,13 @@ interface SupadataTranscriptSegment {
   text: string;
   offset: number;
   duration: number;
+  lang?: string;
 }
 
 interface SupadataTranscriptResponse {
+  content?: SupadataTranscriptSegment[];
+  lang?: string;
+  availableLangs?: string[];
   segments?: SupadataTranscriptSegment[];
   text?: string;
   language?: string;
@@ -62,18 +66,20 @@ export async function getVideoTranscript(videoId: string): Promise<TranscriptSeg
       return null;
     }
 
-    // Check if we have segments
-    if (!data.segments || data.segments.length === 0) {
+    // Check if we have content (supadata.ai uses 'content' array)
+    const segments = data.content || data.segments;
+    if (!segments || segments.length === 0) {
       console.log(`[TRANSCRIPT] No segments in response for video ${videoId}`);
+      console.log(`[TRANSCRIPT] data.content:`, data.content);
       console.log(`[TRANSCRIPT] data.segments:`, data.segments);
       return null;
     }
 
-    console.log(`[TRANSCRIPT] Got ${data.segments.length} transcript segments for video ${videoId}`);
+    console.log(`[TRANSCRIPT] Got ${segments.length} transcript segments for video ${videoId}`);
 
     // Convert from supadata.ai format to our format
     // Filter out segments with invalid data (empty text, null/NaN timing)
-    const result: TranscriptSegment[] = data.segments
+    const result: TranscriptSegment[] = segments
       .filter((segment) => {
         const text = segment.text?.trim();
         const offset = segment.offset;
@@ -88,7 +94,7 @@ export async function getVideoTranscript(videoId: string): Promise<TranscriptSeg
         duration: segment.duration,
       }));
 
-    console.log(`[TRANSCRIPT] Successfully processed ${result.length} segments for video ${videoId} (filtered from ${data.segments.length})`);
+    console.log(`[TRANSCRIPT] Successfully processed ${result.length} segments for video ${videoId} (filtered from ${segments.length})`);
     return result;
   } catch (error: any) {
     console.error(`[TRANSCRIPT] Error fetching transcript for video ${videoId}:`, error);

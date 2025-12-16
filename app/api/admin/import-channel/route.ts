@@ -135,8 +135,8 @@ export async function POST(request: NextRequest) {
     console.log(`Fetching videos for @${channelInfo.handle}...`);
     const allVideos = await getChannelVideos(channelInfo.channelId);
 
-    // Import first 100 videos, but only fetch transcripts for first 5
-    const videos = allVideos.slice(0, 100);
+    // Import first 50 videos, but only fetch transcripts for first 5
+    const videos = allVideos.slice(0, 50);
 
     console.log(`Found ${allVideos.length} videos, processing first ${videos.length} videos`);
 
