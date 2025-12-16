@@ -175,7 +175,7 @@ export default function ChannelPage({
       )}
 
       {/* Channel Header */}
-      <div style={{ backgroundColor: '#222529' }}>
+      <div style={{ backgroundColor: '#222529', paddingTop: searchResults.length > 0 ? '60px' : undefined }}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="flex items-center space-x-4">
             {channelData?.channel.thumbnail && (
