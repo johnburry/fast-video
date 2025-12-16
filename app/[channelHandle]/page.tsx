@@ -291,7 +291,11 @@ export default function ChannelPage({
                 Search Results ({searchResults.length})
               </h2>
 
-              {searchResults.map((result) => (
+              {searchResults.map((result) => {
+                // If there are transcript matches, use the first match's start time
+                const firstMatch = result.matches.length > 0 ? result.matches[0] : null;
+
+                return (
                 <div
                   key={result.videoId}
                   className="bg-white rounded-lg shadow-md overflow-hidden"
@@ -303,14 +307,20 @@ export default function ChannelPage({
                           src={result.thumbnail}
                           alt={result.title}
                           className="absolute top-0 left-0 w-full h-full object-contain cursor-pointer hover:opacity-90 transition-opacity"
-                          onClick={() => openVideo(result.youtubeVideoId)}
+                          onClick={() => firstMatch
+                            ? openVideo(result.youtubeVideoId, firstMatch.startTime, firstMatch.text, result.title)
+                            : openVideo(result.youtubeVideoId)
+                          }
                         />
                       </div>
                     </div>
                     <div className="p-6 flex-1">
                       <h3
                         className="text-xl font-semibold text-gray-900 mb-2 cursor-pointer hover:text-blue-600 transition-colors"
-                        onClick={() => openVideo(result.youtubeVideoId)}
+                        onClick={() => firstMatch
+                          ? openVideo(result.youtubeVideoId, firstMatch.startTime, firstMatch.text, result.title)
+                          : openVideo(result.youtubeVideoId)
+                        }
                       >
                         {result.title}
                       </h3>
@@ -356,7 +366,8 @@ export default function ChannelPage({
                     </div>
                   </div>
                 </div>
-              ))}
+                );
+              })}
             </div>
           )}
 
