@@ -51,6 +51,7 @@ export async function getVideoTranscript(videoId: string): Promise<TranscriptSeg
     }
 
     console.log(`[TRANSCRIPT] Got ${data.length} transcript segments for video ${videoId}`);
+    console.log(`[TRANSCRIPT] First segment structure:`, JSON.stringify(data[0], null, 2));
 
     // Convert from youtube-transcript.io format to our format
     const result: TranscriptSegment[] = data.map((segment) => ({
@@ -58,6 +59,8 @@ export async function getVideoTranscript(videoId: string): Promise<TranscriptSeg
       startTime: segment.start,
       duration: segment.duration,
     }));
+
+    console.log(`[TRANSCRIPT] First mapped segment:`, JSON.stringify(result[0], null, 2));
 
     console.log(`[TRANSCRIPT] Successfully processed ${result.length} segments for video ${videoId}`);
     return result;
