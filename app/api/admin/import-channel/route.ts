@@ -202,11 +202,11 @@ export async function POST(request: NextRequest) {
         }
 
         // Fetch and save transcript
-        console.log(`Fetching transcript for ${video.videoId} (${video.title})...`);
+        console.log(`[IMPORT] Fetching transcript for ${video.videoId} (${video.title})...`);
         const transcript = await getVideoTranscript(video.videoId);
 
         if (transcript && transcript.length > 0) {
-          console.log(`Saving ${transcript.length} transcript segments for ${video.videoId}...`);
+          console.log(`[IMPORT] Saving ${transcript.length} transcript segments for ${video.videoId}...`);
           // Save transcript segments
           const transcriptRecords = transcript.map((segment) => ({
             video_id: videoId,
@@ -220,8 +220,9 @@ export async function POST(request: NextRequest) {
             .insert(transcriptRecords);
 
           if (transcriptError) {
-            console.error(`Error saving transcript for video ${video.videoId}:`, transcriptError);
+            console.error(`[IMPORT] Error saving transcript for video ${video.videoId}:`, transcriptError);
           } else {
+            console.log(`[IMPORT] Successfully saved transcript for video ${video.videoId}`);
             // Update video to mark transcript as available
             await supabaseAdmin
               .from('videos')
@@ -234,7 +235,7 @@ export async function POST(request: NextRequest) {
             transcriptCount++;
           }
         } else {
-          console.log(`No transcript found for ${video.videoId}`);
+          console.log(`[IMPORT] No transcript found for ${video.videoId} - transcript was null or empty`);
         }
 
         processedCount++;

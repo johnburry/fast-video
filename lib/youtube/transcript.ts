@@ -8,7 +8,7 @@ export interface TranscriptSegment {
 
 export async function getVideoTranscript(videoId: string): Promise<TranscriptSegment[] | null> {
   try {
-    console.log(`Fetching transcript for video ${videoId}...`);
+    console.log(`[TRANSCRIPT] Fetching transcript for video ${videoId}...`);
 
     const youtube = await getYouTubeClient();
 
@@ -20,7 +20,7 @@ export async function getVideoTranscript(videoId: string): Promise<TranscriptSeg
       // If it's a type mismatch error, the video metadata has unexpected fields
       // but we can still try to get the transcript directly
       if (infoError.message?.includes('Type mismatch') || infoError.message?.includes('ExpandableMetadata')) {
-        console.log(`Type mismatch error for video ${videoId}, skipping...`);
+        console.log(`[TRANSCRIPT] Type mismatch error for video ${videoId}, skipping...`);
         return null;
       }
       throw infoError;
@@ -33,9 +33,10 @@ export async function getVideoTranscript(videoId: string): Promise<TranscriptSeg
     } catch (transcriptError: any) {
       // Handle cases where transcripts are not available
       if (transcriptError.message?.includes('400') || transcriptError.message?.includes('Precondition check failed')) {
-        console.log(`Transcript not available for video ${videoId} (precondition failed)`);
+        console.log(`[TRANSCRIPT] Transcript not available for video ${videoId} (precondition failed)`);
         return null;
       }
+      console.error(`[TRANSCRIPT] Unexpected error getting transcript for video ${videoId}:`, transcriptError);
       throw transcriptError;
     }
 
@@ -75,17 +76,20 @@ export async function getVideoTranscript(videoId: string): Promise<TranscriptSeg
       return null;
     }
 
-    console.log(`Got ${segments.length} transcript segments for video ${videoId}`);
-    console.log(`First segment keys: ${Object.keys(segments[0])}`);
-    console.log(`First segment: ${JSON.stringify(segments[0])}`);
+    console.log(`[TRANSCRIPT] Got ${segments.length} transcript segments for video ${videoId}`);
+    console.log(`[TRANSCRIPT] First segment keys: ${Object.keys(segments[0])}`);
+    console.log(`[TRANSCRIPT] First segment: ${JSON.stringify(segments[0])}`);
 
-    return segments.map((segment: any) => ({
+    const result = segments.map((segment: any) => ({
       text: segment.snippet?.text || '',
       startTime: parseFloat(segment.start_ms || '0') / 1000,
       duration: parseFloat(segment.end_ms || '0') / 1000 - parseFloat(segment.start_ms || '0') / 1000,
     }));
+
+    console.log(`[TRANSCRIPT] Successfully processed ${result.length} segments for video ${videoId}`);
+    return result;
   } catch (error) {
-    console.error(`Error fetching transcript for video ${videoId}:`, error);
+    console.error(`[TRANSCRIPT] Error fetching transcript for video ${videoId}:`, error);
     return null;
   }
 }
