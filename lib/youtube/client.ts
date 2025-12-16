@@ -63,15 +63,26 @@ export async function getChannelByHandle(handle: string): Promise<YouTubeChannel
     // Try to get metadata from channel.metadata (more reliable)
     const metadata = channel.metadata as any;
     console.log('[CHANNEL] Metadata keys:', Object.keys(metadata || {}));
+    console.log('[CHANNEL] Avatar:', JSON.stringify(metadata?.avatar));
+    console.log('[CHANNEL] Thumbnail:', JSON.stringify(metadata?.thumbnail));
 
     // Extract name and description
     const name = metadata?.title || header?.author?.name || '';
     const description = metadata?.description || header?.author?.description || '';
-    const thumbnailUrl = metadata?.avatar?.thumbnails?.[0]?.url ||
+
+    // Try multiple approaches for thumbnail
+    const thumbnailUrl = metadata?.avatar?.best_thumbnail?.url ||
+                         metadata?.avatar?.[0]?.url ||
+                         metadata?.thumbnail?.[0]?.url ||
                          header?.author?.best_thumbnail?.url || '';
+
+    // For banner, we need to check the header.content
+    console.log('[CHANNEL] Checking header.content for banner...');
+    const headerContent = header?.content as any;
 
     // Extract banner URL from multiple possible locations
     const bannerUrl = metadata?.banner?.thumbnails?.[0]?.url ||
+                      headerContent?.banner?.thumbnails?.[0]?.url ||
                       header?.banner?.thumbnails?.[0]?.url ||
                       header?.tv_banner?.thumbnails?.[0]?.url ||
                       header?.mobile_banner?.thumbnails?.[0]?.url ||
