@@ -1,44 +1,75 @@
-import { YoutubeTranscript } from 'youtube-transcript';
-
 export interface TranscriptSegment {
   text: string;
   startTime: number;
   duration: number;
 }
 
+interface YouTubeTranscriptIOResponse {
+  transcripts: Array<{
+    id: string;
+    title: string;
+    segments: Array<{
+      text: string;
+      start: number;
+      duration: number;
+    }>;
+  }>;
+}
+
 export async function getVideoTranscript(videoId: string): Promise<TranscriptSegment[] | null> {
   try {
     console.log(`[TRANSCRIPT] Fetching transcript for video ${videoId}...`);
 
-    // Use youtube-transcript library which is simpler and more reliable
-    // than youtubei.js for transcript fetching
-    const transcriptItems = await YoutubeTranscript.fetchTranscript(videoId);
-
-    if (!transcriptItems || transcriptItems.length === 0) {
-      console.log(`[TRANSCRIPT] No transcript items returned for video ${videoId}`);
+    const apiToken = process.env.YOUTUBE_TRANSCRIPT_API_TOKEN;
+    if (!apiToken) {
+      console.error('[TRANSCRIPT] YOUTUBE_TRANSCRIPT_API_TOKEN not set in environment');
       return null;
     }
 
-    console.log(`[TRANSCRIPT] Got ${transcriptItems.length} transcript items for video ${videoId}`);
+    // Use youtube-transcript.io commercial API
+    const response = await fetch('https://www.youtube-transcript.io/api/transcripts', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Basic ${apiToken}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        ids: [videoId],
+      }),
+    });
 
-    // Convert from youtube-transcript format to our format
-    const result: TranscriptSegment[] = transcriptItems.map((item: any) => ({
-      text: item.text || '',
-      startTime: item.offset / 1000, // Convert milliseconds to seconds
-      duration: item.duration / 1000, // Convert milliseconds to seconds
+    if (!response.ok) {
+      console.error(`[TRANSCRIPT] API request failed with status ${response.status}: ${response.statusText}`);
+      const errorText = await response.text();
+      console.error(`[TRANSCRIPT] Error response: ${errorText}`);
+      return null;
+    }
+
+    const data: YouTubeTranscriptIOResponse = await response.json();
+
+    if (!data.transcripts || data.transcripts.length === 0) {
+      console.log(`[TRANSCRIPT] No transcripts returned for video ${videoId}`);
+      return null;
+    }
+
+    const transcript = data.transcripts[0];
+    if (!transcript.segments || transcript.segments.length === 0) {
+      console.log(`[TRANSCRIPT] No segments in transcript for video ${videoId}`);
+      return null;
+    }
+
+    console.log(`[TRANSCRIPT] Got ${transcript.segments.length} transcript segments for video ${videoId}`);
+
+    // Convert from youtube-transcript.io format to our format
+    const result: TranscriptSegment[] = transcript.segments.map((segment) => ({
+      text: segment.text || '',
+      startTime: segment.start,
+      duration: segment.duration,
     }));
 
     console.log(`[TRANSCRIPT] Successfully processed ${result.length} segments for video ${videoId}`);
     return result;
   } catch (error: any) {
-    // Handle cases where transcripts are not available
-    if (error.message?.includes('Could not find captions') ||
-        error.message?.includes('Transcript is disabled') ||
-        error.message?.includes('No transcripts available')) {
-      console.log(`[TRANSCRIPT] Transcript not available for video ${videoId}: ${error.message}`);
-      return null;
-    }
-
     console.error(`[TRANSCRIPT] Error fetching transcript for video ${videoId}:`, error);
     return null;
   }
