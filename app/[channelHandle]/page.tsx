@@ -402,10 +402,10 @@ export default function ChannelPage({
                 Close
               </button>
             </div>
-            <div className="flex gap-4">
+            <div className="flex flex-col md:flex-row gap-4">
               {/* Context sidebar - only show if we have match text */}
               {selectedVideo.matchText && (
-                <div className="w-80 bg-white rounded-lg p-4 flex-shrink-0">
+                <div className="w-full md:w-80 bg-white rounded-lg p-4 flex-shrink-0">
                   <h3 className="font-semibold text-gray-900 mb-2 text-sm">
                     Playing from:
                   </h3>
