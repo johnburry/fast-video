@@ -42,11 +42,13 @@ export async function getVideoTranscript(videoId: string): Promise<TranscriptSeg
       return null;
     }
 
-    const data: YouTubeTranscriptIOResponse = await response.json();
+    const data = await response.json();
+
+    console.log(`[TRANSCRIPT] Raw API response for video ${videoId}:`, JSON.stringify(data).substring(0, 500));
 
     // The API returns an array of segments directly
     if (!data || !Array.isArray(data) || data.length === 0) {
-      console.log(`[TRANSCRIPT] No segments in response for video ${videoId}`);
+      console.log(`[TRANSCRIPT] No segments in response for video ${videoId}, response type: ${typeof data}, isArray: ${Array.isArray(data)}`);
       return null;
     }
 
