@@ -125,9 +125,12 @@ export async function POST(request: NextRequest) {
 
     // Fetch videos from YouTube
     console.log(`Fetching videos for @${channelInfo.handle}...`);
-    const videos = await getChannelVideos(channelInfo.channelId);
+    const allVideos = await getChannelVideos(channelInfo.channelId);
 
-    console.log(`Found ${videos.length} videos`);
+    // Limit to first 5 videos for testing
+    const videos = allVideos.slice(0, 5);
+
+    console.log(`Found ${allVideos.length} videos, processing first ${videos.length} videos`);
 
     // Update channel video count
     await supabaseAdmin
