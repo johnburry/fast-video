@@ -149,12 +149,11 @@ export default function ChannelPage({
     <div className="min-h-screen bg-black">
       {/* Back Button Bar (shown when search results exist) */}
       {searchResults.length > 0 && (
-        <div style={{ backgroundColor: '#1a1d21' }} className="border-b border-gray-700">
+        <div style={{ backgroundColor: '#165DFC' }}>
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
             <button
               onClick={resetSearch}
-              className="flex items-center gap-2 hover:opacity-80 transition-opacity font-medium"
-              style={{ color: '#165DFC' }}
+              className="flex items-center gap-2 hover:opacity-80 transition-opacity font-medium text-white"
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
