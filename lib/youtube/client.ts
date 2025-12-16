@@ -15,6 +15,7 @@ export interface YouTubeChannelInfo {
   name: string;
   description: string;
   thumbnailUrl: string;
+  bannerUrl: string;
   subscriberCount: number;
   videoCount: number;
 }
@@ -56,12 +57,19 @@ export async function getChannelByHandle(handle: string): Promise<YouTubeChannel
     // Type guard for channel header
     const header = channel.header as any;
 
+    // Extract banner URL from header
+    const bannerUrl = header?.banner?.thumbnails?.[0]?.url ||
+                      header?.tv_banner?.thumbnails?.[0]?.url ||
+                      header?.mobile_banner?.thumbnails?.[0]?.url ||
+                      '';
+
     return {
       channelId: channelId,
       handle: cleanHandle,
       name: header?.author?.name || '',
       description: header?.author?.description || '',
       thumbnailUrl: header?.author?.best_thumbnail?.url || '',
+      bannerUrl: bannerUrl,
       subscriberCount: header?.subscribers?.value || 0,
       videoCount: 0, // Will be updated when fetching videos
     };

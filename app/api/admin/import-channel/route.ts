@@ -92,6 +92,7 @@ export async function POST(request: NextRequest) {
           channel_name: channelInfo.name,
           channel_description: channelInfo.description,
           thumbnail_url: channelInfo.thumbnailUrl,
+          banner_url: channelInfo.bannerUrl,
           subscriber_count: channelInfo.subscriberCount,
           last_synced_at: new Date().toISOString(),
         })
@@ -106,6 +107,7 @@ export async function POST(request: NextRequest) {
           channel_name: channelInfo.name,
           channel_description: channelInfo.description,
           thumbnail_url: channelInfo.thumbnailUrl,
+          banner_url: channelInfo.bannerUrl,
           subscriber_count: channelInfo.subscriberCount,
           last_synced_at: new Date().toISOString(),
         })

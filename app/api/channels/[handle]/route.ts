@@ -50,6 +50,7 @@ export async function GET(
         name: channel.channel_name,
         description: channel.channel_description,
         thumbnail: channel.thumbnail_url,
+        bannerUrl: channel.banner_url,
         subscriberCount: channel.subscriber_count,
         videoCount: channel.video_count,
         lastSynced: channel.last_synced_at,
