@@ -51,6 +51,7 @@ export default function ChannelPage({
   const [loading, setLoading] = useState(false);
   const [channelLoading, setChannelLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [hasSearched, setHasSearched] = useState(false);
   const [selectedVideo, setSelectedVideo] = useState<{
     youtubeVideoId: string;
     startTime?: number;
@@ -87,6 +88,7 @@ export default function ChannelPage({
 
     setLoading(true);
     setError(null);
+    setHasSearched(true);
 
     try {
       const response = await fetch(
@@ -116,6 +118,7 @@ export default function ChannelPage({
   const resetSearch = () => {
     setSearchQuery('');
     setSearchResults([]);
+    setHasSearched(false);
   };
 
   if (channelLoading) {
@@ -307,7 +310,7 @@ export default function ChannelPage({
           )}
 
           {/* No Results */}
-          {searchQuery && searchResults.length === 0 && !loading && (
+          {hasSearched && searchResults.length === 0 && !loading && (
             <div className="text-center py-12">
               <p className="text-white text-lg">
                 No results found for "{searchQuery}"
