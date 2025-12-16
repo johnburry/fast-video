@@ -289,7 +289,7 @@ export default function ChannelPage({
                   className="bg-white rounded-lg shadow-md overflow-hidden"
                 >
                   <div className="flex flex-col md:flex-row">
-                    <div className="md:w-80 flex-shrink-0">
+                    <div className="md:w-80 flex-shrink-0" style={{ backgroundColor: '#222529' }}>
                       <img
                         src={result.thumbnail}
                         alt={result.title}
