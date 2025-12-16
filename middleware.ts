@@ -27,6 +27,11 @@ export function middleware(request: NextRequest) {
     }
   }
 
+  // If no subdomain and we're on the root path (bare domain), redirect to reorbit.com
+  if (!subdomain && url.pathname === '/' && !hostname.includes('localhost')) {
+    return NextResponse.redirect('https://reorbit.com')
+  }
+
   // If we have a subdomain and we're on the root path, rewrite to /{subdomain}
   if (subdomain && url.pathname === '/') {
     url.pathname = `/${subdomain}`
