@@ -159,12 +159,21 @@ export default function ChannelPage({
               />
             )}
             <div>
-              <h1
-                className="text-5xl font-sans text-gray-900 cursor-pointer hover:text-blue-600 transition-colors"
-                onClick={resetSearch}
-              >
-                {channelData?.channel.name}
-              </h1>
+              <div className="text-5xl font-sans text-gray-900">
+                <span className="text-gray-500">YouTube Channel: </span>
+                <a
+                  href={`https://www.youtube.com/@${channelData?.channel.handle}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="cursor-pointer hover:text-blue-600 transition-colors"
+                  onClick={(e) => {
+                    // Allow link to open, but also reset search
+                    resetSearch();
+                  }}
+                >
+                  {channelData?.channel.name}
+                </a>
+              </div>
               <p className="text-lg text-gray-600 mt-2">@{channelData?.channel.handle}</p>
               <p className="text-sm text-gray-500 mt-1">
                 {channelData?.channel.videoCount} videos
