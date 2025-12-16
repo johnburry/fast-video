@@ -101,32 +101,43 @@ export default function AdminPage() {
 
           {result && (
             <div className="mt-8 p-6 bg-green-50 border border-green-200 rounded-lg">
-              <h2 className="text-green-800 font-bold text-lg mb-4">
-                Import Successful!
-              </h2>
-              <div className="space-y-2 text-sm">
-                <p className="text-gray-700">
-                  <span className="font-medium">Channel:</span> {result.channel.name}
-                </p>
-                <p className="text-gray-700">
-                  <span className="font-medium">Handle:</span> @{result.channel.handle}
-                </p>
-                <p className="text-gray-700">
-                  <span className="font-medium">Videos Processed:</span>{' '}
-                  {result.videosProcessed}
-                </p>
-                <p className="text-gray-700">
-                  <span className="font-medium">Transcripts Downloaded:</span>{' '}
-                  {result.transcriptsDownloaded}
-                </p>
-              </div>
-              <div className="mt-4 pt-4 border-t border-green-200">
-                <a
-                  href={`/${result.channel.handle}`}
-                  className="text-blue-600 hover:text-blue-800 font-medium"
-                >
-                  View channel page →
-                </a>
+              <div className="flex items-start gap-4">
+                {result.channel.thumbnailUrl && (
+                  <img
+                    src={result.channel.thumbnailUrl}
+                    alt={result.channel.name}
+                    className="w-[150px] h-[150px] rounded-lg object-cover flex-shrink-0"
+                  />
+                )}
+                <div className="flex-1">
+                  <h2 className="text-green-800 font-bold text-lg mb-4">
+                    Import Successful!
+                  </h2>
+                  <div className="space-y-2 text-sm">
+                    <p className="text-gray-700">
+                      <span className="font-medium">Channel:</span> {result.channel.name}
+                    </p>
+                    <p className="text-gray-700">
+                      <span className="font-medium">Handle:</span> @{result.channel.handle}
+                    </p>
+                    <p className="text-gray-700">
+                      <span className="font-medium">Videos Processed:</span>{' '}
+                      {result.videosProcessed}
+                    </p>
+                    <p className="text-gray-700">
+                      <span className="font-medium">Transcripts Downloaded:</span>{' '}
+                      {result.transcriptsDownloaded}
+                    </p>
+                  </div>
+                  <div className="mt-4 pt-4 border-t border-green-200">
+                    <a
+                      href={`/${result.channel.handle}`}
+                      className="text-blue-600 hover:text-blue-800 font-medium"
+                    >
+                      View channel page →
+                    </a>
+                  </div>
+                </div>
               </div>
             </div>
           )}
