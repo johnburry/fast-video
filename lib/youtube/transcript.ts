@@ -11,11 +11,13 @@ interface YouTubeTranscriptIOSegment {
 }
 
 interface YouTubeTranscriptIOResponse {
-  text?: string;
-  id?: string;
-  tracks?: Array<{
-    language: string;
-    transcript: YouTubeTranscriptIOSegment[];
+  success?: Array<{
+    text?: string;
+    id?: string;
+    tracks?: Array<{
+      language: string;
+      transcript: YouTubeTranscriptIOSegment[];
+    }>;
   }>;
 }
 
@@ -29,8 +31,8 @@ export async function getVideoTranscript(videoId: string): Promise<TranscriptSeg
       return null;
     }
 
-    // Use youtube-transcript.io commercial API
-    const response = await fetch('https://www.youtube-transcript.io/api/transcripts', {
+    // Use youtube-transcript.io commercial API v2
+    const response = await fetch('https://www.youtube-transcript.io/api/transcripts/v2', {
       method: 'POST',
       headers: {
         'Authorization': `Basic ${apiToken}`,
@@ -50,13 +52,19 @@ export async function getVideoTranscript(videoId: string): Promise<TranscriptSeg
 
     const data: YouTubeTranscriptIOResponse = await response.json();
 
-    // The API returns an object with tracks array containing transcript segments
-    if (!data.tracks || data.tracks.length === 0) {
+    // The v2 API returns {success: [{tracks: [...]}]}
+    if (!data.success || data.success.length === 0) {
+      console.log(`[TRANSCRIPT] No success array in response for video ${videoId}`);
+      return null;
+    }
+
+    const videoData = data.success[0];
+    if (!videoData.tracks || videoData.tracks.length === 0) {
       console.log(`[TRANSCRIPT] No tracks in response for video ${videoId}`);
       return null;
     }
 
-    const track = data.tracks[0]; // Use first track (usually English)
+    const track = videoData.tracks[0]; // Use first track (usually English)
     if (!track.transcript || track.transcript.length === 0) {
       console.log(`[TRANSCRIPT] No transcript segments in track for video ${videoId}`);
       return null;
