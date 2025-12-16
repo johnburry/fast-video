@@ -62,48 +62,22 @@ export async function getChannelByHandle(handle: string): Promise<YouTubeChannel
 
     // Try to get metadata from channel.metadata (more reliable)
     const metadata = channel.metadata as any;
-    console.log('[CHANNEL] Metadata keys:', Object.keys(metadata || {}));
-    console.log('[CHANNEL] Avatar:', JSON.stringify(metadata?.avatar));
-    console.log('[CHANNEL] Thumbnail:', JSON.stringify(metadata?.thumbnail));
-
     // Extract name and description
     const name = metadata?.title || header?.author?.name || '';
     const description = metadata?.description || header?.author?.description || '';
 
     // Try multiple approaches for thumbnail
-    const thumbnailUrl = metadata?.avatar?.best_thumbnail?.url ||
-                         metadata?.avatar?.[0]?.url ||
+    const thumbnailUrl = metadata?.avatar?.[0]?.url ||
                          metadata?.thumbnail?.[0]?.url ||
                          header?.author?.best_thumbnail?.url || '';
 
-    // For banner, we need to check the header.content
-    console.log('[CHANNEL] Checking header.content for banner...');
-    const headerContent = header?.content as any;
-
-    if (headerContent) {
-      console.log('[CHANNEL] Header content type:', headerContent?.type);
-      console.log('[CHANNEL] Header content keys:', Object.keys(headerContent || {}));
-
-      // Check if there's a banner in the content
-      if (headerContent?.banner) {
-        console.log('[CHANNEL] Found banner in content:', JSON.stringify(headerContent.banner).substring(0, 200));
-      }
-    }
-
-    // Extract banner URL from multiple possible locations
-    // Try to get the largest banner available
-    const bannerUrl = metadata?.banner?.thumbnails?.[0]?.url ||
-                      headerContent?.banner?.image?.thumbnails?.[headerContent?.banner?.image?.thumbnails?.length - 1]?.url ||
-                      headerContent?.banner?.thumbnails?.[0]?.url ||
-                      header?.banner?.thumbnails?.[0]?.url ||
-                      header?.tv_banner?.thumbnails?.[0]?.url ||
-                      header?.mobile_banner?.thumbnails?.[0]?.url ||
-                      '';
+    // Create banner URL from thumbnail by changing size parameter from s200 to s500
+    const bannerUrl = thumbnailUrl ? thumbnailUrl.replace(/=s\d+/g, '=s500') : '';
 
     console.log('[CHANNEL] Extracted data:', {
       name,
-      thumbnailUrl: thumbnailUrl?.substring(0, 50),
-      bannerUrl: bannerUrl?.substring(0, 50),
+      thumbnailUrl,
+      bannerUrl,
     });
 
     return {
