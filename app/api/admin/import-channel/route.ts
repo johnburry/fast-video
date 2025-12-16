@@ -127,8 +127,8 @@ export async function POST(request: NextRequest) {
     console.log(`Fetching videos for @${channelInfo.handle}...`);
     const allVideos = await getChannelVideos(channelInfo.channelId);
 
-    // Limit to first 5 videos for testing
-    const videos = allVideos.slice(0, 5);
+    // Import first 100 videos, but only fetch transcripts for first 5
+    const videos = allVideos.slice(0, 100);
 
     console.log(`Found ${allVideos.length} videos, processing first ${videos.length} videos`);
 
@@ -204,41 +204,45 @@ export async function POST(request: NextRequest) {
           videoId = newVideo.id;
         }
 
-        // Fetch and save transcript
-        console.log(`[IMPORT] Fetching transcript for ${video.videoId} (${video.title})...`);
-        const transcript = await getVideoTranscript(video.videoId);
+        // Fetch and save transcript (only for first 5 videos)
+        if (processedCount < 5) {
+          console.log(`[IMPORT] Fetching transcript for ${video.videoId} (${video.title})...`);
+          const transcript = await getVideoTranscript(video.videoId);
 
-        if (transcript && transcript.length > 0) {
-          console.log(`[IMPORT] Saving ${transcript.length} transcript segments for ${video.videoId}...`);
-          // Save transcript segments
-          const transcriptRecords = transcript.map((segment) => ({
-            video_id: videoId,
-            text: segment.text,
-            start_time: segment.startTime,
-            duration: segment.duration,
-          }));
+          if (transcript && transcript.length > 0) {
+            console.log(`[IMPORT] Saving ${transcript.length} transcript segments for ${video.videoId}...`);
+            // Save transcript segments
+            const transcriptRecords = transcript.map((segment) => ({
+              video_id: videoId,
+              text: segment.text,
+              start_time: segment.startTime,
+              duration: segment.duration,
+            }));
 
-          const { error: transcriptError } = await supabaseAdmin
-            .from('transcripts')
-            .insert(transcriptRecords);
+            const { error: transcriptError } = await supabaseAdmin
+              .from('transcripts')
+              .insert(transcriptRecords);
 
-          if (transcriptError) {
-            console.error(`[IMPORT] Error saving transcript for video ${video.videoId}:`, transcriptError);
+            if (transcriptError) {
+              console.error(`[IMPORT] Error saving transcript for video ${video.videoId}:`, transcriptError);
+            } else {
+              console.log(`[IMPORT] Successfully saved transcript for video ${video.videoId}`);
+              // Update video to mark transcript as available
+              await supabaseAdmin
+                .from('videos')
+                .update({
+                  has_transcript: true,
+                  transcript_language: 'en',
+                })
+                .eq('id', videoId);
+
+              transcriptCount++;
+            }
           } else {
-            console.log(`[IMPORT] Successfully saved transcript for video ${video.videoId}`);
-            // Update video to mark transcript as available
-            await supabaseAdmin
-              .from('videos')
-              .update({
-                has_transcript: true,
-                transcript_language: 'en',
-              })
-              .eq('id', videoId);
-
-            transcriptCount++;
+            console.log(`[IMPORT] No transcript found for ${video.videoId} - transcript was null or empty`);
           }
         } else {
-          console.log(`[IMPORT] No transcript found for ${video.videoId} - transcript was null or empty`);
+          console.log(`[IMPORT] Skipping transcript fetch for ${video.videoId} (only fetching first 5)`);
         }
 
         processedCount++;
