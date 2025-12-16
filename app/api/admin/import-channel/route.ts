@@ -4,6 +4,54 @@ import { getChannelByHandle, getChannelVideos } from '@/lib/youtube/client';
 import { getVideoTranscript } from '@/lib/youtube/transcript';
 import type { Database } from '@/lib/supabase/database.types';
 
+// Parse relative time strings like "5 days ago" to ISO timestamp
+function parseRelativeTime(relativeTime: string): string | null {
+  if (!relativeTime) return null;
+
+  const now = new Date();
+  const match = relativeTime.match(/(\d+)\s+(second|minute|hour|day|week|month|year)s?\s+ago/i);
+
+  if (!match) {
+    // Try to parse as ISO date
+    const date = new Date(relativeTime);
+    if (!isNaN(date.getTime())) {
+      return date.toISOString();
+    }
+    return null;
+  }
+
+  const amount = parseInt(match[1], 10);
+  const unit = match[2].toLowerCase();
+
+  switch (unit) {
+    case 'second':
+      now.setSeconds(now.getSeconds() - amount);
+      break;
+    case 'minute':
+      now.setMinutes(now.getMinutes() - amount);
+      break;
+    case 'hour':
+      now.setHours(now.getHours() - amount);
+      break;
+    case 'day':
+      now.setDate(now.getDate() - amount);
+      break;
+    case 'week':
+      now.setDate(now.getDate() - amount * 7);
+      break;
+    case 'month':
+      now.setMonth(now.getMonth() - amount);
+      break;
+    case 'year':
+      now.setFullYear(now.getFullYear() - amount);
+      break;
+    default:
+      return null;
+  }
+
+  return now.toISOString();
+}
+
 export async function POST(request: NextRequest) {
   try {
     const { channelHandle } = await request.json();
@@ -127,6 +175,7 @@ export async function POST(request: NextRequest) {
             .eq('id', videoId);
         } else {
           // Create new video
+          const publishedAt = parseRelativeTime(video.publishedAt);
           const { data: newVideo, error: videoError } = await supabaseAdmin
             .from('videos')
             .insert({
@@ -136,7 +185,7 @@ export async function POST(request: NextRequest) {
               description: video.description,
               thumbnail_url: video.thumbnailUrl,
               duration_seconds: video.durationSeconds,
-              published_at: video.publishedAt,
+              published_at: publishedAt,
               view_count: video.viewCount,
               like_count: video.likeCount,
               comment_count: video.commentCount,
