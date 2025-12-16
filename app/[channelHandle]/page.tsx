@@ -330,28 +330,29 @@ export default function ChannelPage({
           className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4"
           onClick={() => setSelectedVideo(null)}
         >
-          <div
-            className="bg-white rounded-lg overflow-hidden max-w-5xl w-full relative"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <button
-              onClick={() => setSelectedVideo(null)}
-              className="absolute top-0 right-0 px-6 py-2 text-white rounded-tl-lg z-10 hover:opacity-80 transition-opacity"
-              style={{ backgroundColor: '#165DFC' }}
-            >
-              Close
-            </button>
-            <div className="aspect-video">
-              <iframe
-                src={`https://www.youtube.com/embed/${selectedVideo.youtubeVideoId}${
-                  selectedVideo.startTime
-                    ? `?start=${Math.floor(selectedVideo.startTime)}`
-                    : ''
-                }`}
-                className="w-full h-full"
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                allowFullScreen
-              />
+          <div className="max-w-5xl w-full" onClick={(e) => e.stopPropagation()}>
+            <div className="flex justify-end mb-2">
+              <button
+                onClick={() => setSelectedVideo(null)}
+                className="px-6 py-2 text-white rounded-lg hover:opacity-80 transition-opacity"
+                style={{ backgroundColor: '#165DFC' }}
+              >
+                Close
+              </button>
+            </div>
+            <div className="bg-white rounded-lg overflow-hidden">
+              <div className="aspect-video">
+                <iframe
+                  src={`https://www.youtube.com/embed/${selectedVideo.youtubeVideoId}${
+                    selectedVideo.startTime
+                      ? `?start=${Math.floor(selectedVideo.startTime)}`
+                      : ''
+                  }`}
+                  className="w-full h-full"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowFullScreen
+                />
+              </div>
             </div>
           </div>
         </div>
