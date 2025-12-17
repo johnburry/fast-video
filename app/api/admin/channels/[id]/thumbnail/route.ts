@@ -57,10 +57,11 @@ export async function POST(
 
     await s3Client.send(uploadCommand);
 
-    // Construct R2 URL
+    // Construct R2 URL with cache-busting timestamp
     const PUBLIC_URL = process.env.R2_PUBLIC_URL || '';
     const baseUrl = PUBLIC_URL.endsWith('/') ? PUBLIC_URL.slice(0, -1) : PUBLIC_URL;
-    const r2Url = `${baseUrl}/${key}`;
+    const timestamp = Date.now();
+    const r2Url = `${baseUrl}/${key}?v=${timestamp}`;
 
     // Update channel with new thumbnail URL and banner URL (use same image for both)
     const { error: updateError } = await supabaseAdmin
