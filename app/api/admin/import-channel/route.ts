@@ -151,31 +151,53 @@ export async function POST(request: NextRequest) {
         console.log(`Fetching videos for @${channelInfo.handle}...`);
         const allVideos = await getChannelVideos(channelInfo.channelId);
 
-        // Import videos up to the specified limit
-        const videos = allVideos.slice(0, videoLimit);
+        // Fetch all existing video IDs for this channel to avoid re-importing
+        sendProgress({ type: 'status', message: 'Checking for existing videos...' });
+        const { data: existingVideos } = await supabaseAdmin
+          .from('videos')
+          .select('youtube_video_id, has_transcript')
+          .eq('channel_id', channelId);
 
-        console.log(`Found ${allVideos.length} videos, processing first ${videos.length} videos (limit: ${videoLimit})`);
+        const existingVideoMap = new Map(
+          (existingVideos || []).map(v => [v.youtube_video_id, v.has_transcript])
+        );
+
+        console.log(`Found ${existingVideoMap.size} existing videos in database`);
+
+        // Filter out videos that already exist with transcripts
+        const newVideos = allVideos.filter(v => !existingVideoMap.has(v.videoId));
+        const videosWithoutTranscripts = allVideos.filter(v =>
+          existingVideoMap.has(v.videoId) && !existingVideoMap.get(v.videoId)
+        );
+
+        // Combine new videos and videos needing transcripts, up to the limit
+        const videosToProcess = [...newVideos, ...videosWithoutTranscripts].slice(0, videoLimit);
+
+        console.log(`Found ${allVideos.length} total videos, ${newVideos.length} new, ${videosWithoutTranscripts.length} need transcripts`);
+        console.log(`Processing ${videosToProcess.length} videos (limit: ${videoLimit})`);
+
         sendProgress({
           type: 'status',
-          message: `Found ${videos.length} videos. Starting import...`
+          message: `Found ${newVideos.length} new videos and ${videosWithoutTranscripts.length} videos needing transcripts. Starting import...`
         });
 
-    // Update channel video count
+    // Update channel video count with actual total
     await supabaseAdmin
       .from('channels')
-      .update({ video_count: videos.length })
+      .update({ video_count: allVideos.length })
       .eq('id', channelId);
 
     let processedCount = 0;
     let transcriptCount = 0;
+    let skippedCount = 0;
 
         // Process each video
-        for (const video of videos) {
+        for (const video of videosToProcess) {
           try {
             sendProgress({
               type: 'progress',
               current: processedCount + 1,
-              total: videos.length,
+              total: videosToProcess.length,
               videoTitle: video.title,
             });
 
@@ -184,28 +206,26 @@ export async function POST(request: NextRequest) {
               video.videoId,
               video.thumbnailUrl
             );
-        // Check if video already exists
-        const { data: existingVideos } = await supabaseAdmin
-          .from('videos')
-          .select('id, has_transcript')
-          .eq('youtube_video_id', video.videoId)
-          .limit(1);
 
         let videoId: string;
+        const videoExists = existingVideoMap.has(video.videoId);
 
-        if (existingVideos && existingVideos.length > 0) {
-          // @ts-ignore - Supabase type inference issue
-          videoId = existingVideos[0].id;
+        if (videoExists) {
+          // Video exists, get its ID and update metadata (but don't re-fetch transcript)
+          const { data: existingVideo } = await supabaseAdmin
+            .from('videos')
+            .select('id')
+            .eq('youtube_video_id', video.videoId)
+            .single();
 
-          // Skip if transcript already exists
-          // @ts-ignore - Supabase type inference issue
-          if (existingVideos[0].has_transcript) {
-            processedCount++;
-            transcriptCount++;
+          if (!existingVideo) {
+            console.error(`Video ${video.videoId} marked as existing but not found in DB`);
             continue;
           }
 
-          // Update video info
+          videoId = existingVideo.id;
+
+          // Update video metadata
           await supabaseAdmin
             .from('videos')
             .update({
@@ -244,7 +264,16 @@ export async function POST(request: NextRequest) {
           videoId = newVideo.id;
         }
 
-        // Fetch and save transcript for all videos
+        // Only fetch transcript if video doesn't have one
+        const hasTranscript = existingVideoMap.get(video.videoId) || false;
+        if (hasTranscript) {
+          console.log(`[IMPORT] Skipping transcript for ${video.videoId} - already exists`);
+          processedCount++;
+          skippedCount++;
+          continue;
+        }
+
+        // Fetch and save transcript
         console.log(`[IMPORT] Fetching transcript for ${video.videoId} (${video.title})...`);
         const transcript = await getVideoTranscript(video.videoId);
 
@@ -282,7 +311,7 @@ export async function POST(request: NextRequest) {
         }
 
             processedCount++;
-            console.log(`Processed ${processedCount}/${videos.length} videos`);
+            console.log(`Processed ${processedCount}/${videosToProcess.length} videos`);
           } catch (error) {
             console.error(`Error processing video ${video.videoId}:`, error);
           }
@@ -293,6 +322,7 @@ export async function POST(request: NextRequest) {
           channel: channelInfo,
           videosProcessed: processedCount,
           transcriptsDownloaded: transcriptCount,
+          skippedExisting: skippedCount,
         });
 
         controller.close();
