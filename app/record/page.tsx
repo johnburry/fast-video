@@ -199,10 +199,15 @@ export default function RecordPage() {
       <div className="max-w-4xl mx-auto p-8">
         <div className="mb-8">
           <h1 className="text-4xl font-bold mb-2 flex items-center gap-3">
-            <svg className="w-10 h-10" viewBox="0 0 24 24" fill="#FF0000">
+            <svg className="w-10 h-10 flex-shrink-0" viewBox="0 0 24 24" fill="#FF0000">
               <path d="M17 10.5V7c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1v10c0 .55.45 1 1 1h12c.55 0 1-.45 1-1v-3.5l4 4v-11l-4 4z"/>
             </svg>
-            Record a Fast Video
+            <span className="hidden md:inline">
+              Record a Fast Video
+            </span>
+            <span className="md:hidden inline">
+              Record a<br />Fast Video
+            </span>
           </h1>
           {channelName && (
             <p className="text-gray-400">
