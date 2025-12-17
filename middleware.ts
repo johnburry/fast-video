@@ -43,8 +43,8 @@ export function middleware(request: NextRequest) {
       return NextResponse.next()
     }
 
-    // Allow /admin and /api to pass through without subdomain prefix
-    if (url.pathname.startsWith('/admin') || url.pathname.startsWith('/api')) {
+    // Allow /admin, /api, and /record to pass through without subdomain prefix
+    if (url.pathname.startsWith('/admin') || url.pathname.startsWith('/api') || url.pathname.startsWith('/record')) {
       return NextResponse.next()
     }
 
