@@ -39,10 +39,11 @@ export async function generateMetadata({
       description,
       icons: {
         icon: [
-          { url: '/favicon', type: 'image/svg+xml' },
+          { url: '/icon.svg', type: 'image/svg+xml' },
+          { url: '/icon', type: 'image/png' },
         ],
-        shortcut: '/favicon.ico',
-        apple: '/favicon',
+        shortcut: ['/icon.svg'],
+        apple: ['/icon'],
       },
       openGraph: {
         title,
@@ -63,10 +64,11 @@ export async function generateMetadata({
       title: 'Fast Video Transcript Search',
       icons: {
         icon: [
-          { url: '/favicon', type: 'image/svg+xml' },
+          { url: '/icon.svg', type: 'image/svg+xml' },
+          { url: '/icon', type: 'image/png' },
         ],
-        shortcut: '/favicon.ico',
-        apple: '/favicon',
+        shortcut: ['/icon.svg'],
+        apple: ['/icon'],
       },
     }
   }
