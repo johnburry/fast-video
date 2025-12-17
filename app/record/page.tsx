@@ -97,15 +97,25 @@ export default function RecordPage() {
           const playbackId = data.playbackUrl.split('/').pop()?.replace('.m3u8', '') || '';
           const thumbnailUrl = `https://image.mux.com/${playbackId}/thumbnail.jpg`;
 
-          await fetch('/api/videos', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              playbackId,
-              thumbnailUrl,
-              channelId: channelId, // Associate with channel from subdomain
-            }),
-          });
+          try {
+            const saveRes = await fetch('/api/videos', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                playbackId,
+                thumbnailUrl,
+                channelId: channelId, // Associate with channel from subdomain
+              }),
+            });
+
+            if (!saveRes.ok) {
+              console.error('Failed to save video metadata:', await saveRes.text());
+            } else {
+              console.log('Video metadata saved successfully');
+            }
+          } catch (saveError) {
+            console.error('Error saving video metadata:', saveError);
+          }
         }
       } catch (e) {
         console.error('Error polling upload status:', e);
@@ -113,7 +123,7 @@ export default function RecordPage() {
     }, 3000);
 
     return () => clearInterval(pollInterval);
-  }, [isPreparing, uploadId]);
+  }, [isPreparing, uploadId, channelId]);
 
   const getShareableUrl = () => {
     // Extract playback ID from Mux URL (e.g., https://stream.mux.com/PLAYBACK_ID.m3u8)
