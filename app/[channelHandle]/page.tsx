@@ -223,15 +223,6 @@ export default function ChannelPage({
         aria-label="View all channels"
       />
 
-      {/* Spyglass icon at top left */}
-      <div className="absolute top-2 left-4 z-50">
-        <svg className="w-8 h-8 md:w-10 md:h-10" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <rect width="64" height="64" rx="12" fill="#B2071D"/>
-          <circle cx="27" cy="27" r="12" stroke="white" strokeWidth="4" fill="none"/>
-          <line x1="35" y1="35" x2="48" y2="48" stroke="white" strokeWidth="4" strokeLinecap="round"/>
-        </svg>
-      </div>
-
       {/* Back Button Bar (shown when search results exist) */}
       {searchResults.length > 0 && (
         <div
