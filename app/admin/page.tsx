@@ -13,6 +13,8 @@ export default function AdminPage() {
   const [error, setError] = useState<string | null>(null);
   const [progressStatus, setProgressStatus] = useState<string>('');
   const [currentVideo, setCurrentVideo] = useState<{ current: number; total: number; title: string } | null>(null);
+  const [channels, setChannels] = useState<any[]>([]);
+  const [channelsLoading, setChannelsLoading] = useState(false);
 
   useEffect(() => {
     // Extract subdomain from hostname
@@ -37,7 +39,27 @@ export default function AdminPage() {
     if (subdomain && !channelHandle) {
       setChannelHandle(subdomain);
     }
-  }, []);
+
+    // Fetch channels if authenticated
+    if (isAuthenticated) {
+      fetchChannels();
+    }
+  }, [isAuthenticated]);
+
+  const fetchChannels = async () => {
+    setChannelsLoading(true);
+    try {
+      const response = await fetch('/api/channels');
+      if (response.ok) {
+        const data = await response.json();
+        setChannels(data.channels);
+      }
+    } catch (err) {
+      console.error('Error fetching channels:', err);
+    } finally {
+      setChannelsLoading(false);
+    }
+  };
 
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -318,16 +340,46 @@ export default function AdminPage() {
         </div>
 
         <div className="mt-8 bg-white rounded-lg shadow-lg p-8">
-          <h2 className="text-xl font-bold text-gray-900 mb-4">
-            How it works
+          <h2 className="text-xl font-bold text-gray-900 mb-6">
+            Manage Channels
           </h2>
-          <ol className="list-decimal list-inside space-y-2 text-gray-700">
-            <li>Enter a YouTube channel handle (e.g., @mkbhd)</li>
-            <li>The system fetches all videos from the channel</li>
-            <li>Transcripts are downloaded for each video</li>
-            <li>All content is stored in a searchable database</li>
-            <li>A custom Fast.Video page is created for the channel</li>
-          </ol>
+
+          {channelsLoading ? (
+            <p className="text-gray-600">Loading channels...</p>
+          ) : channels.length === 0 ? (
+            <p className="text-gray-600">No channels imported yet.</p>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {channels.map((channel) => (
+                <a
+                  key={channel.id}
+                  href={`/admin/manage/${channel.handle}`}
+                  className="block border border-gray-200 rounded-lg p-4 hover:border-blue-500 hover:shadow-md transition-all"
+                >
+                  <div className="flex items-start gap-3">
+                    {channel.thumbnail && (
+                      <img
+                        src={channel.thumbnail}
+                        alt={channel.name}
+                        className="w-16 h-16 rounded-lg object-cover flex-shrink-0"
+                      />
+                    )}
+                    <div className="flex-1 min-w-0">
+                      <h3 className="font-semibold text-gray-900 truncate mb-1">
+                        {channel.name}
+                      </h3>
+                      <p className="text-sm text-gray-600 truncate">
+                        @{channel.handle}
+                      </p>
+                      <p className="text-xs text-gray-500 mt-1">
+                        {channel.videoCount || 0} videos
+                      </p>
+                    </div>
+                  </div>
+                </a>
+              ))}
+            </div>
+          )}
         </div>
       </div>
     </div>
