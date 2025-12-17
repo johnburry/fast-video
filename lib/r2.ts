@@ -34,8 +34,9 @@ export async function uploadThumbnailToR2(
           Key: key,
         })
       );
-      // If no error, file exists - return the URL
-      return `${PUBLIC_URL}/${key}`;
+      // If no error, file exists - return the URL (no double slashes)
+      const baseUrl = PUBLIC_URL.endsWith('/') ? PUBLIC_URL.slice(0, -1) : PUBLIC_URL;
+      return `${baseUrl}/${key}`;
     } catch (headError: any) {
       // File doesn't exist, proceed with upload
       if (headError.name !== 'NotFound') {
@@ -61,7 +62,9 @@ export async function uploadThumbnailToR2(
       })
     );
 
-    const r2Url = `${PUBLIC_URL}/${key}`;
+    // Ensure no double slashes in URL
+    const baseUrl = PUBLIC_URL.endsWith('/') ? PUBLIC_URL.slice(0, -1) : PUBLIC_URL;
+    const r2Url = `${baseUrl}/${key}`;
     console.log(`Uploaded thumbnail for ${youtubeVideoId} to R2: ${r2Url}`);
     return r2Url;
   } catch (error) {
