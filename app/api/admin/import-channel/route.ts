@@ -352,30 +352,35 @@ export async function POST(request: NextRequest) {
         // Update has_transcript flag for all videos in this channel that have transcripts
         sendProgress({ type: 'status', message: 'Updating transcript flags...' });
 
-        // Get all video IDs that have transcripts
-        const { data: videoIdsWithTranscripts } = await supabaseAdmin
-          .from('transcripts')
-          .select('video_id')
-          .in('video_id',
-            supabaseAdmin
+        // First, get all video IDs for this channel
+        const { data: channelVideos } = await supabaseAdmin
+          .from('videos')
+          .select('id')
+          .eq('channel_id', channelId);
+
+        if (channelVideos && channelVideos.length > 0) {
+          const channelVideoIds = channelVideos.map(v => v.id);
+
+          // Get all video IDs that have transcripts
+          const { data: videoIdsWithTranscripts } = await supabaseAdmin
+            .from('transcripts')
+            .select('video_id')
+            .in('video_id', channelVideoIds);
+
+          if (videoIdsWithTranscripts && videoIdsWithTranscripts.length > 0) {
+            const uniqueVideoIds = [...new Set(videoIdsWithTranscripts.map(t => t.video_id))];
+
+            const { error: updateError } = await supabaseAdmin
               .from('videos')
-              .select('id')
-              .eq('channel_id', channelId)
-          );
+              .update({ has_transcript: true })
+              .in('id', uniqueVideoIds)
+              .eq('has_transcript', false);
 
-        if (videoIdsWithTranscripts && videoIdsWithTranscripts.length > 0) {
-          const uniqueVideoIds = [...new Set(videoIdsWithTranscripts.map(t => t.video_id))];
-
-          const { error: updateError } = await supabaseAdmin
-            .from('videos')
-            .update({ has_transcript: true })
-            .in('id', uniqueVideoIds)
-            .eq('has_transcript', false);
-
-          if (updateError) {
-            console.error('Error updating has_transcript flags:', updateError);
-          } else {
-            console.log(`Updated has_transcript flag for ${uniqueVideoIds.length} videos`);
+            if (updateError) {
+              console.error('Error updating has_transcript flags:', updateError);
+            } else {
+              console.log(`Updated has_transcript flag for ${uniqueVideoIds.length} videos`);
+            }
           }
         }
 
