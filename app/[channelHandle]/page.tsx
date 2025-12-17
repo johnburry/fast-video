@@ -221,9 +221,9 @@ export default function ChannelPage({
 
       {/* Channel Header - only show when no search results */}
       {searchResults.length === 0 && (
-        <div style={{ backgroundColor: '#ffffff' }}>
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-            <div className="flex items-center space-x-4">
+        <div style={{ backgroundColor: '#ffffff', paddingTop: '0.5rem' }}>
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-8">
+            <div className="flex items-start space-x-4">
               {channelData?.channel.thumbnail && (
                 <img
                   src={channelData.channel.thumbnail}
