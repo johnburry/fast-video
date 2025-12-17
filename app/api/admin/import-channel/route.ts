@@ -54,7 +54,7 @@ function parseRelativeTime(relativeTime: string): string | null {
 }
 
 export async function POST(request: NextRequest) {
-  const { channelHandle } = await request.json();
+  const { channelHandle, limit } = await request.json();
 
   if (!channelHandle) {
     return NextResponse.json(
@@ -62,6 +62,9 @@ export async function POST(request: NextRequest) {
       { status: 400 }
     );
   }
+
+  // Use provided limit or default to 50, with max of 1000
+  const videoLimit = Math.min(Math.max(1, limit || 50), 1000);
 
   // Create a streaming response
   const encoder = new TextEncoder();
@@ -148,10 +151,10 @@ export async function POST(request: NextRequest) {
         console.log(`Fetching videos for @${channelInfo.handle}...`);
         const allVideos = await getChannelVideos(channelInfo.channelId);
 
-        // Import first 50 videos and fetch transcripts for all
-        const videos = allVideos.slice(0, 50);
+        // Import videos up to the specified limit
+        const videos = allVideos.slice(0, videoLimit);
 
-        console.log(`Found ${allVideos.length} videos, processing first ${videos.length} videos`);
+        console.log(`Found ${allVideos.length} videos, processing first ${videos.length} videos (limit: ${videoLimit})`);
         sendProgress({
           type: 'status',
           message: `Found ${videos.length} videos. Starting import...`

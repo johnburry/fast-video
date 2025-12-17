@@ -7,6 +7,7 @@ export default function AdminPage() {
   const [password, setPassword] = useState('');
   const [authError, setAuthError] = useState('');
   const [channelHandle, setChannelHandle] = useState('');
+  const [importLimit, setImportLimit] = useState<number>(50);
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<any>(null);
   const [error, setError] = useState<string | null>(null);
@@ -76,7 +77,7 @@ export default function AdminPage() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ channelHandle }),
+        body: JSON.stringify({ channelHandle, limit: importLimit }),
       });
 
       if (!response.body) {
@@ -207,6 +208,29 @@ export default function AdminPage() {
               />
               <p className="mt-2 text-sm text-gray-500">
                 Enter the channel handle (e.g., @mkbhd, @veritasium)
+              </p>
+            </div>
+
+            <div>
+              <label
+                htmlFor="importLimit"
+                className="block text-sm font-medium text-gray-700 mb-2"
+              >
+                Import Limit
+              </label>
+              <input
+                type="number"
+                id="importLimit"
+                value={importLimit}
+                onChange={(e) => setImportLimit(parseInt(e.target.value) || 50)}
+                min="1"
+                max="1000"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                required
+                disabled={loading}
+              />
+              <p className="mt-2 text-sm text-gray-500">
+                Maximum number of videos to import (default: 50)
               </p>
             </div>
 
