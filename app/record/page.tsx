@@ -13,6 +13,7 @@ export default function RecordPage() {
   const [error, setError] = useState<string>('');
   const [channelId, setChannelId] = useState<string | null>(null);
   const [channelName, setChannelName] = useState<string | null>(null);
+  const [channelHandle, setChannelHandle] = useState<string | null>(null);
   const [recordUrl, setRecordUrl] = useState<string>('');
   const [isMobile, setIsMobile] = useState<boolean>(false);
 
@@ -37,6 +38,7 @@ export default function RecordPage() {
 
         if (subdomain) {
           console.log('Detected subdomain:', subdomain);
+          setChannelHandle(subdomain);
           const res = await fetch(`/api/channels/handle/${subdomain}`);
           if (res.ok) {
             const data = await res.json();
@@ -174,7 +176,13 @@ export default function RecordPage() {
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <button
-            onClick={() => window.history.back()}
+            onClick={() => {
+              if (channelHandle) {
+                window.location.href = `/${channelHandle}`;
+              } else {
+                window.history.back();
+              }
+            }}
             className="flex items-center gap-2 bg-blue-600 text-white px-6 py-2 rounded-lg font-medium hover:bg-blue-700 transition-colors"
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
