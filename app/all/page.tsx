@@ -3,6 +3,17 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 
+// Helper function to process channel names with line break character
+function formatChannelName(name: string): JSX.Element[] {
+  const parts = name.split('|');
+  return parts.map((part, index) => (
+    <span key={index}>
+      {part.trim()}
+      {index < parts.length - 1 && <br />}
+    </span>
+  ));
+}
+
 interface Channel {
   id: string;
   handle: string;
@@ -109,7 +120,7 @@ export default function AllChannelsPage() {
                         )}
                         <div className="flex-1 min-w-0">
                           <h3 className="text-xl font-bold text-gray-900 line-clamp-3 mb-2" style={{ minHeight: '4.5rem' }}>
-                            {channel.name}
+                            {formatChannelName(channel.name)}
                           </h3>
                           <p className="text-sm text-gray-600">
                             @{channel.handle}

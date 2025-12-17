@@ -3,6 +3,17 @@
 import { use, useState, useEffect } from 'react';
 import { formatTimestamp } from '@/lib/youtube/transcript';
 
+// Helper function to process channel names with line break character
+function formatChannelName(name: string): JSX.Element[] {
+  const parts = name.split('|');
+  return parts.map((part, index) => (
+    <span key={index}>
+      {part.trim()}
+      {index < parts.length - 1 && <br />}
+    </span>
+  ));
+}
+
 interface SearchResult {
   videoId: string;
   youtubeVideoId: string;
@@ -238,7 +249,7 @@ export default function ChannelPage({
                   style={{ color: '#000000' }}
                   onClick={resetSearch}
                 >
-                  {channelData?.channel.name}
+                  {channelData?.channel.name && formatChannelName(channelData.channel.name)}
                 </h1>
                 <div className="text-lg md:text-3xl font-bold" style={{ color: '#B2071D' }}>
                   <div>FAST VIDEO</div>
