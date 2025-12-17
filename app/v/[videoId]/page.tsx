@@ -45,24 +45,12 @@ export async function generateMetadata({
 
   console.log('generateMetadata - videoId:', videoId);
   console.log('generateMetadata - metadata:', metadata);
-  console.log('generateMetadata - channelName:', metadata?.channelName);
+  console.log('generateMetadata - channelName from API:', metadata?.channelName);
 
-  // Clean the channel name - remove "Fast Video Transcript Search" and similar unwanted text
-  let channelName = metadata?.channelName;
-  if (channelName) {
-    // Remove common unwanted suffixes/prefixes
-    channelName = channelName
-      .replace(/\s*Fast Video Transcript Search\s*/gi, '')
-      .replace(/\s*-\s*Fast Video Transcript Search\s*/gi, '')
-      .replace(/\s*\|\s*Fast Video Transcript Search\s*/gi, '')
-      .trim();
-  }
-
-  const title = channelName
-    ? `A Fast Video from ${channelName}`
+  const title = metadata?.channelName
+    ? `A Fast Video from ${metadata.channelName}`
     : 'A Fast Video';
 
-  console.log('generateMetadata - cleaned channelName:', channelName);
   console.log('generateMetadata - final title:', title);
 
   const thumbnailUrl = metadata?.thumbnailUrl || `https://image.mux.com/${videoId}/thumbnail.jpg`;
