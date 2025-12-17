@@ -1,5 +1,11 @@
 import { Metadata } from 'next';
 import VideoPageClient from './VideoPageClient';
+import { createClient } from '@supabase/supabase-js';
+
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!
+);
 
 interface VideoMetadata {
   playbackId: string;
@@ -10,29 +16,37 @@ interface VideoMetadata {
 
 async function getVideoMetadata(videoId: string): Promise<VideoMetadata | null> {
   try {
-    // Construct the base URL for server-side API calls
-    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL
-      || (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : null)
-      || 'http://localhost:3000';
+    console.log('Fetching video metadata for playbackId:', videoId);
 
-    const apiUrl = `${baseUrl}/api/videos/${videoId}`;
-    console.log('Fetching video metadata from:', apiUrl);
+    const { data: video, error } = await supabase
+      .from('mux_videos')
+      .select('*, channels(channel_name, channel_handle)')
+      .eq('mux_playback_id', videoId)
+      .maybeSingle();
 
-    const res = await fetch(apiUrl, {
-      cache: 'no-store',
-    });
-
-    if (res.ok) {
-      const data = await res.json();
-      console.log('Video metadata received:', data);
-      return data;
-    } else {
-      console.error('Failed to fetch video metadata:', res.status, res.statusText);
+    if (error) {
+      console.error('Database error fetching video metadata:', error);
+      return null;
     }
+
+    if (!video) {
+      console.error('Video not found for playbackId:', videoId);
+      return null;
+    }
+
+    const metadata = {
+      playbackId: video.mux_playback_id,
+      thumbnailUrl: video.thumbnail_url,
+      channelName: video.channels?.channel_name || null,
+      channelHandle: video.channels?.channel_handle || null,
+    };
+
+    console.log('Video metadata retrieved:', metadata);
+    return metadata;
   } catch (e) {
     console.error('Error fetching video metadata for OpenGraph:', e);
+    return null;
   }
-  return null;
 }
 
 export async function generateMetadata({
