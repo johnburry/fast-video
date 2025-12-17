@@ -185,10 +185,22 @@ export default function ManageChannelPage({
         </div>
 
         <div className="bg-white rounded-lg shadow-lg p-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            Manage Channel
-          </h1>
-          <p className="text-gray-600 mb-8">@{channel.handle}</p>
+          <div className="flex items-start justify-between mb-6">
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900 mb-2">
+                Manage Channel
+              </h1>
+              <p className="text-gray-600">@{channel.handle}</p>
+            </div>
+            <a
+              href={`https://${channel.handle}.fast.video`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="px-6 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors"
+            >
+              View Channel →
+            </a>
+          </div>
 
           {error && (
             <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
