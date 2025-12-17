@@ -180,6 +180,20 @@ export default function RecordPage() {
           </p>
         </div>
 
+        {channelName && (
+          <div className="bg-green-900 border border-green-700 text-white px-4 py-3 rounded mb-4">
+            Recording for channel: <strong>{channelName}</strong>
+          </div>
+        )}
+
+        {!channelName && (
+          <div className="bg-yellow-900 border border-yellow-700 text-white px-4 py-3 rounded mb-4">
+            <strong>Warning:</strong> No channel detected. Videos will not be associated with a channel.
+            <br />
+            Make sure you're accessing this page from a channel subdomain (e.g., yourname.fast.video/record)
+          </div>
+        )}
+
         {error && (
           <div className="bg-red-900 border border-red-700 text-white px-4 py-3 rounded mb-4">
             {error}

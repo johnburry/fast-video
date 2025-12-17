@@ -10,11 +10,17 @@ export async function POST(request: NextRequest) {
   try {
     const { playbackId, channelId, thumbnailUrl } = await request.json();
 
+    console.log('Saving video with:', { playbackId, channelId, thumbnailUrl });
+
     if (!playbackId) {
       return NextResponse.json(
         { error: 'playbackId is required' },
         { status: 400 }
       );
+    }
+
+    if (!channelId) {
+      console.warn('WARNING: Saving video without channelId!');
     }
 
     const { data, error } = await supabase
@@ -35,6 +41,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    console.log('Video saved successfully:', data);
     return NextResponse.json({ success: true, video: data });
   } catch (error) {
     console.error('Error in POST /api/videos:', error);
