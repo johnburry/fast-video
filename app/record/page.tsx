@@ -14,6 +14,7 @@ export default function RecordPage() {
   const [channelId, setChannelId] = useState<string | null>(null);
   const [channelName, setChannelName] = useState<string | null>(null);
   const [recordUrl, setRecordUrl] = useState<string>('');
+  const [isMobile, setIsMobile] = useState<boolean>(false);
 
   // Detect subdomain and fetch channel info
   useEffect(() => {
@@ -56,10 +57,13 @@ export default function RecordPage() {
     getChannelFromSubdomain();
   }, []);
 
-  // Set the current URL for QR code
+  // Set the current URL for QR code and detect mobile
   useEffect(() => {
     if (typeof window !== 'undefined') {
       setRecordUrl(window.location.href);
+      // Detect if device is mobile
+      const checkIsMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+      setIsMobile(checkIsMobile);
     }
   }, []);
 
@@ -217,25 +221,30 @@ export default function RecordPage() {
               onSuccess={handleSuccess}
               onUploadError={handleError}
             >
+              {!isMobile && (
+                <span slot="heading">Drop a video file here to upload, or</span>
+              )}
               <button slot="file-select" type="button" className="px-6 py-3 bg-blue-600 hover:bg-blue-700 rounded font-medium transition-colors cursor-pointer">
-                Record or Upload a Video
+                {isMobile ? 'Record or Upload a Video' : 'Upload a Video'}
               </button>
             </MuxUploader>
-            <div className="mt-6 text-center">
-              <p className="text-gray-300 text-base mb-4">
-                Scan QR code to use your mobile for recording a Fast Video
-              </p>
-              {recordUrl && (
-                <div className="inline-block p-4 bg-white rounded-lg">
-                  <QRCodeSVG
-                    value={recordUrl}
-                    size={200}
-                    level="H"
-                    includeMargin={true}
-                  />
-                </div>
-              )}
-            </div>
+            {!isMobile && (
+              <div className="mt-6 text-center">
+                <p className="text-gray-300 text-base mb-4">
+                  Scan QR code to use your mobile for recording a Fast Video
+                </p>
+                {recordUrl && (
+                  <div className="inline-block p-4 bg-white rounded-lg">
+                    <QRCodeSVG
+                      value={recordUrl}
+                      size={200}
+                      level="H"
+                      includeMargin={true}
+                    />
+                  </div>
+                )}
+              </div>
+            )}
             {isUploading && (
               <div className="mt-4 text-center">
                 <p className="text-lg">Uploading your video...</p>
