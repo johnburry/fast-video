@@ -16,6 +16,7 @@ export default function RecordPage() {
   const [channelHandle, setChannelHandle] = useState<string | null>(null);
   const [recordUrl, setRecordUrl] = useState<string>('');
   const [isMobile, setIsMobile] = useState<boolean>(false);
+  const [channelLoading, setChannelLoading] = useState<boolean>(true);
 
   // Detect subdomain and fetch channel info
   useEffect(() => {
@@ -53,6 +54,8 @@ export default function RecordPage() {
         }
       } catch (e) {
         console.error('Error fetching channel from subdomain:', e);
+      } finally {
+        setChannelLoading(false);
       }
     };
 
@@ -204,14 +207,6 @@ export default function RecordPage() {
         {channelName && (
           <div className="bg-green-900 border border-green-700 text-white px-4 py-3 rounded mb-4">
             Recording for channel: <strong>{channelName}</strong>
-          </div>
-        )}
-
-        {!channelName && (
-          <div className="bg-yellow-900 border border-yellow-700 text-white px-4 py-3 rounded mb-4">
-            <strong>Warning:</strong> No channel detected. Videos will not be associated with a channel.
-            <br />
-            Make sure you're accessing this page from a channel subdomain (e.g., yourname.fast.video/record)
           </div>
         )}
 
