@@ -219,7 +219,8 @@ export default function ChannelPage({
                 <img
                   src={channelData.channel.thumbnail}
                   alt={channelData.channel.name}
-                  className="w-20 h-20 rounded-full"
+                  className="w-35 h-35 rounded-full"
+                  style={{ width: '140px', height: '140px' }}
                 />
               )}
               <div>
