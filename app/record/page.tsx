@@ -64,9 +64,18 @@ export default function RecordPage() {
     return () => clearInterval(pollInterval);
   }, [isPreparing, uploadId]);
 
-  const copyToClipboard = () => {
-    navigator.clipboard.writeText(playbackUrl);
-    alert('Playback URL copied to clipboard!');
+  const getShareableUrl = () => {
+    // Extract playback ID from Mux URL (e.g., https://stream.mux.com/PLAYBACK_ID.m3u8)
+    const playbackId = playbackUrl.split('/').pop()?.replace('.m3u8', '') || '';
+    // Get current hostname to construct the shareable URL
+    const hostname = window.location.hostname;
+    return `${window.location.protocol}//${hostname}/v/${playbackId}`;
+  };
+
+  const copyShareLink = () => {
+    const shareUrl = getShareableUrl();
+    navigator.clipboard.writeText(shareUrl);
+    alert('Video link copied to clipboard!');
   };
 
   return (
@@ -148,44 +157,13 @@ export default function RecordPage() {
               />
             </div>
 
-            <div className="bg-gray-900 rounded-lg p-6">
-              <h2 className="text-xl font-bold mb-4">Your Video is Ready!</h2>
-              <p className="text-gray-400 mb-4">
-                Copy this playback URL and add it to your channel settings:
-              </p>
-              <div className="flex gap-2">
-                <input
-                  type="text"
-                  value={playbackUrl}
-                  readOnly
-                  className="flex-1 bg-gray-800 text-white px-4 py-2 rounded border border-gray-700"
-                />
-                <button
-                  onClick={copyToClipboard}
-                  className="px-6 py-2 bg-blue-600 hover:bg-blue-700 rounded font-medium transition-colors"
-                >
-                  Copy URL
-                </button>
-              </div>
-              <div className="mt-4 p-4 bg-gray-800 rounded">
-                <p className="text-sm text-gray-300 mb-2">
-                  <strong>To set this as your channel's hello video:</strong>
-                </p>
-                <pre className="text-xs text-gray-400 overflow-x-auto">
-{`UPDATE channels
-SET hello_video_url = '${playbackUrl}'
-WHERE channel_handle = 'your-channel-handle';`}
-                </pre>
-              </div>
-            </div>
-
             <div className="text-center">
-              <a
-                href="/"
-                className="inline-block px-6 py-3 bg-gray-700 hover:bg-gray-600 rounded font-medium transition-colors"
+              <button
+                onClick={copyShareLink}
+                className="px-8 py-3 bg-blue-600 hover:bg-blue-700 rounded-lg font-medium transition-colors text-lg"
               >
-                Record Another Video
-              </a>
+                Copy Video Link for Sharing
+              </button>
             </div>
           </div>
         )}
