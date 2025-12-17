@@ -33,6 +33,7 @@ export default function ManageChannelPage({
 
   // Form fields
   const [name, setName] = useState('');
+  const [channelHandle, setChannelHandle] = useState('');
   const [description, setDescription] = useState('');
   const [externalLink, setExternalLink] = useState('');
   const [externalLinkName, setExternalLinkName] = useState('');
@@ -54,6 +55,7 @@ export default function ManageChannelPage({
       const ch = data.channel;
       setChannel(ch);
       setName(ch.name);
+      setChannelHandle(ch.handle);
       setDescription(ch.description || '');
       setExternalLink(ch.externalLink || '');
       setExternalLinkName(ch.externalLinkName || '');
@@ -79,6 +81,7 @@ export default function ManageChannelPage({
         },
         body: JSON.stringify({
           name,
+          handle: channelHandle,
           description,
           externalLink,
           externalLinkName,
@@ -90,8 +93,18 @@ export default function ManageChannelPage({
         throw new Error('Failed to update channel');
       }
 
-      setSuccess('Channel updated successfully!');
-      fetchChannel();
+      const data = await response.json();
+
+      // If handle was changed, redirect to new URL
+      if (channelHandle !== handle) {
+        setSuccess('Channel updated successfully! Redirecting...');
+        setTimeout(() => {
+          router.push(`/admin/manage/${channelHandle}`);
+        }, 1000);
+      } else {
+        setSuccess('Channel updated successfully!');
+        fetchChannel();
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to update channel');
     } finally {
@@ -228,6 +241,24 @@ export default function ManageChannelPage({
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 required
               />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Channel Handle
+              </label>
+              <input
+                type="text"
+                value={channelHandle}
+                onChange={(e) => setChannelHandle(e.target.value)}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                required
+                pattern="[a-z0-9-]+"
+                title="Only lowercase letters, numbers, and hyphens are allowed"
+              />
+              <p className="mt-2 text-sm text-gray-500">
+                Used in the URL: {channelHandle}.fast.video
+              </p>
             </div>
 
             <div>
