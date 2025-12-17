@@ -73,6 +73,7 @@ export default function ChannelPage({
     matchText?: string;
     videoTitle?: string;
   } | null>(null);
+  const [showRecordModal, setShowRecordModal] = useState(false);
 
   useEffect(() => {
     fetchChannelData();
@@ -294,6 +295,17 @@ export default function ChannelPage({
                       </a>
                     </div>
                   )}
+                  <div className="flex items-center gap-1 md:gap-2 md:ml-20">
+                    <svg className="w-6 h-6" viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M17 10.5V7c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1v10c0 .55.45 1 1 1h12c.55 0 1-.45 1-1v-3.5l4 4v-11l-4 4z"/>
+                    </svg>
+                    <button
+                      onClick={() => setShowRecordModal(true)}
+                      className="underline cursor-pointer hover:text-blue-400 transition-colors"
+                    >
+                      Record a Hello
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
@@ -529,6 +541,35 @@ export default function ChannelPage({
                   />
                 </div>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Record a Hello Modal */}
+      {showRecordModal && (
+        <div
+          className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4"
+          onClick={() => setShowRecordModal(false)}
+        >
+          <div className="max-w-4xl w-full" onClick={(e) => e.stopPropagation()}>
+            <div className="flex justify-end mb-2">
+              <button
+                onClick={() => setShowRecordModal(false)}
+                className="px-6 py-2 text-white rounded-lg hover:opacity-80 transition-opacity"
+                style={{ backgroundColor: '#165DFC' }}
+              >
+                Close
+              </button>
+            </div>
+            <div className="bg-white rounded-lg overflow-hidden">
+              <iframe
+                src="https://stream.new/?access_token=fb0e4821-84e4-4ac3-967d-39b7474d616d"
+                className="w-full"
+                style={{ height: '80vh', minHeight: '600px' }}
+                allow="camera; microphone; fullscreen"
+                title="Record a Hello Video"
+              />
             </div>
           </div>
         </div>
