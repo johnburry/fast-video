@@ -223,8 +223,11 @@ export default function RecordPage() {
               onUploadStart={handleUploadStart}
               onSuccess={handleSuccess}
               onUploadError={handleError}
+              noDropzone={isMobile}
             >
-              <span slot="heading">{isMobile ? '' : 'Drop a video file here to upload, or'}</span>
+              {!isMobile && (
+                <span slot="heading">Drop a video file here to upload, or</span>
+              )}
               <button slot="file-select" type="button" className="px-6 py-3 bg-blue-600 hover:bg-blue-700 rounded font-medium transition-colors cursor-pointer">
                 {isMobile ? 'Record or Upload a Video' : 'Upload a Video'}
               </button>
