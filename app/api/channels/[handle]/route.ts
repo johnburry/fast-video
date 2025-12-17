@@ -53,6 +53,8 @@ export async function GET(
         subscriberCount: channel.subscriber_count,
         videoCount: channel.video_count,
         lastSynced: channel.last_synced_at,
+        externalLink: channel.external_link,
+        externalLinkName: channel.external_link_name,
       },
       recentVideos: videos || [],
     });
