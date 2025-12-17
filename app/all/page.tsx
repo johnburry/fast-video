@@ -26,14 +26,43 @@ interface Channel {
 }
 
 export default function AllChannelsPage() {
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [password, setPassword] = useState('');
+  const [authError, setAuthError] = useState('');
   const [channels, setChannels] = useState<Channel[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     document.title = 'All Fast Video Channels';
-    fetchChannels();
-  }, []);
+    if (isAuthenticated) {
+      fetchChannels();
+    }
+  }, [isAuthenticated]);
+
+  const handleAuth = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setAuthError('');
+
+    try {
+      const response = await fetch('/api/admin/auth', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ password }),
+      });
+
+      if (response.ok) {
+        setIsAuthenticated(true);
+        setPassword('');
+      } else {
+        setAuthError('Invalid password');
+      }
+    } catch (err) {
+      setAuthError('Authentication failed');
+    }
+  };
 
   const fetchChannels = async () => {
     try {
@@ -49,6 +78,57 @@ export default function AllChannelsPage() {
       setLoading(false);
     }
   };
+
+  // Show password prompt if not authenticated
+  if (!isAuthenticated) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-md w-full">
+          <div className="bg-white rounded-lg shadow-lg p-8">
+            <h1 className="text-3xl font-bold text-gray-900 mb-2 text-center">
+              All Fast Video Channels
+            </h1>
+            <p className="text-gray-600 mb-8 text-center">
+              Enter password to view all channels
+            </p>
+
+            <form onSubmit={handleAuth} className="space-y-6">
+              <div>
+                <label
+                  htmlFor="password"
+                  className="block text-sm font-medium text-gray-700 mb-2"
+                >
+                  Password
+                </label>
+                <input
+                  type="password"
+                  id="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  required
+                  autoFocus
+                />
+              </div>
+
+              {authError && (
+                <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
+                  <p className="text-red-600 text-sm">{authError}</p>
+                </div>
+              )}
+
+              <button
+                type="submit"
+                className="w-full bg-blue-600 text-white py-3 px-6 rounded-lg font-medium hover:bg-blue-700 transition-colors"
+              >
+                Login
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   if (loading) {
     return (
