@@ -276,10 +276,6 @@ export default function ChannelPage({
                 >
                   {channelData?.channel.name && formatChannelName(channelData.channel.name)}
                 </h1>
-                <div className="text-lg md:text-3xl font-bold" style={{ color: '#B2071D' }}>
-                  <div>FAST VIDEO</div>
-                  <div>TRANSCRIPT SEARCH</div>
-                </div>
                 <div className="text-xs md:text-lg mt-2 flex flex-col md:flex-row md:items-center gap-2 md:gap-1" style={{ color: '#777777' }}>
                   <div className="flex items-center gap-1 md:gap-2">
                     <svg className="w-6 h-6" viewBox="0 0 24 24" fill="currentColor">
@@ -318,14 +314,15 @@ export default function ChannelPage({
                     </div>
                   )}
                   <div className="flex items-center gap-1 md:gap-2 md:ml-20">
-                    <svg className="w-6 h-6" viewBox="0 0 24 24" fill="currentColor">
+                    <svg className="w-6 h-6" viewBox="0 0 24 24" fill="#FF0000">
                       <path d="M17 10.5V7c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1v10c0 .55.45 1 1 1h12c.55 0 1-.45 1-1v-3.5l4 4v-11l-4 4z"/>
                     </svg>
                     <a
                       href="/record"
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="underline cursor-pointer hover:text-blue-400 transition-colors"
+                      className="underline cursor-pointer transition-colors"
+                      style={{ color: '#FF0000' }}
                     >
                       Record a Fast Video
                     </a>
