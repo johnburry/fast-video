@@ -140,6 +140,7 @@ export async function POST(request: NextRequest) {
         .insert({
           youtube_channel_id: channelInfo.channelId,
           channel_handle: channelInfo.handle,
+          youtube_channel_handle: channelInfo.handle,
           channel_name: channelInfo.name,
           channel_description: channelInfo.description,
           thumbnail_url: r2ChannelThumbnailUrl,

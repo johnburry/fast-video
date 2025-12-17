@@ -46,6 +46,7 @@ export async function GET(
         id: channel.id,
         youtubeChannelId: channel.youtube_channel_id,
         handle: channel.channel_handle,
+        youtubeHandle: channel.youtube_channel_handle,
         name: channel.channel_name,
         description: channel.channel_description,
         thumbnail: channel.thumbnail_url,
@@ -56,6 +57,7 @@ export async function GET(
         externalLink: channel.external_link,
         externalLinkName: channel.external_link_name,
         helloVideoUrl: channel.hello_video_url,
+        isActive: channel.is_active,
       },
       recentVideos: videos || [],
     });

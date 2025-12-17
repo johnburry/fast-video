@@ -7,6 +7,7 @@ import { useAuth } from '@/lib/hooks/useAuth';
 interface Channel {
   id: string;
   handle: string;
+  youtubeHandle: string | null;
   name: string;
   description: string | null;
   thumbnail: string | null;
@@ -245,7 +246,7 @@ export default function ManageChannelPage({
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Channel Handle
+                Fast Video Handle
               </label>
               <input
                 type="text"
@@ -260,6 +261,24 @@ export default function ManageChannelPage({
                 Used in the URL: {channelHandle}.fast.video
               </p>
             </div>
+
+            {channel.youtubeHandle && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  YouTube Channel Handle
+                </label>
+                <input
+                  type="text"
+                  value={channel.youtubeHandle}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-100 cursor-not-allowed"
+                  disabled
+                  readOnly
+                />
+                <p className="mt-2 text-sm text-gray-500">
+                  Original YouTube handle (read-only, used for YouTube links)
+                </p>
+              </div>
+            )}
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
