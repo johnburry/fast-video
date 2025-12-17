@@ -223,7 +223,7 @@ export default function RecordPage() {
               onUploadStart={handleUploadStart}
               onSuccess={handleSuccess}
               onUploadError={handleError}
-              noDropzone={isMobile}
+              noDrop={isMobile}
             >
               {!isMobile && (
                 <span slot="heading">Drop a video file here to upload, or</span>
