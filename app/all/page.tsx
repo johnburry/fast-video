@@ -2,6 +2,7 @@
 
 import { useState, useEffect, ReactElement } from 'react';
 import Link from 'next/link';
+import { getThumbnailUrl } from '@/lib/thumbnail';
 
 // Helper function to process channel names with line break character
 function formatChannelName(name: string): ReactElement[] {
