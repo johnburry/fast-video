@@ -16,37 +16,23 @@ export default function Icon() {
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          background: '#B2071D',
+          background: '#000000',
           borderRadius: '6px',
         }}
       >
-        <div style={{ display: 'flex', width: '100%', height: '100%', position: 'relative' }}>
-          {/* Magnifying glass circle */}
-          <div
-            style={{
-              position: 'absolute',
-              left: '6px',
-              top: '6px',
-              width: '12px',
-              height: '12px',
-              border: '2px solid white',
-              borderRadius: '50%',
-            }}
+        {/* Camera icon - white on black background */}
+        <svg
+          width="24"
+          height="24"
+          viewBox="0 0 24 24"
+          fill="none"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <path
+            d="M17 10.5V7c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1v10c0 .55.45 1 1 1h12c.55 0 1-.45 1-1v-3.5l4 4v-11l-4 4z"
+            fill="#FFFFFF"
           />
-          {/* Magnifying glass handle */}
-          <div
-            style={{
-              position: 'absolute',
-              left: '16px',
-              top: '16px',
-              width: '10px',
-              height: '2px',
-              background: 'white',
-              transform: 'rotate(45deg)',
-              transformOrigin: 'left center',
-            }}
-          />
-        </div>
+        </svg>
       </div>
     ),
     {
