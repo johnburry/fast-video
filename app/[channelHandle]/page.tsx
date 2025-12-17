@@ -647,7 +647,7 @@ export default function ChannelPage({
                 className="px-6 py-2 text-white rounded-lg hover:opacity-80 transition-opacity"
                 style={{ backgroundColor: '#165DFC' }}
               >
-                Close
+                Continue →
               </button>
             </div>
             <div className="bg-white rounded-lg overflow-hidden">
