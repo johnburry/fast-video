@@ -16,7 +16,7 @@ export async function GET(
 
     const { data: channel, error } = await supabase
       .from('channels')
-      .select('id, name, channel_handle')
+      .select('id, channel_name, channel_handle')
       .eq('channel_handle', handle)
       .single();
 
@@ -46,11 +46,11 @@ export async function GET(
       );
     }
 
-    console.log('Channel found:', { id: channel.id, name: channel.name, handle: channel.channel_handle });
+    console.log('Channel found:', { id: channel.id, name: channel.channel_name, handle: channel.channel_handle });
 
     return NextResponse.json({
       id: channel.id,
-      name: channel.name,
+      name: channel.channel_name,
       handle: channel.channel_handle,
     });
   } catch (error) {
