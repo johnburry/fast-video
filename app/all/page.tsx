@@ -1,10 +1,10 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, ReactElement } from 'react';
 import Link from 'next/link';
 
 // Helper function to process channel names with line break character
-function formatChannelName(name: string): JSX.Element[] {
+function formatChannelName(name: string): ReactElement[] {
   const parts = name.split('|');
   return parts.map((part, index) => (
     <span key={index}>

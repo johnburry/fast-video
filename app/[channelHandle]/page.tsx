@@ -1,10 +1,10 @@
 'use client';
 
-import { use, useState, useEffect } from 'react';
+import { use, useState, useEffect, ReactElement } from 'react';
 import { formatTimestamp } from '@/lib/youtube/transcript';
 
 // Helper function to process channel names with line break character
-function formatChannelName(name: string): JSX.Element[] {
+function formatChannelName(name: string): ReactElement[] {
   const parts = name.split('|');
   return parts.map((part, index) => (
     <span key={index}>
