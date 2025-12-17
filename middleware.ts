@@ -71,11 +71,11 @@ export const config = {
      * - api (API routes)
      * - _next/static (static files)
      * - _next/image (image optimization files)
-     * - favicon.ico (favicon file)
+     * - favicon (favicon routes)
      * - icon.svg (favicon SVG)
      * - apple-icon (apple touch icons)
      * - icon (Next.js generated icons)
      */
-    '/((?!api|_next/static|_next/image|favicon.ico|icon.svg|apple-icon|icon).*)',
+    '/((?!api|_next/static|_next/image|favicon|icon.svg|apple-icon|icon).*)',
   ],
 }

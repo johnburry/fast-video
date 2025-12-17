@@ -10,21 +10,21 @@ export default function HeadLinks() {
       const existingIcons = document.querySelectorAll('link[rel*="icon"]');
       existingIcons.forEach(icon => icon.remove());
 
-      // Add new favicon links
+      // Use favicon route handlers which work across all subdomains
       const link1 = document.createElement('link');
       link1.rel = 'icon';
       link1.type = 'image/svg+xml';
-      link1.href = '/icon.svg';
+      link1.href = '/favicon';
       document.head.appendChild(link1);
 
       const link2 = document.createElement('link');
       link2.rel = 'shortcut icon';
-      link2.href = '/icon.svg';
+      link2.href = '/favicon.ico';
       document.head.appendChild(link2);
 
       const link3 = document.createElement('link');
       link3.rel = 'apple-touch-icon';
-      link3.href = '/icon.svg';
+      link3.href = '/favicon';
       document.head.appendChild(link3);
     };
 
