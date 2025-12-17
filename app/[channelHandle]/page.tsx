@@ -3,6 +3,7 @@
 import { use, useState, useEffect, ReactElement } from 'react';
 import { formatTimestamp } from '@/lib/youtube/transcript';
 import MuxPlayer from '@mux/mux-player-react';
+import { getThumbnailUrl } from '@/lib/thumbnail';
 
 // Helper function to process channel names with line break character
 function formatChannelName(name: string): ReactElement[] {
@@ -260,7 +261,7 @@ export default function ChannelPage({
             <div className="flex items-start space-x-4">
               {channelData?.channel.thumbnail && (
                 <img
-                  src={channelData.channel.thumbnail}
+                  src={getThumbnailUrl(channelData.channel.thumbnail)}
                   alt={channelData.channel.name}
                   className="w-35 h-35 rounded-full mt-8"
                   style={{ width: '140px', height: '140px' }}
@@ -379,7 +380,7 @@ export default function ChannelPage({
                     <div className="md:w-80 flex-shrink-0" style={{ backgroundColor: '#222529' }}>
                       <div className="relative w-full" style={{ paddingBottom: '56.25%' }}>
                         <img
-                          src={result.thumbnail}
+                          src={getThumbnailUrl(result.thumbnail, result.youtubeVideoId)}
                           alt={result.title}
                           className="absolute top-0 left-0 w-full h-full object-contain cursor-pointer hover:opacity-90 transition-opacity"
                           onClick={() => firstMatch
@@ -470,7 +471,7 @@ export default function ChannelPage({
                   >
                     <div className="relative w-full bg-black" style={{ paddingBottom: '56.25%' }}>
                       <img
-                        src={video.thumbnail_url}
+                        src={getThumbnailUrl(video.thumbnail_url, video.youtube_video_id)}
                         alt={video.title}
                         className="absolute top-0 left-0 w-full h-full object-contain"
                       />

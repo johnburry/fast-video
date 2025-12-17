@@ -113,7 +113,7 @@ export default function AllChannelsPage() {
                       <div className="flex items-start space-x-4 mb-4">
                         {channel.thumbnail && (
                           <img
-                            src={channel.thumbnail}
+                            src={getThumbnailUrl(channel.thumbnail)}
                             alt={channel.name}
                             className="w-16 h-16 rounded-full flex-shrink-0"
                           />
