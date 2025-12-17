@@ -109,11 +109,11 @@ export async function POST(request: NextRequest) {
           );
         }
 
-        // Check if channel already exists
+        // Check if channel already exists (by handle or youtube_channel_id)
         const { data: existingChannels } = await supabaseAdmin
       .from('channels')
-      .select('id, channel_handle')
-      .eq('channel_handle', channelInfo.handle)
+      .select('id, channel_handle, youtube_channel_id')
+      .or(`channel_handle.eq.${channelInfo.handle},youtube_channel_id.eq.${channelInfo.channelId}`)
       .limit(1);
 
     let channelId: string;
@@ -150,12 +150,29 @@ export async function POST(request: NextRequest) {
         .select('id')
         .single();
 
-      if (channelError || !newChannel) {
+      if (channelError) {
         console.error('Error creating channel:', channelError);
-        return NextResponse.json(
-          { error: 'Failed to create channel' },
-          { status: 500 }
-        );
+
+        // Check if it's a duplicate key error
+        if (channelError.code === '23505') {
+          sendProgress({
+            type: 'error',
+            message: `Channel already exists in the database. This channel may have been imported with a different handle.`
+          });
+        } else {
+          sendProgress({
+            type: 'error',
+            message: `Failed to create channel: ${channelError.message}`
+          });
+        }
+        controller.close();
+        return;
+      }
+
+      if (!newChannel) {
+        sendProgress({ type: 'error', message: 'Failed to create channel - no data returned' });
+        controller.close();
+        return;
       }
 
       channelId = newChannel.id;
