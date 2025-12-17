@@ -48,6 +48,7 @@ interface ChannelData {
     lastSynced: string;
     externalLink?: string;
     externalLinkName?: string;
+    helloVideoUrl?: string;
   };
   recentVideos: Array<any>;
 }
@@ -74,10 +75,20 @@ export default function ChannelPage({
     videoTitle?: string;
   } | null>(null);
   const [showRecordModal, setShowRecordModal] = useState(false);
+  const [showHelloVideo, setShowHelloVideo] = useState(false);
+  const [hasShownHelloVideo, setHasShownHelloVideo] = useState(false);
 
   useEffect(() => {
     fetchChannelData();
   }, [channelHandle]);
+
+  // Auto-show hello video when channel data loads (only once)
+  useEffect(() => {
+    if (channelData?.channel.helloVideoUrl && !hasShownHelloVideo) {
+      setShowHelloVideo(true);
+      setHasShownHelloVideo(true);
+    }
+  }, [channelData, hasShownHelloVideo]);
 
   useEffect(() => {
     if (channelData?.channel.handle) {
@@ -570,6 +581,42 @@ export default function ChannelPage({
                 allow="camera; microphone; fullscreen"
                 title="Record a Hello Video"
               />
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Hello Video Auto-Play Modal */}
+      {showHelloVideo && channelData?.channel.helloVideoUrl && (
+        <div
+          className="fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center z-50 p-4"
+          onClick={() => setShowHelloVideo(false)}
+        >
+          <div className="max-w-4xl w-full" onClick={(e) => e.stopPropagation()}>
+            <div className="flex justify-end mb-2">
+              <button
+                onClick={() => setShowHelloVideo(false)}
+                className="px-6 py-2 text-white rounded-lg hover:opacity-80 transition-opacity"
+                style={{ backgroundColor: '#165DFC' }}
+              >
+                Close
+              </button>
+            </div>
+            <div className="bg-black rounded-lg overflow-hidden">
+              <div className="aspect-video">
+                <video
+                  src={channelData.channel.helloVideoUrl}
+                  className="w-full h-full"
+                  controls
+                  autoPlay
+                  playsInline
+                />
+              </div>
+            </div>
+            <div className="mt-4 text-center">
+              <p className="text-white text-sm">
+                Welcome! After watching this message, explore the videos below.
+              </p>
             </div>
           </div>
         </div>

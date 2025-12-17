@@ -55,6 +55,7 @@ export async function GET(
         lastSynced: channel.last_synced_at,
         externalLink: channel.external_link,
         externalLinkName: channel.external_link_name,
+        helloVideoUrl: channel.hello_video_url,
       },
       recentVideos: videos || [],
     });
