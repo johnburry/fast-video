@@ -280,14 +280,19 @@ export default function ChannelPage({
                     </a>
                   </div>
                   {channelData?.channel.externalLink && channelData?.channel.externalLinkName && (
-                    <a
-                      href={channelData.channel.externalLink}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="underline cursor-pointer hover:text-blue-400 transition-colors md:ml-20"
-                    >
-                      {channelData.channel.externalLinkName}
-                    </a>
+                    <div className="flex items-center gap-1 md:gap-2 md:ml-20">
+                      <svg className="w-6 h-6" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/>
+                      </svg>
+                      <a
+                        href={channelData.channel.externalLink}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="underline cursor-pointer hover:text-blue-400 transition-colors"
+                      >
+                        {channelData.channel.externalLinkName}
+                      </a>
+                    </div>
                   )}
                 </div>
               </div>
