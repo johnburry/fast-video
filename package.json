@@ -9,6 +9,9 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@mux/mux-node": "^12.8.1",
+    "@mux/mux-player-react": "^3.10.1",
+    "@mux/mux-uploader-react": "^1.4.1",
     "@supabase/supabase-js": "^2.87.3",
     "next": "16.0.10",
     "react": "19.2.1",

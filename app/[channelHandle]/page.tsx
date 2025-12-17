@@ -310,12 +310,14 @@ export default function ChannelPage({
                     <svg className="w-6 h-6" viewBox="0 0 24 24" fill="currentColor">
                       <path d="M17 10.5V7c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1v10c0 .55.45 1 1 1h12c.55 0 1-.45 1-1v-3.5l4 4v-11l-4 4z"/>
                     </svg>
-                    <button
-                      onClick={() => setShowRecordModal(true)}
+                    <a
+                      href="/record"
+                      target="_blank"
+                      rel="noopener noreferrer"
                       className="underline cursor-pointer hover:text-blue-400 transition-colors"
                     >
                       Record a Hello
-                    </button>
+                    </a>
                   </div>
                 </div>
               </div>
