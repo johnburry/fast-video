@@ -16,15 +16,9 @@ export const metadata: Metadata = {
   title: "Fast Video Transcript Search",
   description: "Search video transcripts across channels",
   icons: {
-    icon: [
-      { url: '/icon.svg', type: 'image/svg+xml' },
-      { url: '/icon.png', type: 'image/png', sizes: '32x32' },
-    ],
-    shortcut: ['/icon.svg'],
-    apple: [
-      { url: '/icon.svg' },
-      { url: '/icon.png', sizes: '180x180', type: 'image/png' },
-    ],
+    icon: '/icon',
+    shortcut: '/favicon.ico',
+    apple: '/apple-icon',
   },
 };
 
@@ -42,9 +36,9 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
-        <link rel="icon" type="image/svg+xml" href="/icon.svg" />
-        <link rel="alternate icon" type="image/png" href="/icon.png" />
-        <link rel="apple-touch-icon" href="/icon.png" />
+        <link rel="icon" type="image/png" href="/icon" />
+        <link rel="shortcut icon" href="/favicon.ico" />
+        <link rel="apple-touch-icon" href="/apple-icon" />
       </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}

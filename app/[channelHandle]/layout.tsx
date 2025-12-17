@@ -20,11 +20,9 @@ export async function generateMetadata({
       return {
         title: 'Channel Not Found',
         icons: {
-          icon: [
-            { url: '/icon.svg', type: 'image/svg+xml' },
-          ],
-          shortcut: '/icon.svg',
-          apple: '/icon.svg',
+          icon: '/icon',
+          shortcut: '/favicon.ico',
+          apple: '/apple-icon',
         },
       }
     }
@@ -38,12 +36,9 @@ export async function generateMetadata({
       title,
       description,
       icons: {
-        icon: [
-          { url: '/icon.svg', type: 'image/svg+xml' },
-          { url: '/icon', type: 'image/png' },
-        ],
-        shortcut: ['/icon.svg'],
-        apple: ['/icon'],
+        icon: '/icon',
+        shortcut: '/favicon.ico',
+        apple: '/apple-icon',
       },
       openGraph: {
         title,
@@ -63,12 +58,9 @@ export async function generateMetadata({
     return {
       title: 'Fast Video Transcript Search',
       icons: {
-        icon: [
-          { url: '/icon.svg', type: 'image/svg+xml' },
-          { url: '/icon', type: 'image/png' },
-        ],
-        shortcut: ['/icon.svg'],
-        apple: ['/icon'],
+        icon: '/icon',
+        shortcut: '/favicon.ico',
+        apple: '/apple-icon',
       },
     }
   }

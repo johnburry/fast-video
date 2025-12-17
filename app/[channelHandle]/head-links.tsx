@@ -7,27 +7,36 @@ export default function HeadLinks() {
     // Force favicon refresh with cache-busting
     const timestamp = Date.now();
 
-    // Remove Vercel's default favicon if present
+    // Remove Vercel's default favicon and any SVG favicons
     const vercelFavicon = document.querySelector('link[href*="vercel"]');
     if (vercelFavicon) {
       vercelFavicon.remove();
     }
 
-    // Add our favicon links if they don't exist
-    if (!document.querySelector('link[href="/icon.svg"]')) {
-      const link1 = document.createElement('link');
-      link1.rel = 'icon';
-      link1.type = 'image/svg+xml';
-      link1.href = `/icon.svg?v=${timestamp}`;
-      document.head.appendChild(link1);
+    const svgFavicons = document.querySelectorAll('link[href*=".svg"]');
+    svgFavicons.forEach(icon => icon.remove());
+
+    // Add PNG favicon links with cache-busting
+    if (!document.querySelector('link[href*="/icon"]')) {
+      const iconLink = document.createElement('link');
+      iconLink.rel = 'icon';
+      iconLink.type = 'image/png';
+      iconLink.href = `/icon?v=${timestamp}`;
+      document.head.appendChild(iconLink);
     }
 
-    if (!document.querySelector('link[href*="/icon.png"]') && !document.querySelector('link[href="/icon"]')) {
-      const link2 = document.createElement('link');
-      link2.rel = 'alternate icon';
-      link2.type = 'image/png';
-      link2.href = `/icon?v=${timestamp}`;
-      document.head.appendChild(link2);
+    if (!document.querySelector('link[href="/favicon.ico"]')) {
+      const faviconLink = document.createElement('link');
+      faviconLink.rel = 'shortcut icon';
+      faviconLink.href = `/favicon.ico?v=${timestamp}`;
+      document.head.appendChild(faviconLink);
+    }
+
+    if (!document.querySelector('link[href*="/apple-icon"]')) {
+      const appleLink = document.createElement('link');
+      appleLink.rel = 'apple-touch-icon';
+      appleLink.href = `/apple-icon?v=${timestamp}`;
+      document.head.appendChild(appleLink);
     }
   }, []);
 
