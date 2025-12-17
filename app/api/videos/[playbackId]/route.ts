@@ -14,7 +14,7 @@ export async function GET(
     const { playbackId } = await params;
 
     const { data: video, error: videoError } = await supabase
-      .from('videos')
+      .from('mux_videos')
       .select('*, channels(name, channel_handle)')
       .eq('mux_playback_id', playbackId)
       .single();

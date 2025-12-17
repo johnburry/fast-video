@@ -18,7 +18,7 @@ export async function POST(request: NextRequest) {
     }
 
     const { data, error } = await supabase
-      .from('videos')
+      .from('mux_videos')
       .insert({
         mux_playback_id: playbackId,
         channel_id: channelId || null,
