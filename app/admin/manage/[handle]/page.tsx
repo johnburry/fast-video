@@ -36,6 +36,7 @@ export default function ManageChannelPage({
   const [externalLinkName, setExternalLinkName] = useState('');
   const [isActive, setIsActive] = useState(true);
   const [thumbnailFile, setThumbnailFile] = useState<File | null>(null);
+  const [uploadingThumbnail, setUploadingThumbnail] = useState(false);
 
   useEffect(() => {
     fetchChannel();
@@ -93,6 +94,36 @@ export default function ManageChannelPage({
       setError(err instanceof Error ? err.message : 'Failed to update channel');
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleThumbnailUpload = async () => {
+    if (!thumbnailFile || !channel) return;
+
+    setUploadingThumbnail(true);
+    setError(null);
+    setSuccess(null);
+
+    try {
+      const formData = new FormData();
+      formData.append('thumbnail', thumbnailFile);
+
+      const response = await fetch(`/api/admin/channels/${channel.id}/thumbnail`, {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to upload thumbnail');
+      }
+
+      setSuccess('Thumbnail uploaded successfully!');
+      setThumbnailFile(null);
+      fetchChannel();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to upload thumbnail');
+    } finally {
+      setUploadingThumbnail(false);
     }
   };
 
@@ -195,6 +226,42 @@ export default function ManageChannelPage({
                 rows={4}
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Channel Thumbnail
+              </label>
+              {channel.thumbnail && (
+                <div className="mb-4">
+                  <img
+                    src={channel.thumbnail}
+                    alt={channel.name}
+                    className="w-32 h-32 rounded-lg object-cover"
+                  />
+                </div>
+              )}
+              <div className="flex items-end gap-3">
+                <div className="flex-1">
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => setThumbnailFile(e.target.files?.[0] || null)}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                </div>
+                <button
+                  type="button"
+                  onClick={handleThumbnailUpload}
+                  disabled={!thumbnailFile || uploadingThumbnail}
+                  className="px-6 py-2 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
+                >
+                  {uploadingThumbnail ? 'Uploading...' : 'Upload'}
+                </button>
+              </div>
+              <p className="mt-2 text-sm text-gray-500">
+                Upload a new thumbnail image (JPG, PNG, etc.)
+              </p>
             </div>
 
             <div>
