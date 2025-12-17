@@ -92,7 +92,12 @@ export default function RecordPage() {
               onUploadStart={handleUploadStart}
               onSuccess={handleSuccess}
               onUploadError={handleError}
-            />
+            >
+              <button slot="file-select">Upload or Record Video</button>
+            </MuxUploader>
+            <div className="mt-4 text-center text-gray-400 text-sm">
+              Record feature is only available on mobile devices.
+            </div>
             {isUploading && (
               <div className="mt-4 text-center">
                 <p className="text-lg">Uploading your video...</p>
