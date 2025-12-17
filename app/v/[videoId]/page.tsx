@@ -1,6 +1,5 @@
-'use client';
-
-import { use, useState, useEffect } from 'react';
+import { Metadata } from 'next';
+import VideoPageClient from './VideoPageClient';
 
 interface VideoMetadata {
   playbackId: string;
@@ -9,113 +8,66 @@ interface VideoMetadata {
   channelHandle: string | null;
 }
 
-export default function VideoPage({
+async function getVideoMetadata(videoId: string): Promise<VideoMetadata | null> {
+  try {
+    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || process.env.VERCEL_URL
+      ? `https://${process.env.VERCEL_URL}`
+      : 'http://localhost:3000';
+
+    const res = await fetch(`${baseUrl}/api/videos/${videoId}`, {
+      cache: 'no-store',
+    });
+
+    if (res.ok) {
+      return await res.json();
+    }
+  } catch (e) {
+    console.error('Error fetching video metadata for OpenGraph:', e);
+  }
+  return null;
+}
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ videoId: string }>;
+}): Promise<Metadata> {
+  const { videoId } = await params;
+  const metadata = await getVideoMetadata(videoId);
+
+  const title = metadata?.channelName
+    ? `A Fast Video from ${metadata.channelName}`
+    : 'A Fast Video';
+
+  const thumbnailUrl = metadata?.thumbnailUrl || `https://image.mux.com/${videoId}/thumbnail.jpg`;
+
+  return {
+    title,
+    openGraph: {
+      title,
+      type: 'video.other',
+      images: [
+        {
+          url: thumbnailUrl,
+          width: 1200,
+          height: 675,
+        },
+      ],
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title,
+      images: [thumbnailUrl],
+    },
+  };
+}
+
+export default async function VideoPage({
   params,
 }: {
   params: Promise<{ videoId: string }>;
 }) {
-  const { videoId } = use(params);
-  const [metadata, setMetadata] = useState<VideoMetadata | null>(null);
-  const [redirecting, setRedirecting] = useState(false);
+  const { videoId } = await params;
 
-  useEffect(() => {
-    const fetchMetadataAndRedirect = async () => {
-      try {
-        const res = await fetch(`/api/videos/${videoId}`);
-        if (res.ok) {
-          const data = await res.json();
-          setMetadata(data);
-
-          // If we have a channel handle, redirect to the channel page with video modal
-          if (data.channelHandle) {
-            setRedirecting(true);
-            const protocol = window.location.protocol;
-            const hostname = window.location.hostname;
-            const port = window.location.port ? `:${window.location.port}` : '';
-
-            // Construct subdomain URL
-            let targetUrl;
-            if (hostname.includes('localhost')) {
-              targetUrl = `${protocol}//${data.channelHandle}.${hostname}${port}?v=${videoId}`;
-            } else {
-              // For production, use subdomain
-              const baseDomain = hostname.split('.').slice(-2).join('.'); // e.g., "fast.video"
-              targetUrl = `${protocol}//${data.channelHandle}.${baseDomain}?v=${videoId}`;
-            }
-
-            window.location.href = targetUrl;
-          }
-        }
-      } catch (e) {
-        console.error('Error fetching video metadata:', e);
-      }
-    };
-
-    fetchMetadataAndRedirect();
-  }, [videoId]);
-
-  useEffect(() => {
-    // Update page title and meta tags
-    const title = metadata?.channelName
-      ? `A Fast Video from ${metadata.channelName}`
-      : 'A Fast Video';
-
-    document.title = title;
-
-    // Update or create OpenGraph meta tags
-    const updateMetaTag = (property: string, content: string) => {
-      let tag = document.querySelector(`meta[property="${property}"]`) as HTMLMetaElement;
-      if (!tag) {
-        tag = document.createElement('meta');
-        tag.setAttribute('property', property);
-        document.head.appendChild(tag);
-      }
-      tag.content = content;
-    };
-
-    updateMetaTag('og:title', title);
-    updateMetaTag('og:type', 'video.other');
-    updateMetaTag('og:url', window.location.href);
-
-    if (metadata?.thumbnailUrl) {
-      updateMetaTag('og:image', metadata.thumbnailUrl);
-      updateMetaTag('og:image:width', '1200');
-      updateMetaTag('og:image:height', '675');
-    }
-
-    // Twitter Card
-    const updateTwitterTag = (name: string, content: string) => {
-      let tag = document.querySelector(`meta[name="${name}"]`) as HTMLMetaElement;
-      if (!tag) {
-        tag = document.createElement('meta');
-        tag.setAttribute('name', name);
-        document.head.appendChild(tag);
-      }
-      tag.content = content;
-    };
-
-    updateTwitterTag('twitter:card', 'summary_large_image');
-    updateTwitterTag('twitter:title', title);
-    if (metadata?.thumbnailUrl) {
-      updateTwitterTag('twitter:image', metadata.thumbnailUrl);
-    }
-  }, [metadata]);
-
-  return (
-    <div className="min-h-screen bg-black text-white flex items-center justify-center">
-      <div className="text-center">
-        {redirecting || metadata?.channelHandle ? (
-          <>
-            <div className="inline-block animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500 mb-4"></div>
-            <p className="text-lg">Redirecting to channel...</p>
-          </>
-        ) : (
-          <>
-            <div className="inline-block animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500 mb-4"></div>
-            <p className="text-lg">Loading video...</p>
-          </>
-        )}
-      </div>
-    </div>
-  );
+  return <VideoPageClient videoId={videoId} />;
 }
