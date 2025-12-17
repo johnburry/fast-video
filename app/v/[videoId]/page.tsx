@@ -10,16 +10,24 @@ interface VideoMetadata {
 
 async function getVideoMetadata(videoId: string): Promise<VideoMetadata | null> {
   try {
-    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || process.env.VERCEL_URL
-      ? `https://${process.env.VERCEL_URL}`
-      : 'http://localhost:3000';
+    // Construct the base URL for server-side API calls
+    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL
+      || (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : null)
+      || 'http://localhost:3000';
 
-    const res = await fetch(`${baseUrl}/api/videos/${videoId}`, {
+    const apiUrl = `${baseUrl}/api/videos/${videoId}`;
+    console.log('Fetching video metadata from:', apiUrl);
+
+    const res = await fetch(apiUrl, {
       cache: 'no-store',
     });
 
     if (res.ok) {
-      return await res.json();
+      const data = await res.json();
+      console.log('Video metadata received:', data);
+      return data;
+    } else {
+      console.error('Failed to fetch video metadata:', res.status, res.statusText);
     }
   } catch (e) {
     console.error('Error fetching video metadata for OpenGraph:', e);
@@ -35,9 +43,15 @@ export async function generateMetadata({
   const { videoId } = await params;
   const metadata = await getVideoMetadata(videoId);
 
+  console.log('generateMetadata - videoId:', videoId);
+  console.log('generateMetadata - metadata:', metadata);
+  console.log('generateMetadata - channelName:', metadata?.channelName);
+
   const title = metadata?.channelName
     ? `A Fast Video from ${metadata.channelName}`
     : 'A Fast Video';
+
+  console.log('generateMetadata - final title:', title);
 
   const thumbnailUrl = metadata?.thumbnailUrl || `https://image.mux.com/${videoId}/thumbnail.jpg`;
 
