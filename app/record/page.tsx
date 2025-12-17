@@ -92,7 +92,11 @@ export default function RecordPage() {
               onUploadStart={handleUploadStart}
               onSuccess={handleSuccess}
               onUploadError={handleError}
-            />
+            >
+              <button slot="file-select" type="button" className="px-6 py-3 bg-blue-600 hover:bg-blue-700 rounded font-medium transition-colors cursor-pointer">
+                Record or Upload a Video
+              </button>
+            </MuxUploader>
             <div className="mt-4 text-center text-gray-400 text-sm">
               Record feature is only available on mobile devices.
             </div>
