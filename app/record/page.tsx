@@ -33,12 +33,18 @@ export default function RecordPage() {
         }
 
         if (subdomain) {
+          console.log('Detected subdomain:', subdomain);
           const res = await fetch(`/api/channels/handle/${subdomain}`);
           if (res.ok) {
             const data = await res.json();
+            console.log('Channel found:', data);
             setChannelId(data.id);
             setChannelName(data.name);
+          } else {
+            console.error('Channel not found for subdomain:', subdomain, 'Status:', res.status);
           }
+        } else {
+          console.log('No subdomain detected');
         }
       } catch (e) {
         console.error('Error fetching channel from subdomain:', e);
@@ -98,6 +104,7 @@ export default function RecordPage() {
           const thumbnailUrl = `https://image.mux.com/${playbackId}/thumbnail.jpg`;
 
           try {
+            console.log('Saving video metadata with channelId:', channelId);
             const saveRes = await fetch('/api/videos', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
@@ -109,12 +116,15 @@ export default function RecordPage() {
             });
 
             if (!saveRes.ok) {
-              console.error('Failed to save video metadata:', await saveRes.text());
+              const errorText = await saveRes.text();
+              console.error('Failed to save video metadata:', errorText);
+              setError(`Failed to save video: ${errorText}`);
             } else {
               console.log('Video metadata saved successfully');
             }
           } catch (saveError) {
             console.error('Error saving video metadata:', saveError);
+            setError('Error saving video metadata');
           }
         }
       } catch (e) {
