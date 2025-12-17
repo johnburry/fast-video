@@ -1,12 +1,12 @@
 'use client';
 
 import { use, useState, useEffect } from 'react';
-import MuxPlayer from '@mux/mux-player-react';
 
 interface VideoMetadata {
   playbackId: string;
   thumbnailUrl: string | null;
   channelName: string | null;
+  channelHandle: string | null;
 }
 
 export default function VideoPage({
@@ -16,21 +16,42 @@ export default function VideoPage({
 }) {
   const { videoId } = use(params);
   const [metadata, setMetadata] = useState<VideoMetadata | null>(null);
+  const [redirecting, setRedirecting] = useState(false);
 
   useEffect(() => {
-    const fetchMetadata = async () => {
+    const fetchMetadataAndRedirect = async () => {
       try {
         const res = await fetch(`/api/videos/${videoId}`);
         if (res.ok) {
           const data = await res.json();
           setMetadata(data);
+
+          // If we have a channel handle, redirect to the channel page with video modal
+          if (data.channelHandle) {
+            setRedirecting(true);
+            const protocol = window.location.protocol;
+            const hostname = window.location.hostname;
+            const port = window.location.port ? `:${window.location.port}` : '';
+
+            // Construct subdomain URL
+            let targetUrl;
+            if (hostname.includes('localhost')) {
+              targetUrl = `${protocol}//${data.channelHandle}.${hostname}${port}?v=${videoId}`;
+            } else {
+              // For production, use subdomain
+              const baseDomain = hostname.split('.').slice(-2).join('.'); // e.g., "fast.video"
+              targetUrl = `${protocol}//${data.channelHandle}.${baseDomain}?v=${videoId}`;
+            }
+
+            window.location.href = targetUrl;
+          }
         }
       } catch (e) {
         console.error('Error fetching video metadata:', e);
       }
     };
 
-    fetchMetadata();
+    fetchMetadataAndRedirect();
   }, [videoId]);
 
   useEffect(() => {
@@ -81,41 +102,19 @@ export default function VideoPage({
   }, [metadata]);
 
   return (
-    <div className="min-h-screen bg-black text-white">
-      {/* Back Button Bar */}
-      <div
-        style={{
-          paddingTop: 'calc(env(safe-area-inset-top) + 11px)',
-          paddingBottom: '12px'
-        }}
-        className="sticky top-0 z-50 bg-black"
-      >
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <button
-            onClick={() => window.history.back()}
-            className="flex items-center gap-2 bg-blue-600 text-white px-6 py-2 rounded-lg font-medium hover:bg-blue-700 transition-colors"
-          >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-            </svg>
-            Back
-          </button>
-        </div>
-      </div>
-
-      <div className="max-w-4xl mx-auto p-8">
-        <div className="bg-gray-900 rounded-lg overflow-hidden">
-          <MuxPlayer
-            playbackId={videoId}
-            metadata={{
-              video_title: metadata?.channelName
-                ? `A Fast Video from ${metadata.channelName}`
-                : 'Video',
-            }}
-            streamType="on-demand"
-            autoPlay
-          />
-        </div>
+    <div className="min-h-screen bg-black text-white flex items-center justify-center">
+      <div className="text-center">
+        {redirecting || metadata?.channelHandle ? (
+          <>
+            <div className="inline-block animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500 mb-4"></div>
+            <p className="text-lg">Redirecting to channel...</p>
+          </>
+        ) : (
+          <>
+            <div className="inline-block animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500 mb-4"></div>
+            <p className="text-lg">Loading video...</p>
+          </>
+        )}
       </div>
     </div>
   );

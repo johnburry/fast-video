@@ -2,6 +2,7 @@
 
 import { use, useState, useEffect, ReactElement } from 'react';
 import { formatTimestamp } from '@/lib/youtube/transcript';
+import MuxPlayer from '@mux/mux-player-react';
 
 // Helper function to process channel names with line break character
 function formatChannelName(name: string): ReactElement[] {
@@ -77,9 +78,17 @@ export default function ChannelPage({
   const [showRecordModal, setShowRecordModal] = useState(false);
   const [showHelloVideo, setShowHelloVideo] = useState(false);
   const [hasShownHelloVideo, setHasShownHelloVideo] = useState(false);
+  const [muxVideoId, setMuxVideoId] = useState<string | null>(null);
 
   useEffect(() => {
     fetchChannelData();
+
+    // Check for ?v= query parameter
+    const urlParams = new URLSearchParams(window.location.search);
+    const videoParam = urlParams.get('v');
+    if (videoParam) {
+      setMuxVideoId(videoParam);
+    }
   }, [channelHandle]);
 
   // Auto-show hello video when channel data loads (only once)
@@ -619,6 +628,35 @@ export default function ChannelPage({
               <p className="text-white text-sm">
                 Welcome! After watching this message, explore the videos below.
               </p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Mux Video Modal (from ?v= parameter) */}
+      {muxVideoId && (
+        <div
+          className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4"
+          onClick={() => setMuxVideoId(null)}
+        >
+          <div className="max-w-7xl w-full" onClick={(e) => e.stopPropagation()}>
+            <div className="flex justify-end mb-2">
+              <button
+                onClick={() => setMuxVideoId(null)}
+                className="px-6 py-2 text-white rounded-lg hover:opacity-80 transition-opacity"
+                style={{ backgroundColor: '#165DFC' }}
+              >
+                Close
+              </button>
+            </div>
+            <div className="bg-white rounded-lg overflow-hidden">
+              <div className="aspect-video">
+                <MuxPlayer
+                  playbackId={muxVideoId}
+                  streamType="on-demand"
+                  autoPlay
+                />
+              </div>
             </div>
           </div>
         </div>

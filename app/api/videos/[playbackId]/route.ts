@@ -15,7 +15,7 @@ export async function GET(
 
     const { data: video, error: videoError } = await supabase
       .from('videos')
-      .select('*, channels(name)')
+      .select('*, channels(name, channel_handle)')
       .eq('playback_id', playbackId)
       .single();
 
@@ -30,6 +30,7 @@ export async function GET(
       playbackId: video.playback_id,
       thumbnailUrl: video.thumbnail_url,
       channelName: video.channels?.name || null,
+      channelHandle: video.channels?.channel_handle || null,
       createdAt: video.created_at,
     });
   } catch (error) {
