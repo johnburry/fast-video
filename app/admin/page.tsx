@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/lib/hooks/useAuth';
+import { AdminToolbar } from '@/components/AdminToolbar';
 
 export default function AdminPage() {
   const { user, loading: authLoading, signOut } = useAuth();
@@ -138,23 +139,17 @@ export default function AdminPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-3xl mx-auto">
-        <div className="bg-white rounded-lg shadow-lg p-8">
-          <div className="flex justify-between items-start mb-2">
-            <h1 className="text-3xl font-bold text-gray-900">
-              Fast.Video Admin
+    <div className="min-h-screen bg-gray-50">
+      <AdminToolbar />
+      <div className="py-12 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-3xl mx-auto">
+          <div className="bg-white rounded-lg shadow-lg p-8">
+            <h1 className="text-3xl font-bold text-gray-900 mb-2">
+              Import Channel
             </h1>
-            <button
-              onClick={signOut}
-              className="px-4 py-2 text-sm text-gray-700 hover:text-gray-900 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
-            >
-              Sign Out
-            </button>
-          </div>
-          <p className="text-gray-600 mb-8">
-            Import YouTube channels and their transcripts
-          </p>
+            <p className="text-gray-600 mb-8">
+              Import YouTube channels and their transcripts
+            </p>
 
           <form onSubmit={handleImport} className="space-y-6">
             <div>
@@ -328,6 +323,7 @@ export default function AdminPage() {
           )}
         </div>
       </div>
+    </div>
     </div>
   );
 }

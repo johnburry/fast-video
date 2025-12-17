@@ -3,6 +3,7 @@
 import { use, useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/hooks/useAuth';
+import { AdminToolbar } from '@/components/AdminToolbar';
 
 interface Channel {
   id: string;
@@ -189,16 +190,18 @@ export default function ManageChannelPage({
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-3xl mx-auto">
-        <div className="mb-6">
-          <a
-            href="/admin"
-            className="text-blue-600 hover:text-blue-800 font-medium"
-          >
-            ← Back to Admin
-          </a>
-        </div>
+    <div className="min-h-screen bg-gray-50">
+      <AdminToolbar />
+      <div className="py-12 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-3xl mx-auto">
+          <div className="mb-6">
+            <a
+              href="/admin"
+              className="text-blue-600 hover:text-blue-800 font-medium"
+            >
+              ← Back to Import
+            </a>
+          </div>
 
         <div className="bg-white rounded-lg shadow-lg p-8">
           <div className="flex items-start justify-between mb-6">
@@ -391,6 +394,7 @@ export default function ManageChannelPage({
           </div>
         </div>
       </div>
+    </div>
     </div>
   );
 }
