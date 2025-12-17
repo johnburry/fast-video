@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase/server';
 import { getChannelByHandle, getChannelVideos } from '@/lib/youtube/client';
 import { getVideoTranscript } from '@/lib/youtube/transcript';
-import { uploadThumbnailToR2 } from '@/lib/r2';
+import { uploadThumbnailToR2, uploadChannelThumbnailToR2 } from '@/lib/r2';
 import type { Database } from '@/lib/supabase/database.types';
 
 // Parse relative time strings like "5 days ago" to ISO timestamp
@@ -94,6 +94,12 @@ export async function POST(request: NextRequest) {
 
         sendProgress({ type: 'status', message: 'Setting up channel...' });
 
+        // Upload channel thumbnail to R2
+        const r2ChannelThumbnailUrl = await uploadChannelThumbnailToR2(
+          channelInfo.channelId,
+          channelInfo.thumbnailUrl
+        );
+
         // Check if channel already exists
         const { data: existingChannels } = await supabaseAdmin
       .from('channels')
@@ -112,7 +118,7 @@ export async function POST(request: NextRequest) {
       await supabaseAdmin.from('channels').update({
           channel_name: channelInfo.name,
           channel_description: channelInfo.description,
-          thumbnail_url: channelInfo.thumbnailUrl,
+          thumbnail_url: r2ChannelThumbnailUrl,
           banner_url: channelInfo.bannerUrl,
           subscriber_count: channelInfo.subscriberCount,
           last_synced_at: new Date().toISOString(),
@@ -127,7 +133,7 @@ export async function POST(request: NextRequest) {
           channel_handle: channelInfo.handle,
           channel_name: channelInfo.name,
           channel_description: channelInfo.description,
-          thumbnail_url: channelInfo.thumbnailUrl,
+          thumbnail_url: r2ChannelThumbnailUrl,
           banner_url: channelInfo.bannerUrl,
           subscriber_count: channelInfo.subscriberCount,
           last_synced_at: new Date().toISOString(),
