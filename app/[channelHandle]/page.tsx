@@ -321,7 +321,7 @@ export default function ChannelPage({
                       href="/record"
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="underline cursor-pointer transition-colors"
+                      className="underline cursor-pointer transition-colors font-bold"
                       style={{ color: '#FF0000' }}
                     >
                       Record a Fast Video

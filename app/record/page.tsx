@@ -198,7 +198,12 @@ export default function RecordPage() {
 
       <div className="max-w-4xl mx-auto p-8">
         <div className="mb-8">
-          <h1 className="text-4xl font-bold mb-2">Record a Fast Video</h1>
+          <h1 className="text-4xl font-bold mb-2 flex items-center gap-3">
+            <svg className="w-10 h-10" viewBox="0 0 24 24" fill="#FF0000">
+              <path d="M17 10.5V7c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1v10c0 .55.45 1 1 1h12c.55 0 1-.45 1-1v-3.5l4 4v-11l-4 4z"/>
+            </svg>
+            Record a Fast Video
+          </h1>
           {channelName && (
             <p className="text-gray-400">
               A Fast Video recorded here, after playback will send viewers to the channel: <strong className="text-white">{channelName}</strong>
@@ -224,8 +229,8 @@ export default function RecordPage() {
               {!isMobile && (
                 <span slot="heading">Drop a video file here to upload, or</span>
               )}
-              <button slot="file-select" type="button" className="px-6 py-3 bg-blue-600 hover:bg-blue-700 rounded font-medium transition-colors cursor-pointer">
-                {isMobile ? 'Record or Upload a Video' : 'Upload a Video'}
+              <button slot="file-select" type="button" className="px-6 py-3 rounded font-medium transition-colors cursor-pointer" style={{ backgroundColor: '#FF0000' }}>
+                {isMobile ? 'Record or Upload Video' : 'Upload Video'}
               </button>
             </MuxUploader>
             {!isMobile && (
