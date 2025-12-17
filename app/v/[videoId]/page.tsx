@@ -1,7 +1,13 @@
 'use client';
 
-import { use } from 'react';
+import { use, useState, useEffect } from 'react';
 import MuxPlayer from '@mux/mux-player-react';
+
+interface VideoMetadata {
+  playbackId: string;
+  thumbnailUrl: string | null;
+  channelName: string | null;
+}
 
 export default function VideoPage({
   params,
@@ -9,6 +15,70 @@ export default function VideoPage({
   params: Promise<{ videoId: string }>;
 }) {
   const { videoId } = use(params);
+  const [metadata, setMetadata] = useState<VideoMetadata | null>(null);
+
+  useEffect(() => {
+    const fetchMetadata = async () => {
+      try {
+        const res = await fetch(`/api/videos/${videoId}`);
+        if (res.ok) {
+          const data = await res.json();
+          setMetadata(data);
+        }
+      } catch (e) {
+        console.error('Error fetching video metadata:', e);
+      }
+    };
+
+    fetchMetadata();
+  }, [videoId]);
+
+  useEffect(() => {
+    // Update page title and meta tags
+    const title = metadata?.channelName
+      ? `A Fast Video from ${metadata.channelName}`
+      : 'A Fast Video';
+
+    document.title = title;
+
+    // Update or create OpenGraph meta tags
+    const updateMetaTag = (property: string, content: string) => {
+      let tag = document.querySelector(`meta[property="${property}"]`) as HTMLMetaElement;
+      if (!tag) {
+        tag = document.createElement('meta');
+        tag.setAttribute('property', property);
+        document.head.appendChild(tag);
+      }
+      tag.content = content;
+    };
+
+    updateMetaTag('og:title', title);
+    updateMetaTag('og:type', 'video.other');
+    updateMetaTag('og:url', window.location.href);
+
+    if (metadata?.thumbnailUrl) {
+      updateMetaTag('og:image', metadata.thumbnailUrl);
+      updateMetaTag('og:image:width', '1200');
+      updateMetaTag('og:image:height', '675');
+    }
+
+    // Twitter Card
+    const updateTwitterTag = (name: string, content: string) => {
+      let tag = document.querySelector(`meta[name="${name}"]`) as HTMLMetaElement;
+      if (!tag) {
+        tag = document.createElement('meta');
+        tag.setAttribute('name', name);
+        document.head.appendChild(tag);
+      }
+      tag.content = content;
+    };
+
+    updateTwitterTag('twitter:card', 'summary_large_image');
+    updateTwitterTag('twitter:title', title);
+    if (metadata?.thumbnailUrl) {
+      updateTwitterTag('twitter:image', metadata.thumbnailUrl);
+    }
+  }, [metadata]);
 
   return (
     <div className="min-h-screen bg-black text-white">
@@ -38,7 +108,9 @@ export default function VideoPage({
           <MuxPlayer
             playbackId={videoId}
             metadata={{
-              video_title: 'Video',
+              video_title: metadata?.channelName
+                ? `A Fast Video from ${metadata.channelName}`
+                : 'Video',
             }}
             streamType="on-demand"
             autoPlay

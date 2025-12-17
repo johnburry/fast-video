@@ -55,6 +55,20 @@ export default function RecordPage() {
           setPlaybackUrl(data.playbackUrl);
           setIsPreparing(false);
           clearInterval(pollInterval);
+
+          // Save video metadata to database
+          const playbackId = data.playbackUrl.split('/').pop()?.replace('.m3u8', '') || '';
+          const thumbnailUrl = `https://image.mux.com/${playbackId}/thumbnail.jpg`;
+
+          await fetch('/api/videos', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              playbackId,
+              thumbnailUrl,
+              channelId: null, // Can be set later if needed
+            }),
+          });
         }
       } catch (e) {
         console.error('Error polling upload status:', e);
