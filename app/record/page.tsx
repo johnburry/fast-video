@@ -174,7 +174,7 @@ export default function RecordPage() {
 
       <div className="max-w-4xl mx-auto p-8">
         <div className="mb-8">
-          <h1 className="text-4xl font-bold mb-2">Record a Hello Video</h1>
+          <h1 className="text-4xl font-bold mb-2">Record a Fast Video</h1>
           <p className="text-gray-400">
             Record or upload a video message for your channel visitors
           </p>

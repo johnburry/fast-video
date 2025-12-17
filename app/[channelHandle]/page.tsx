@@ -326,7 +326,7 @@ export default function ChannelPage({
                       rel="noopener noreferrer"
                       className="underline cursor-pointer hover:text-blue-400 transition-colors"
                     >
-                      Record a Hello
+                      Record a Fast Video
                     </a>
                   </div>
                 </div>
@@ -569,7 +569,7 @@ export default function ChannelPage({
         </div>
       )}
 
-      {/* Record a Hello Modal */}
+      {/* Record a Fast Video Modal */}
       {showRecordModal && (
         <div
           className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4"
@@ -591,7 +591,7 @@ export default function ChannelPage({
                 className="w-full"
                 style={{ height: '80vh', minHeight: '600px' }}
                 allow="camera; microphone; fullscreen"
-                title="Record a Hello Video"
+                title="Record a Fast Video"
               />
             </div>
           </div>
