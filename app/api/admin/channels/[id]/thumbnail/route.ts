@@ -62,10 +62,13 @@ export async function POST(
     const baseUrl = PUBLIC_URL.endsWith('/') ? PUBLIC_URL.slice(0, -1) : PUBLIC_URL;
     const r2Url = `${baseUrl}/${key}`;
 
-    // Update channel with new thumbnail URL
+    // Update channel with new thumbnail URL and banner URL (use same image for both)
     const { error: updateError } = await supabaseAdmin
       .from('channels')
-      .update({ thumbnail_url: r2Url })
+      .update({
+        thumbnail_url: r2Url,
+        banner_url: r2Url
+      })
       .eq('id', id);
 
     if (updateError) {
