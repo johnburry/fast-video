@@ -46,13 +46,17 @@ export async function POST(
     const bytes = await file.arrayBuffer();
     const buffer = Buffer.from(bytes);
 
-    // Upload to R2
+    // Upload to R2 with cache control headers
     const key = `fast-video-thumbnails/channels/${channel.youtube_channel_id}.jpg`;
     const uploadCommand = new PutObjectCommand({
       Bucket: process.env.R2_BUCKET_NAME!,
       Key: key,
       Body: buffer,
       ContentType: file.type,
+      CacheControl: 'no-cache, no-store, must-revalidate',
+      Metadata: {
+        'uploaded-at': new Date().toISOString(),
+      },
     });
 
     await s3Client.send(uploadCommand);
