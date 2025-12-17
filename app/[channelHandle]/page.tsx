@@ -655,6 +655,7 @@ export default function ChannelPage({
                 <MuxPlayer
                   playbackId={muxVideoId}
                   streamType="on-demand"
+                  poster={`https://image.mux.com/${muxVideoId}/thumbnail.jpg?width=1200&height=675&fit_mode=smartcrop`}
                   autoPlay
                 />
               </div>
