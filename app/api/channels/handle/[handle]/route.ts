@@ -21,10 +21,24 @@ export async function GET(
       .single();
 
     if (error) {
-      console.error('Database error looking up channel:', error);
+      console.error('Database error looking up channel:', {
+        handle,
+        errorCode: error.code,
+        errorMessage: error.message,
+        errorDetails: error.details,
+        errorHint: error.hint
+      });
+      return NextResponse.json(
+        {
+          error: 'Database error',
+          message: error.message,
+          code: error.code
+        },
+        { status: 500 }
+      );
     }
 
-    if (error || !channel) {
+    if (!channel) {
       console.log('Channel not found for handle:', handle);
       return NextResponse.json(
         { error: 'Channel not found' },
