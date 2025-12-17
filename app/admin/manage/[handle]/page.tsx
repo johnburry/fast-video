@@ -2,6 +2,7 @@
 
 import { use, useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { useAuth } from '@/lib/hooks/useAuth';
 
 interface Channel {
   id: string;
@@ -22,6 +23,7 @@ export default function ManageChannelPage({
 }) {
   const { handle } = use(params);
   const router = useRouter();
+  const { user, loading: authLoading } = useAuth();
   const [channel, setChannel] = useState<Channel | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -156,10 +158,10 @@ export default function ManageChannelPage({
     }
   };
 
-  if (loading) {
+  if (authLoading || loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <p className="text-gray-600">Loading channel...</p>
+        <p className="text-gray-600">Loading...</p>
       </div>
     );
   }
