@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import MuxUploader from '@mux/mux-uploader-react';
 import MuxPlayer from '@mux/mux-player-react';
+import { QRCodeSVG } from 'qrcode.react';
 
 export default function RecordPage() {
   const [uploadId, setUploadId] = useState<string>('');
@@ -12,6 +13,7 @@ export default function RecordPage() {
   const [error, setError] = useState<string>('');
   const [channelId, setChannelId] = useState<string | null>(null);
   const [channelName, setChannelName] = useState<string | null>(null);
+  const [recordUrl, setRecordUrl] = useState<string>('');
 
   // Detect subdomain and fetch channel info
   useEffect(() => {
@@ -52,6 +54,13 @@ export default function RecordPage() {
     };
 
     getChannelFromSubdomain();
+  }, []);
+
+  // Set the current URL for QR code
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      setRecordUrl(window.location.href);
+    }
   }, []);
 
   const createUpload = async () => {
@@ -212,8 +221,20 @@ export default function RecordPage() {
                 Record or Upload a Video
               </button>
             </MuxUploader>
-            <div className="mt-4 text-center text-gray-400 text-sm">
-              Record feature is only available on mobile devices.
+            <div className="mt-6 text-center">
+              <p className="text-gray-300 text-base mb-4">
+                Scan QR code to use your mobile for recording a Fast Video
+              </p>
+              {recordUrl && (
+                <div className="inline-block p-4 bg-white rounded-lg">
+                  <QRCodeSVG
+                    value={recordUrl}
+                    size={200}
+                    level="H"
+                    includeMargin={true}
+                  />
+                </div>
+              )}
             </div>
             {isUploading && (
               <div className="mt-4 text-center">
