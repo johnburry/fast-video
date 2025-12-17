@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase/server';
 import { getChannelByHandle, getChannelVideos } from '@/lib/youtube/client';
 import { getVideoTranscript } from '@/lib/youtube/transcript';
+import { uploadThumbnailToR2 } from '@/lib/r2';
 import type { Database } from '@/lib/supabase/database.types';
 
 // Parse relative time strings like "5 days ago" to ISO timestamp
@@ -174,6 +175,12 @@ export async function POST(request: NextRequest) {
               total: videos.length,
               videoTitle: video.title,
             });
+
+            // Upload thumbnail to R2
+            const r2ThumbnailUrl = await uploadThumbnailToR2(
+              video.videoId,
+              video.thumbnailUrl
+            );
         // Check if video already exists
         const { data: existingVideos } = await supabaseAdmin
           .from('videos')
@@ -201,7 +208,7 @@ export async function POST(request: NextRequest) {
             .update({
               title: video.title,
               description: video.description,
-              thumbnail_url: video.thumbnailUrl,
+              thumbnail_url: r2ThumbnailUrl,
               duration_seconds: video.durationSeconds,
               view_count: video.viewCount,
             })
@@ -216,7 +223,7 @@ export async function POST(request: NextRequest) {
               youtube_video_id: video.videoId,
               title: video.title,
               description: video.description,
-              thumbnail_url: video.thumbnailUrl,
+              thumbnail_url: r2ThumbnailUrl,
               duration_seconds: video.durationSeconds,
               published_at: publishedAt,
               view_count: video.viewCount,

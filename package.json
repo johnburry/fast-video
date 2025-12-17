@@ -9,6 +9,7 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.953.0",
     "@mux/mux-node": "^12.8.1",
     "@mux/mux-player-react": "^3.10.1",
     "@mux/mux-uploader-react": "^1.4.1",
