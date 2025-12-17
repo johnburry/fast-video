@@ -23,7 +23,7 @@ export async function uploadThumbnailToR2(
   youtubeVideoId: string,
   thumbnailUrl: string
 ): Promise<string> {
-  const key = `thumbnails/${youtubeVideoId}.jpg`;
+  const key = `fast-video-thumbnails/${youtubeVideoId}.jpg`;
 
   try {
     // Check if thumbnail already exists in R2
@@ -76,7 +76,7 @@ export async function uploadThumbnailToR2(
  */
 export function getThumbnailUrl(youtubeVideoId: string, originalUrl?: string): string {
   if (PUBLIC_URL) {
-    return `${PUBLIC_URL}/thumbnails/${youtubeVideoId}.jpg`;
+    return `${PUBLIC_URL}/fast-video-thumbnails/${youtubeVideoId}.jpg`;
   }
   return originalUrl || '';
 }
