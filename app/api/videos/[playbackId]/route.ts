@@ -17,9 +17,18 @@ export async function GET(
       .from('mux_videos')
       .select('*, channels(name, channel_handle)')
       .eq('mux_playback_id', playbackId)
-      .single();
+      .maybeSingle();
 
-    if (videoError || !video) {
+    if (videoError) {
+      console.error('Database error fetching video:', videoError);
+      return NextResponse.json(
+        { error: 'Database error', details: videoError.message },
+        { status: 500 }
+      );
+    }
+
+    if (!video) {
+      console.error('Video not found for playback ID:', playbackId);
       return NextResponse.json(
         { error: 'Video not found' },
         { status: 404 }
