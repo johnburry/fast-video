@@ -10,6 +10,43 @@ export default function RecordPage() {
   const [isPreparing, setIsPreparing] = useState(false);
   const [playbackUrl, setPlaybackUrl] = useState<string>('');
   const [error, setError] = useState<string>('');
+  const [channelId, setChannelId] = useState<string | null>(null);
+  const [channelName, setChannelName] = useState<string | null>(null);
+
+  // Detect subdomain and fetch channel info
+  useEffect(() => {
+    const getChannelFromSubdomain = async () => {
+      try {
+        const hostname = window.location.hostname;
+        const parts = hostname.split('.');
+
+        let subdomain: string | null = null;
+
+        if (hostname.includes('localhost')) {
+          if (parts.length >= 2 && parts[0] !== 'localhost') {
+            subdomain = parts[0];
+          }
+        } else {
+          if (parts.length >= 3 && parts[0] !== 'www' && parts[0] !== 'all') {
+            subdomain = parts[0];
+          }
+        }
+
+        if (subdomain) {
+          const res = await fetch(`/api/channels/handle/${subdomain}`);
+          if (res.ok) {
+            const data = await res.json();
+            setChannelId(data.id);
+            setChannelName(data.name);
+          }
+        }
+      } catch (e) {
+        console.error('Error fetching channel from subdomain:', e);
+      }
+    };
+
+    getChannelFromSubdomain();
+  }, []);
 
   const createUpload = async () => {
     try {
@@ -66,7 +103,7 @@ export default function RecordPage() {
             body: JSON.stringify({
               playbackId,
               thumbnailUrl,
-              channelId: null, // Can be set later if needed
+              channelId: channelId, // Associate with channel from subdomain
             }),
           });
         }
