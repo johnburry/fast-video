@@ -199,16 +199,12 @@ export default function RecordPage() {
       <div className="max-w-4xl mx-auto p-8">
         <div className="mb-8">
           <h1 className="text-4xl font-bold mb-2">Record a Fast Video</h1>
-          <p className="text-gray-400">
-            Record or upload a video message for your channel visitors
-          </p>
+          {channelName && (
+            <p className="text-gray-400">
+              A Fast Video recorded here, after playback will send viewers to the channel: <strong className="text-white">{channelName}</strong>
+            </p>
+          )}
         </div>
-
-        {channelName && (
-          <div className="bg-green-900 border border-green-700 text-white px-4 py-3 rounded mb-4">
-            Recording for channel: <strong>{channelName}</strong>
-          </div>
-        )}
 
         {error && (
           <div className="bg-red-900 border border-red-700 text-white px-4 py-3 rounded mb-4">
