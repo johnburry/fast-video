@@ -215,6 +215,16 @@ export default function RecordPage() {
 
         {!playbackUrl && !isPreparing && (
           <div className="bg-gray-900 rounded-lg p-8">
+            {isMobile && (
+              <style dangerouslySetInnerHTML={{
+                __html: `
+                  mux-uploader::part(heading),
+                  mux-uploader::part(separator) {
+                    display: none !important;
+                  }
+                `
+              }} />
+            )}
             <MuxUploader
               endpoint={createUpload}
               onUploadStart={handleUploadStart}
