@@ -98,8 +98,8 @@ export default function RecordPage() {
           .catch(err => console.error('Error fetching OpenGraph data:', err));
       }
 
-      // Detect if device is mobile
-      const checkIsMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+      // Detect if device is iOS or Android (to hide QR code and enable mobile uploader)
+      const checkIsMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
       setIsMobile(checkIsMobile);
     }
   }, []);
