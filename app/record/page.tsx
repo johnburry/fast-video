@@ -201,8 +201,8 @@ export default function RecordPage() {
           <h1 className="text-4xl font-bold mb-2 flex items-center gap-3">
             <svg className="w-20 h-20 flex-shrink-0" viewBox="0 0 530 510" fill="none" xmlns="http://www.w3.org/2000/svg">
               <rect width="530" height="510" rx="100" fill="#E02020"/>
-              <path d="M165 200C165 172.386 187.386 150 215 150H365C392.614 150 415 172.386 415 200V310C415 337.614 392.614 360 365 360H215C187.386 360 165 337.614 165 310V200Z" fill="white"/>
-              <path d="M415 210L465 170V340L415 300V210Z" fill="white"/>
+              <path d="M115 180C115 152.386 137.386 130 165 130H365C392.614 130 415 152.386 415 180V330C415 357.614 392.614 380 365 380H165C137.386 380 115 357.614 115 330V180Z" fill="white"/>
+              <path d="M415 210L485 160V350L415 300V210Z" fill="white"/>
             </svg>
             <span className="hidden md:inline">
               Record a Fast Video
