@@ -136,6 +136,7 @@ export default function RecordPage() {
                 playbackId,
                 thumbnailUrl,
                 channelId: channelId, // Associate with channel from subdomain
+                altDestination: destinationOption === 'other' ? customDestination : null,
               }),
             });
 
@@ -174,27 +175,35 @@ export default function RecordPage() {
   };
 
   const handleSaveDestination = async () => {
-    const playbackId = playbackUrl.split('/').pop()?.replace('.m3u8', '') || '';
+    // If video is already uploaded, save immediately
+    if (playbackUrl) {
+      const playbackId = playbackUrl.split('/').pop()?.replace('.m3u8', '') || '';
 
-    try {
-      const response = await fetch('/api/videos/destination', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          playbackId,
-          altDestination: destinationOption === 'other' ? customDestination : null,
-        }),
-      });
+      try {
+        const response = await fetch('/api/videos/destination', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            playbackId,
+            altDestination: destinationOption === 'other' ? customDestination : null,
+          }),
+        });
 
-      if (!response.ok) {
-        throw new Error('Failed to save destination');
+        if (!response.ok) {
+          throw new Error('Failed to save destination');
+        }
+
+        setShowDestinationModal(false);
+        alert('Destination saved successfully!');
+      } catch (err) {
+        console.error('Error saving destination:', err);
+        alert('Failed to save destination');
       }
-
+    } else {
+      // Video not uploaded yet, just close the modal
+      // The destination will be saved when the video is uploaded
       setShowDestinationModal(false);
-      alert('Destination saved successfully!');
-    } catch (err) {
-      console.error('Error saving destination:', err);
-      alert('Failed to save destination');
+      alert('Destination will be applied when you upload a video');
     }
   };
 
@@ -254,14 +263,12 @@ export default function RecordPage() {
                   </span>
                 ))}
               </strong>
-              {playbackUrl && (
-                <button
-                  onClick={() => setShowDestinationModal(true)}
-                  className="text-blue-600 hover:text-blue-800 underline text-sm mt-2"
-                >
-                  Change end of video destination
-                </button>
-              )}
+              <button
+                onClick={() => setShowDestinationModal(true)}
+                className="text-blue-600 hover:text-blue-800 underline text-sm mt-2"
+              >
+                Change end of video destination
+              </button>
             </div>
           )}
         </div>
