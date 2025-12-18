@@ -226,7 +226,14 @@ export default function RecordPage() {
                   className="w-24 h-24 rounded-full"
                 />
               )}
-              <strong className="text-black text-2xl md:text-4xl text-center">{channelName}</strong>
+              <strong className="text-black text-2xl md:text-4xl text-center">
+                {channelName.split('|').map((part, index, array) => (
+                  <span key={index}>
+                    {part}
+                    {index < array.length - 1 && <br />}
+                  </span>
+                ))}
+              </strong>
             </div>
           )}
         </div>
