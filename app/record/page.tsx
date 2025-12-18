@@ -347,42 +347,49 @@ export default function RecordPage() {
 
         {!playbackUrl && !isPreparing && (
           <div className="bg-gray-900 rounded-lg p-8">
-            <MuxUploader
-              endpoint={createUpload}
-              onUploadStart={handleUploadStart}
-              onSuccess={handleSuccess}
-              onUploadError={handleError}
-              noDrop={isMobile}
-            >
-              {!isMobile && (
-                <span slot="heading">Drop a video file here to upload, or</span>
-              )}
-              <button slot="file-select" type="button" className="px-6 py-3 rounded font-medium transition-colors cursor-pointer" style={{ backgroundColor: '#FF0000' }}>
-                {isMobile ? 'Record or Upload Video' : 'Upload Video'}
-              </button>
-            </MuxUploader>
-            {!isMobile && (
-              <div className="mt-6 text-center">
-                <p className="text-gray-300 text-xl mb-4">
-                  Record using your mobile phone using this QR Code
-                </p>
-                {recordUrl && (
-                  <div className="inline-block p-4 bg-white rounded-lg">
-                    <QRCodeSVG
-                      value={recordUrl}
-                      size={200}
-                      level="H"
-                      includeMargin={true}
-                    />
+            <div className="flex flex-col md:flex-row gap-8 items-start">
+              {/* Upload Section */}
+              <div className="flex-1 w-full">
+                <MuxUploader
+                  endpoint={createUpload}
+                  onUploadStart={handleUploadStart}
+                  onSuccess={handleSuccess}
+                  onUploadError={handleError}
+                  noDrop={isMobile}
+                >
+                  {!isMobile && (
+                    <span slot="heading">Drop a video file here to upload, or</span>
+                  )}
+                  <button slot="file-select" type="button" className="px-6 py-3 rounded font-medium transition-colors cursor-pointer" style={{ backgroundColor: '#FF0000' }}>
+                    {isMobile ? 'Record or Upload Video' : 'Upload Video'}
+                  </button>
+                </MuxUploader>
+                {isUploading && (
+                  <div className="mt-4 text-center">
+                    <p className="text-lg">Uploading your video...</p>
                   </div>
                 )}
               </div>
-            )}
-            {isUploading && (
-              <div className="mt-4 text-center">
-                <p className="text-lg">Uploading your video...</p>
-              </div>
-            )}
+
+              {/* QR Code Section */}
+              {!isMobile && (
+                <div className="flex-1 w-full text-center flex flex-col items-center justify-center">
+                  <p className="text-gray-300 text-xl mb-4">
+                    Record using your mobile phone using this QR Code
+                  </p>
+                  {recordUrl && (
+                    <div className="inline-block p-4 bg-white rounded-lg">
+                      <QRCodeSVG
+                        value={recordUrl}
+                        size={200}
+                        level="H"
+                        includeMargin={true}
+                      />
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
           </div>
         )}
 
