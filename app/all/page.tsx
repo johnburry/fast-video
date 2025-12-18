@@ -3,7 +3,6 @@
 import { useState, useEffect, ReactElement } from 'react';
 import Link from 'next/link';
 import { getThumbnailUrl } from '@/lib/thumbnail';
-import { useAuth } from '@/lib/hooks/useAuth';
 import { AdminToolbar } from '@/components/AdminToolbar';
 import HeadLinks from '@/app/[channelHandle]/head-links';
 
@@ -29,17 +28,14 @@ interface Channel {
 }
 
 export default function AllChannelsPage() {
-  const { user, loading: authLoading, signOut } = useAuth();
   const [channels, setChannels] = useState<Channel[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     document.title = 'All Fast Video Channels';
-    if (user) {
-      fetchChannels();
-    }
-  }, [user]);
+    fetchChannels();
+  }, []);
 
 
   const fetchChannels = async () => {
@@ -56,15 +52,6 @@ export default function AllChannelsPage() {
       setLoading(false);
     }
   };
-
-  // Show loading state while checking auth
-  if (authLoading) {
-    return (
-      <div className="min-h-screen bg-black flex items-center justify-center">
-        <p className="text-white text-xl">Loading...</p>
-      </div>
-    );
-  }
 
   if (loading) {
     return (
