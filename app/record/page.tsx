@@ -223,7 +223,7 @@ export default function RecordPage() {
                 <img
                   src={getThumbnailUrl(channelThumbnail)}
                   alt={channelName}
-                  className="w-16 h-16 rounded-full"
+                  className="w-24 h-24 rounded-full"
                 />
               )}
               <strong className="text-black text-2xl md:text-4xl text-center">{channelName}</strong>
