@@ -285,6 +285,7 @@ export async function POST(request: NextRequest) {
               view_count: video.viewCount,
               like_count: video.likeCount,
               comment_count: video.commentCount,
+              has_transcript: false,
             })
             .select('id')
             .single();
@@ -374,8 +375,7 @@ export async function POST(request: NextRequest) {
             const { error: updateError } = await supabaseAdmin
               .from('videos')
               .update({ has_transcript: true })
-              .in('id', uniqueVideoIds)
-              .eq('has_transcript', false);
+              .in('id', uniqueVideoIds);
 
             if (updateError) {
               console.error('Error updating has_transcript flags:', updateError);
