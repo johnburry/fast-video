@@ -251,12 +251,12 @@ export default function ChannelPage({
       {searchResults.length === 0 && (
         <div style={{ backgroundColor: '#ffffff', paddingTop: '0.5rem' }}>
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-8">
-            <div className="flex items-start space-x-4">
+            <div className="flex items-start md:items-center space-x-4">
               {channelData?.channel.thumbnail && (
                 <img
                   src={getThumbnailUrl(channelData.channel.thumbnail)}
                   alt={channelData.channel.name}
-                  className="w-35 h-35 rounded-full mt-8"
+                  className="w-35 h-35 rounded-full mt-8 md:mt-0"
                   style={{ width: '140px', height: '140px' }}
                 />
               )}
@@ -651,15 +651,15 @@ export default function ChannelPage({
             </div>
             <div className="flex justify-between items-center mt-2">
               <div className="flex items-center gap-2">
-                <span className="text-white">Up Next:</span>
+                <span className="text-white flex items-center">Up Next:</span>
                 {channelData?.channel.thumbnail && (
                   <img
                     src={getThumbnailUrl(channelData.channel.thumbnail)}
                     alt={channelData.channel.name}
-                    className="w-8 h-8 rounded-full"
+                    className="w-8 h-8 rounded-full flex-shrink-0"
                   />
                 )}
-                <span className="text-gray-400">{channelData?.channel.name}</span>
+                <span className="text-gray-400 flex items-center">{channelData?.channel.name}</span>
               </div>
               <button
                 onClick={() => setMuxVideoId(null)}
