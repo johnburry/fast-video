@@ -201,7 +201,7 @@ export default function RecordPage() {
           <h1 className="text-4xl font-bold mb-2 flex items-center gap-3">
             <svg className="w-20 h-20 flex-shrink-0" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
               <rect width="64" height="64" rx="12" fill="#FF0000"/>
-              <g transform="translate(8, 12) scale(2.4)">
+              <g transform="translate(5, 16) scale(2.7)">
                 <path d="M17 10.5V7c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1v10c0 .55.45 1 1 1h12c.55 0 1-.45 1-1v-3.5l4 4v-11l-4 4z" fill="#FFFFFF"/>
               </g>
             </svg>
