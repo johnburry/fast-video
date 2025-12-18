@@ -217,7 +217,7 @@ export default function RecordPage() {
           {channelName && (
             <div className="bg-white rounded-lg p-6 md:p-8 flex flex-col items-center gap-4">
               <p className="text-gray-600 text-center text-sm md:text-base">
-                A Fast Video recorded here, after being shared, will play then automatically load the channel:
+                A Fast Video is a quick hello video you can record here and share. When it has been shared, after it plays, it will automatically load this content:
               </p>
               {channelThumbnail && (
                 <img
