@@ -381,7 +381,7 @@ export default function RecordPage() {
                     <div className="inline-block p-4 bg-white rounded-lg">
                       <QRCodeSVG
                         value={recordUrl}
-                        size={200}
+                        size={150}
                         level="H"
                         includeMargin={true}
                       />
