@@ -4,7 +4,6 @@ import { useState, useEffect } from 'react';
 import MuxUploader from '@mux/mux-uploader-react';
 import MuxPlayer from '@mux/mux-player-react';
 import { QRCodeSVG } from 'qrcode.react';
-import Image from 'next/image';
 
 export default function RecordPage() {
   const [uploadId, setUploadId] = useState<string>('');
@@ -200,11 +199,9 @@ export default function RecordPage() {
       <div className="max-w-4xl mx-auto p-8">
         <div className="mb-8">
           <h1 className="text-4xl font-bold mb-2 flex items-center gap-3">
-            <Image
+            <img
               src="/camera.png"
               alt="Camera"
-              width={80}
-              height={80}
               className="w-20 h-20 flex-shrink-0"
             />
             <span className="hidden md:inline">

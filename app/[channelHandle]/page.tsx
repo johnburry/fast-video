@@ -4,7 +4,6 @@ import { use, useState, useEffect, ReactElement } from 'react';
 import { formatTimestamp } from '@/lib/youtube/transcript';
 import MuxPlayer from '@mux/mux-player-react';
 import { getThumbnailUrl } from '@/lib/thumbnail';
-import Image from 'next/image';
 
 // Helper function to process channel names with line break character
 function formatChannelName(name: string): ReactElement[] {
@@ -306,11 +305,9 @@ export default function ChannelPage({
                     </div>
                   )}
                   <div className="flex items-center gap-1 md:gap-2 md:ml-20">
-                    <Image
+                    <img
                       src="/camera.png"
                       alt="Camera"
-                      width={24}
-                      height={24}
                       className="w-6 h-6"
                     />
                     <a
