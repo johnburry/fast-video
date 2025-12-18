@@ -251,28 +251,30 @@ export default function ChannelPage({
       {searchResults.length === 0 && (
         <div style={{ backgroundColor: '#ffffff', paddingTop: '0.5rem' }}>
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-8">
-            {/* Row 1: Thumbnail and Channel Title */}
-            <div className="flex items-center space-x-4 mb-4">
-              {channelData?.channel.thumbnail && (
-                <img
-                  src={getThumbnailUrl(channelData.channel.thumbnail)}
-                  alt={channelData.channel.name}
-                  className="w-35 h-35 rounded-full"
-                  style={{ width: '140px', height: '140px' }}
-                />
-              )}
-              <h1
-                className="text-2xl md:text-5xl font-black cursor-pointer transition-colors"
-                style={{ color: '#000000' }}
-                onClick={resetSearch}
-              >
-                {channelData?.channel.name && formatChannelName(channelData.channel.name)}
-              </h1>
-            </div>
+            {/* Mobile: Stack vertically, Desktop: Two columns */}
+            <div className="flex flex-col md:flex-row md:justify-between md:items-start gap-4">
+              {/* Left: Thumbnail and Channel Title */}
+              <div className="flex items-center space-x-4">
+                {channelData?.channel.thumbnail && (
+                  <img
+                    src={getThumbnailUrl(channelData.channel.thumbnail)}
+                    alt={channelData.channel.name}
+                    className="w-35 h-35 rounded-full"
+                    style={{ width: '140px', height: '140px' }}
+                  />
+                )}
+                <h1
+                  className="text-2xl md:text-5xl font-black cursor-pointer transition-colors"
+                  style={{ color: '#000000' }}
+                  onClick={resetSearch}
+                >
+                  {channelData?.channel.name && formatChannelName(channelData.channel.name)}
+                </h1>
+              </div>
 
-            {/* Row 2: Links and Actions */}
-            <div className="flex justify-center">
-              <div className="text-xs md:text-lg flex flex-col md:flex-row md:items-center gap-2 md:gap-1" style={{ color: '#777777' }}>
+              {/* Right: Links and Actions - centered on mobile, column on desktop */}
+              <div className="flex justify-center md:justify-start">
+                <div className="text-xs md:text-lg flex flex-col gap-2 md:gap-3" style={{ color: '#777777' }}>
               <div className="flex items-center gap-1 md:gap-2">
                     <svg className="w-6 h-6" viewBox="0 0 24 24" fill="currentColor">
                       <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
@@ -295,7 +297,7 @@ export default function ChannelPage({
                     </a>
                   </div>
                   {channelData?.channel.externalLink && channelData?.channel.externalLinkName && (
-                    <div className="flex items-center gap-1 md:gap-2 md:ml-20">
+                    <div className="flex items-center gap-1 md:gap-2">
                       <svg className="w-6 h-6" viewBox="0 0 24 24" fill="currentColor">
                         <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/>
                       </svg>
@@ -311,7 +313,7 @@ export default function ChannelPage({
                   )}
                   <a
                     href="/record"
-                    className="flex items-center gap-2 md:gap-3 px-4 py-2 md:px-6 md:py-3 bg-white border-2 rounded-lg hover:bg-gray-50 transition-colors md:ml-20"
+                    className="flex items-center gap-2 md:gap-3 px-4 py-2 md:px-6 md:py-3 bg-white border-2 rounded-lg hover:bg-gray-50 transition-colors"
                     style={{ borderColor: '#FF0000' }}
                   >
                     <svg className="w-8 h-8 md:w-12 md:h-12 flex-shrink-0" viewBox="0 0 530 510" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -323,6 +325,7 @@ export default function ChannelPage({
                       Record a Fast Video
                     </span>
                   </a>
+                </div>
               </div>
             </div>
           </div>
