@@ -88,23 +88,9 @@ export default function AllChannelsPage() {
       <div style={{ backgroundColor: '#222529' }}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="text-center">
-            <div className="text-2xl md:text-4xl font-bold mb-3" style={{ color: '#B2071D' }}>
-              <div className="flex items-center justify-center gap-3">
-                <svg className="w-8 h-8 md:w-10 md:h-10" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <rect width="64" height="64" rx="12" fill="#B2071D"/>
-                  <circle cx="27" cy="27" r="12" stroke="white" strokeWidth="4" fill="none"/>
-                  <line x1="35" y1="35" x2="48" y2="48" stroke="white" strokeWidth="4" strokeLinecap="round"/>
-                </svg>
-                <span>FAST VIDEO</span>
-              </div>
-              <div>TRANSCRIPT SEARCH</div>
-            </div>
             <h1 className="text-3xl md:text-6xl font-black text-white mb-4">
               All Fast Video Channels
             </h1>
-            <p className="text-gray-300 text-lg">
-              Search transcripts across all available channels
-            </p>
           </div>
         </div>
       </div>
