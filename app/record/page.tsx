@@ -22,6 +22,7 @@ export default function RecordPage() {
   const [showDestinationModal, setShowDestinationModal] = useState(false);
   const [destinationOption, setDestinationOption] = useState<'default' | 'other'>('default');
   const [customDestination, setCustomDestination] = useState('');
+  const [showLinkPreview, setShowLinkPreview] = useState(false);
 
   // Detect subdomain and fetch channel info
   useEffect(() => {
@@ -175,6 +176,13 @@ export default function RecordPage() {
   };
 
   const handleSaveDestination = async () => {
+    // Update link preview visibility based on selection
+    if (destinationOption === 'other' && customDestination) {
+      setShowLinkPreview(true);
+    } else {
+      setShowLinkPreview(false);
+    }
+
     // If video is already uploaded, save immediately
     if (playbackUrl) {
       const playbackId = playbackUrl.split('/').pop()?.replace('.m3u8', '') || '';
@@ -203,7 +211,6 @@ export default function RecordPage() {
       // Video not uploaded yet, just close the modal
       // The destination will be saved when the video is uploaded
       setShowDestinationModal(false);
-      alert('Destination will be applied when you upload a video');
     }
   };
 
@@ -248,26 +255,42 @@ export default function RecordPage() {
               <p className="text-gray-600 text-center text-base md:text-2xl">
                 A Fast Video is a quick video you can record here, it's uploaded to the cloud and you get a link to share with others. When it has been shared, at the end of the video, it will automatically take the viewer to this content:
               </p>
-              {channelThumbnail && (
-                <img
-                  src={getThumbnailUrl(channelThumbnail)}
-                  alt={channelName}
-                  className="w-24 h-24 rounded-full"
-                />
+              {showLinkPreview ? (
+                <div className="w-full border border-gray-300 rounded-lg p-4 bg-gray-50">
+                  <p className="text-xs text-gray-500 mb-2">Link Preview</p>
+                  <a
+                    href={customDestination}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-blue-600 hover:text-blue-800 break-all text-sm"
+                  >
+                    {customDestination}
+                  </a>
+                </div>
+              ) : (
+                <>
+                  {channelThumbnail && (
+                    <img
+                      src={getThumbnailUrl(channelThumbnail)}
+                      alt={channelName}
+                      className="w-24 h-24 rounded-full"
+                    />
+                  )}
+                  <strong className="text-black text-2xl md:text-4xl text-center">
+                    {channelName.split('|').map((part, index, array) => (
+                      <span key={index}>
+                        {part}
+                        {index < array.length - 1 && <br />}
+                      </span>
+                    ))}
+                  </strong>
+                </>
               )}
-              <strong className="text-black text-2xl md:text-4xl text-center">
-                {channelName.split('|').map((part, index, array) => (
-                  <span key={index}>
-                    {part}
-                    {index < array.length - 1 && <br />}
-                  </span>
-                ))}
-              </strong>
               <button
                 onClick={() => setShowDestinationModal(true)}
-                className="text-blue-600 hover:text-blue-800 underline text-sm mt-2"
+                className="text-blue-600 hover:text-blue-800 underline text-lg md:text-xl mt-2"
               >
-                Change end of video destination
+                Change end of video redirect address
               </button>
             </div>
           )}
