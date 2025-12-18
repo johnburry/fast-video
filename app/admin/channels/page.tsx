@@ -59,14 +59,14 @@ export default function ManageChannelsPage() {
             ) : channels.length === 0 ? (
               <p className="text-gray-600">No channels imported yet.</p>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div className="space-y-3">
                 {channels.map((channel) => (
                   <a
                     key={channel.id}
                     href={`/admin/manage/${channel.handle}`}
                     className="block border border-gray-200 rounded-lg p-4 hover:border-blue-500 hover:shadow-md transition-all"
                   >
-                    <div className="flex items-start gap-3">
+                    <div className="flex items-center gap-4">
                       {channel.thumbnail && (
                         <img
                           src={channel.thumbnail}
@@ -74,11 +74,11 @@ export default function ManageChannelsPage() {
                           className="w-16 h-16 rounded-lg object-cover flex-shrink-0"
                         />
                       )}
-                      <div className="flex-1 min-w-0">
-                        <h3 className="font-semibold text-gray-900 truncate mb-1">
+                      <div className="flex-1">
+                        <h3 className="font-semibold text-gray-900 mb-1 break-words">
                           {channel.name}
                         </h3>
-                        <p className="text-sm text-gray-600 truncate">
+                        <p className="text-sm text-gray-600">
                           @{channel.handle}
                         </p>
                         <p className="text-xs text-gray-500 mt-1">
