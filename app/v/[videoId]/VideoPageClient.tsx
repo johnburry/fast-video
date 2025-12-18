@@ -22,6 +22,24 @@ export default function VideoPageClient({ videoId }: { videoId: string }) {
         if (res.ok) {
           const data = await res.json();
           setMetadata(data);
+
+          // If there's NO alt_destination (regular Fast Video), redirect immediately to channel page
+          if (!data.altDestination && data.channelHandle) {
+            setRedirecting(true);
+            const protocol = window.location.protocol;
+            const hostname = window.location.hostname;
+            const port = window.location.port ? `:${window.location.port}` : '';
+
+            let targetUrl;
+            if (hostname.includes('localhost')) {
+              targetUrl = `${protocol}//${data.channelHandle}.${hostname}${port}?v=${videoId}`;
+            } else {
+              const baseDomain = hostname.split('.').slice(-2).join('.'); // e.g., "fast.video"
+              targetUrl = `${protocol}//${data.channelHandle}.${baseDomain}?v=${videoId}`;
+            }
+
+            window.location.href = targetUrl;
+          }
         }
       } catch (e) {
         console.error('Error fetching video metadata:', e);
@@ -71,7 +89,7 @@ export default function VideoPageClient({ videoId }: { videoId: string }) {
       <div className="min-h-screen bg-black text-white flex items-center justify-center">
         <div className="text-center">
           <div className="inline-block animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500 mb-4"></div>
-          <p className="text-lg">Redirecting...</p>
+          <p className="text-lg">Loading Fast Video...</p>
         </div>
       </div>
     );
