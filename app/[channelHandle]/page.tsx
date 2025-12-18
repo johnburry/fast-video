@@ -649,7 +649,11 @@ export default function ChannelPage({
                 style={{ width: '100%', height: '100%', '--poster': 'auto' }}
               />
             </div>
-            <div className="flex justify-end mt-2">
+            <div className="flex justify-between items-center mt-2">
+              <div className="flex items-center gap-1">
+                <span className="text-white">Up Next:</span>
+                <span className="text-gray-400">{channelData?.channel.name}</span>
+              </div>
               <button
                 onClick={() => setMuxVideoId(null)}
                 className="px-6 py-2 text-white rounded-lg hover:opacity-80 transition-opacity"
