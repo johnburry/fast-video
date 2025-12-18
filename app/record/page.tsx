@@ -213,7 +213,9 @@ export default function RecordPage() {
           </h1>
           {channelName && (
             <p className="text-gray-400">
-              A Fast Video recorded here, after playback will send viewers to the channel: <strong className="text-white">{channelName}</strong>
+              A Fast Video recorded here, after being shared, will play then automatically load the channel:
+              <br />
+              <strong className="text-white">{channelName}</strong>
             </p>
           )}
         </div>
