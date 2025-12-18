@@ -631,7 +631,7 @@ export default function ChannelPage({
           className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4"
           onClick={() => setMuxVideoId(null)}
         >
-          <div className="max-w-7xl w-full" onClick={(e) => e.stopPropagation()}>
+          <div className="w-full" style={{ maxWidth: '90vw', height: '80vh' }} onClick={(e) => e.stopPropagation()}>
             <div className="flex justify-end mb-2">
               <button
                 onClick={() => setMuxVideoId(null)}
@@ -641,16 +641,15 @@ export default function ChannelPage({
                 Continue →
               </button>
             </div>
-            <div className="bg-white rounded-lg overflow-hidden">
-              <div className="aspect-video">
-                <MuxPlayer
-                  playbackId={muxVideoId}
-                  streamType="on-demand"
-                  poster={`https://image.mux.com/${muxVideoId}/thumbnail.jpg?width=1200&height=675&fit_mode=smartcrop`}
-                  autoPlay
-                  onEnded={() => setMuxVideoId(null)}
-                />
-              </div>
+            <div className="bg-white rounded-lg overflow-hidden" style={{ height: 'calc(100% - 52px)' }}>
+              <MuxPlayer
+                playbackId={muxVideoId}
+                streamType="on-demand"
+                poster={`https://image.mux.com/${muxVideoId}/thumbnail.jpg?width=1200&height=675&fit_mode=smartcrop`}
+                autoPlay
+                onEnded={() => setMuxVideoId(null)}
+                style={{ width: '100%', height: '100%' }}
+              />
             </div>
           </div>
         </div>
