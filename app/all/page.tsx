@@ -3,7 +3,6 @@
 import { useState, useEffect, ReactElement } from 'react';
 import Link from 'next/link';
 import { getThumbnailUrl } from '@/lib/thumbnail';
-import { AdminToolbar } from '@/components/AdminToolbar';
 import HeadLinks from '@/app/[channelHandle]/head-links';
 
 // Helper function to process channel names with line break character
@@ -72,7 +71,6 @@ export default function AllChannelsPage() {
   return (
     <div className="min-h-screen bg-black">
       <HeadLinks />
-      <AdminToolbar />
       {/* Header */}
       <div style={{ backgroundColor: '#222529' }}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
