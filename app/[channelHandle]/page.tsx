@@ -646,10 +646,10 @@ export default function ChannelPage({
                 playbackId={muxVideoId}
                 streamType="on-demand"
                 poster={`https://image.mux.com/${muxVideoId}/thumbnail.jpg?width=1200&height=675&fit_mode=smartcrop`}
-                autoPlay
-                preload="none"
+                preload="metadata"
+                muted
                 onEnded={() => setMuxVideoId(null)}
-                style={{ width: '100%', height: '100%', '--controls': 'none' }}
+                style={{ width: '100%', height: '100%', '--poster': 'auto' }}
               />
             </div>
           </div>
