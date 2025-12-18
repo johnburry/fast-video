@@ -655,15 +655,15 @@ export default function ChannelPage({
             </div>
             <div className="flex justify-between items-center mt-2">
               <div className="flex items-center gap-2">
-                <span className="text-white flex items-center">Up Next:</span>
+                <span className="text-white">Up Next:</span>
                 {channelData?.channel.thumbnail && (
                   <img
                     src={getThumbnailUrl(channelData.channel.thumbnail)}
                     alt={channelData.channel.name}
-                    className="w-8 h-8 rounded-full flex-shrink-0"
+                    className="w-8 h-8 rounded-full"
                   />
                 )}
-                <span className="text-gray-400 flex items-center">{channelData?.channel.name}</span>
+                <span className="text-gray-400">{channelData?.channel.name}</span>
               </div>
               <button
                 onClick={() => setMuxVideoId(null)}
