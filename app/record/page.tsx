@@ -452,6 +452,7 @@ export default function RecordPage() {
                 metadata={{
                   video_title: 'Hello Video',
                 }}
+                onPlay={() => setShowVideoEndedOverlay(false)}
                 onEnded={() => setShowVideoEndedOverlay(true)}
               />
               {showVideoEndedOverlay && (
