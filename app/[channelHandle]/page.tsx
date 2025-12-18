@@ -81,6 +81,7 @@ export default function ChannelPage({
   const [showHelloVideo, setShowHelloVideo] = useState(false);
   const [hasShownHelloVideo, setHasShownHelloVideo] = useState(false);
   const [muxVideoId, setMuxVideoId] = useState<string | null>(null);
+  const [videoTimeRemaining, setVideoTimeRemaining] = useState<number | null>(null);
 
   useEffect(() => {
     fetchChannelData();
@@ -640,6 +641,11 @@ export default function ChannelPage({
                 preload="metadata"
                 muted
                 onEnded={() => setMuxVideoId(null)}
+                onTimeUpdate={(e) => {
+                  const video = e.target as HTMLVideoElement;
+                  const remaining = Math.ceil(video.duration - video.currentTime);
+                  setVideoTimeRemaining(remaining > 0 ? remaining : null);
+                }}
                 style={{ width: '100%', height: '100%', '--poster': 'auto' }}
               />
             </div>
@@ -649,7 +655,9 @@ export default function ChannelPage({
                 className="px-6 py-2 text-white rounded-lg hover:opacity-80 transition-opacity"
                 style={{ backgroundColor: '#165DFC' }}
               >
-                Continue →
+                {videoTimeRemaining !== null && videoTimeRemaining > 0
+                  ? `Continue (${videoTimeRemaining}s) →`
+                  : 'Continue →'}
               </button>
             </div>
           </div>
