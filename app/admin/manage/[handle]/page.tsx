@@ -200,10 +200,10 @@ export default function ManageChannelPage({
         <div className="max-w-3xl mx-auto">
           <div className="mb-6">
             <a
-              href="/admin"
+              href="/admin/channels"
               className="text-blue-600 hover:text-blue-800 font-medium"
             >
-              ← Back to Import
+              ← Back to Channels
             </a>
           </div>
 
@@ -213,16 +213,23 @@ export default function ManageChannelPage({
               <h1 className="text-3xl font-bold text-gray-900 mb-2">
                 Manage Channel
               </h1>
-              <p className="text-gray-600">@{channel.handle}</p>
+              <p className="text-gray-600 mb-2">@{channel.handle}</p>
+              <a
+                href={`https://${channel.handle}.fast.video`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-blue-600 hover:text-blue-800 underline text-sm"
+              >
+                View Channel →
+              </a>
             </div>
-            <a
-              href={`https://${channel.handle}.fast.video`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="px-6 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors"
+            <button
+              onClick={handleSave}
+              disabled={saving}
+              className="px-6 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
             >
-              View Channel →
-            </a>
+              {saving ? 'Saving...' : 'Save Changes'}
+            </button>
           </div>
 
           {error && (
