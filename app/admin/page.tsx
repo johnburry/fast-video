@@ -13,9 +13,6 @@ export default function AdminPage() {
   const [error, setError] = useState<string | null>(null);
   const [progressStatus, setProgressStatus] = useState<string>('');
   const [currentVideo, setCurrentVideo] = useState<{ current: number; total: number; title: string } | null>(null);
-  const [channels, setChannels] = useState<any[]>([]);
-  const [channelsLoading, setChannelsLoading] = useState(false);
-
   useEffect(() => {
     // Extract subdomain from hostname
     const hostname = window.location.hostname;
@@ -39,27 +36,7 @@ export default function AdminPage() {
     if (subdomain && !channelHandle) {
       setChannelHandle(subdomain);
     }
-
-    // Fetch channels if authenticated
-    if (user) {
-      fetchChannels();
-    }
-  }, [user, channelHandle]);
-
-  const fetchChannels = async () => {
-    setChannelsLoading(true);
-    try {
-      const response = await fetch('/api/channels');
-      if (response.ok) {
-        const data = await response.json();
-        setChannels(data.channels);
-      }
-    } catch (err) {
-      console.error('Error fetching channels:', err);
-    } finally {
-      setChannelsLoading(false);
-    }
-  };
+  }, [channelHandle]);
 
 
   const handleImport = async (e: React.FormEvent) => {
@@ -276,49 +253,6 @@ export default function AdminPage() {
                   </div>
                 </div>
               </div>
-            </div>
-          )}
-        </div>
-
-        <div className="mt-8 bg-white rounded-lg shadow-lg p-8">
-          <h2 className="text-xl font-bold text-gray-900 mb-6">
-            Manage Channels
-          </h2>
-
-          {channelsLoading ? (
-            <p className="text-gray-600">Loading channels...</p>
-          ) : channels.length === 0 ? (
-            <p className="text-gray-600">No channels imported yet.</p>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {channels.map((channel) => (
-                <a
-                  key={channel.id}
-                  href={`/admin/manage/${channel.handle}`}
-                  className="block border border-gray-200 rounded-lg p-4 hover:border-blue-500 hover:shadow-md transition-all"
-                >
-                  <div className="flex items-start gap-3">
-                    {channel.thumbnail && (
-                      <img
-                        src={channel.thumbnail}
-                        alt={channel.name}
-                        className="w-16 h-16 rounded-lg object-cover flex-shrink-0"
-                      />
-                    )}
-                    <div className="flex-1 min-w-0">
-                      <h3 className="font-semibold text-gray-900 truncate mb-1">
-                        {channel.name}
-                      </h3>
-                      <p className="text-sm text-gray-600 truncate">
-                        @{channel.handle}
-                      </p>
-                      <p className="text-xs text-gray-500 mt-1">
-                        {channel.videoCount || 0} videos
-                      </p>
-                    </div>
-                  </div>
-                </a>
-              ))}
             </div>
           )}
         </div>

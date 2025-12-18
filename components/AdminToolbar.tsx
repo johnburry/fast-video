@@ -21,17 +21,17 @@ export function AdminToolbar() {
                   : 'text-gray-400 hover:text-white'
               }`}
             >
-              Import
+              Import Channel
             </Link>
             <Link
-              href="/all"
+              href="/admin/channels"
               className={`text-sm font-medium transition-colors ${
-                pathname === '/all'
+                pathname === '/admin/channels'
                   ? 'text-white'
                   : 'text-gray-400 hover:text-white'
               }`}
             >
-              All Channels
+              Manage Channels
             </Link>
           </div>
           <button
