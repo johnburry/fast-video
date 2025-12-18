@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { getThumbnailUrl } from '@/lib/thumbnail';
 import { useAuth } from '@/lib/hooks/useAuth';
 import { AdminToolbar } from '@/components/AdminToolbar';
+import HeadLinks from '@/app/[channelHandle]/head-links';
 
 // Helper function to process channel names with line break character
 function formatChannelName(name: string): ReactElement[] {
@@ -83,6 +84,7 @@ export default function AllChannelsPage() {
 
   return (
     <div className="min-h-screen bg-black">
+      <HeadLinks />
       <AdminToolbar />
       {/* Header */}
       <div style={{ backgroundColor: '#222529' }}>
