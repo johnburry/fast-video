@@ -216,7 +216,7 @@ export default function RecordPage() {
           </h1>
           {channelName && (
             <div className="bg-white rounded-lg p-6 md:p-8 flex flex-col items-center gap-4">
-              <p className="text-gray-600 text-center text-sm md:text-base">
+              <p className="text-gray-600 text-center text-base md:text-2xl">
                 A Fast Video is a quick video you can record here, it's uploaded to the cloud and you get a link to share with others. When it has been shared, at the end of the video, it will automatically take the viewer to this content:
               </p>
               {channelThumbnail && (
