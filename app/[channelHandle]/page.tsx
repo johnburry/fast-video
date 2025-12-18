@@ -251,24 +251,28 @@ export default function ChannelPage({
       {searchResults.length === 0 && (
         <div style={{ backgroundColor: '#ffffff', paddingTop: '0.5rem' }}>
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-8">
-            <div className="flex items-start md:items-center space-x-4">
+            {/* Row 1: Thumbnail and Channel Title */}
+            <div className="flex items-center space-x-4 mb-4">
               {channelData?.channel.thumbnail && (
                 <img
                   src={getThumbnailUrl(channelData.channel.thumbnail)}
                   alt={channelData.channel.name}
-                  className="w-35 h-35 rounded-full mt-8 md:mt-0"
+                  className="w-35 h-35 rounded-full"
                   style={{ width: '140px', height: '140px' }}
                 />
               )}
-              <div>
-                <h1
-                  className="text-2xl md:text-5xl font-black cursor-pointer transition-colors mb-2"
-                  style={{ color: '#000000' }}
-                  onClick={resetSearch}
-                >
-                  {channelData?.channel.name && formatChannelName(channelData.channel.name)}
-                </h1>
-                <div className="text-xs md:text-lg mt-2 flex flex-col md:flex-row md:items-center gap-2 md:gap-1" style={{ color: '#777777' }}>
+              <h1
+                className="text-2xl md:text-5xl font-black cursor-pointer transition-colors"
+                style={{ color: '#000000' }}
+                onClick={resetSearch}
+              >
+                {channelData?.channel.name && formatChannelName(channelData.channel.name)}
+              </h1>
+            </div>
+
+            {/* Row 2: Links and Actions */}
+            <div>
+              <div className="text-xs md:text-lg flex flex-col md:flex-row md:items-center gap-2 md:gap-1" style={{ color: '#777777' }}>
                   <div className="flex items-center gap-1 md:gap-2">
                     <svg className="w-6 h-6" viewBox="0 0 24 24" fill="currentColor">
                       <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
