@@ -99,7 +99,12 @@ export default function RecordPage() {
       }
 
       // Detect if device is iOS or Android (to hide QR code and enable mobile uploader)
-      const checkIsMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+      // Include touch capability check for iPads that report desktop user agents
+      const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+      const isUserAgentMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+      const isMacWithTouch = /Macintosh/i.test(navigator.userAgent) && isTouchDevice;
+
+      const checkIsMobile = isUserAgentMobile || isMacWithTouch;
       setIsMobile(checkIsMobile);
     }
   }, []);
