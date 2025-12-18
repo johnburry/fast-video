@@ -19,6 +19,9 @@ export default function RecordPage() {
   const [recordUrl, setRecordUrl] = useState<string>('');
   const [isMobile, setIsMobile] = useState<boolean>(false);
   const [channelLoading, setChannelLoading] = useState<boolean>(true);
+  const [showDestinationModal, setShowDestinationModal] = useState(false);
+  const [destinationOption, setDestinationOption] = useState<'default' | 'other'>('default');
+  const [customDestination, setCustomDestination] = useState('');
 
   // Detect subdomain and fetch channel info
   useEffect(() => {
@@ -170,6 +173,31 @@ export default function RecordPage() {
     alert('Video link copied to clipboard!');
   };
 
+  const handleSaveDestination = async () => {
+    const playbackId = playbackUrl.split('/').pop()?.replace('.m3u8', '') || '';
+
+    try {
+      const response = await fetch('/api/videos/destination', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          playbackId,
+          altDestination: destinationOption === 'other' ? customDestination : null,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to save destination');
+      }
+
+      setShowDestinationModal(false);
+      alert('Destination saved successfully!');
+    } catch (err) {
+      console.error('Error saving destination:', err);
+      alert('Failed to save destination');
+    }
+  };
+
   return (
     <div className="min-h-screen bg-black text-white">
       <div className="max-w-4xl mx-auto p-8">
@@ -226,6 +254,14 @@ export default function RecordPage() {
                   </span>
                 ))}
               </strong>
+              {playbackUrl && (
+                <button
+                  onClick={() => setShowDestinationModal(true)}
+                  className="text-blue-600 hover:text-blue-800 underline text-sm mt-2"
+                >
+                  Change end of video destination
+                </button>
+              )}
             </div>
           )}
         </div>
@@ -303,6 +339,65 @@ export default function RecordPage() {
               >
                 Copy Video Link for Sharing
               </button>
+            </div>
+          </div>
+        )}
+
+        {/* Destination Modal */}
+        {showDestinationModal && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+              <h2 className="text-xl font-bold text-gray-900 mb-4">
+                Change End of Video Destination
+              </h2>
+
+              <div className="space-y-4">
+                <label className="flex items-center space-x-3 cursor-pointer">
+                  <input
+                    type="radio"
+                    name="destination"
+                    checked={destinationOption === 'default'}
+                    onChange={() => setDestinationOption('default')}
+                    className="w-4 h-4"
+                  />
+                  <span className="text-gray-900">Default destination</span>
+                </label>
+
+                <label className="flex items-center space-x-3 cursor-pointer">
+                  <input
+                    type="radio"
+                    name="destination"
+                    checked={destinationOption === 'other'}
+                    onChange={() => setDestinationOption('other')}
+                    className="w-4 h-4"
+                  />
+                  <span className="text-gray-900">Other</span>
+                </label>
+
+                <input
+                  type="text"
+                  placeholder="Enter any web URL"
+                  value={customDestination}
+                  onChange={(e) => setCustomDestination(e.target.value)}
+                  disabled={destinationOption !== 'other'}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed text-gray-900"
+                />
+              </div>
+
+              <div className="mt-6 flex gap-3">
+                <button
+                  onClick={handleSaveDestination}
+                  className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                >
+                  Ok
+                </button>
+                <button
+                  onClick={() => setShowDestinationModal(false)}
+                  className="flex-1 px-4 py-2 bg-gray-200 text-gray-900 rounded-lg hover:bg-gray-300 transition-colors"
+                >
+                  Cancel
+                </button>
+              </div>
             </div>
           </div>
         )}

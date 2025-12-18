@@ -40,6 +40,7 @@ export async function GET(
       thumbnailUrl: video.thumbnail_url,
       channelName: video.channels?.channel_name || null,
       channelHandle: video.channels?.channel_handle || null,
+      altDestination: video.alt_destination || null,
       createdAt: video.created_at,
     });
   } catch (error) {

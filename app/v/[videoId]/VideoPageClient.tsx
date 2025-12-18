@@ -7,6 +7,7 @@ interface VideoMetadata {
   thumbnailUrl: string | null;
   channelName: string | null;
   channelHandle: string | null;
+  altDestination: string | null;
 }
 
 export default function VideoPageClient({ videoId }: { videoId: string }) {
@@ -21,8 +22,13 @@ export default function VideoPageClient({ videoId }: { videoId: string }) {
           const data = await res.json();
           setMetadata(data);
 
-          // If we have a channel handle, redirect to the channel page with video modal
-          if (data.channelHandle) {
+          // If there's an alternative destination, redirect there instead
+          if (data.altDestination) {
+            setRedirecting(true);
+            window.location.href = data.altDestination;
+          }
+          // Otherwise, if we have a channel handle, redirect to the channel page with video modal
+          else if (data.channelHandle) {
             setRedirecting(true);
             const protocol = window.location.protocol;
             const hostname = window.location.hostname;
