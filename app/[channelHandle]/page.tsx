@@ -309,20 +309,20 @@ export default function ChannelPage({
                       </a>
                     </div>
                   )}
-                  <div className="flex items-center gap-1 md:gap-2 md:ml-20">
-                    <svg className="w-12 h-12" viewBox="0 0 530 510" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <a
+                    href="/record"
+                    className="flex items-center gap-2 md:gap-3 px-4 py-2 md:px-6 md:py-3 bg-white border-2 rounded-lg hover:bg-gray-50 transition-colors md:ml-20"
+                    style={{ borderColor: '#FF0000' }}
+                  >
+                    <svg className="w-8 h-8 md:w-12 md:h-12 flex-shrink-0" viewBox="0 0 530 510" fill="none" xmlns="http://www.w3.org/2000/svg">
                       <rect width="530" height="510" rx="100" fill="#E02020"/>
                       <path d="M80 180C80 152.386 102.386 130 130 130H330C357.614 130 380 152.386 380 180V330C380 357.614 357.614 380 330 380H130C102.386 380 80 357.614 80 330V180Z" fill="white"/>
                       <path d="M380 210L450 160V350L380 300V210Z" fill="white"/>
                     </svg>
-                    <a
-                      href="/record"
-                      className="underline cursor-pointer transition-colors font-bold text-base md:text-2xl"
-                      style={{ color: '#FF0000' }}
-                    >
+                    <span className="font-bold text-sm md:text-2xl" style={{ color: '#FF0000' }}>
                       Record a Fast Video
-                    </a>
-                  </div>
+                    </span>
+                  </a>
               </div>
             </div>
           </div>
