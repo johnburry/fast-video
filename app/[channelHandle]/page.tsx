@@ -82,6 +82,8 @@ export default function ChannelPage({
   const [hasShownHelloVideo, setHasShownHelloVideo] = useState(false);
   const [muxVideoId, setMuxVideoId] = useState<string | null>(null);
   const [videoTimeRemaining, setVideoTimeRemaining] = useState<number | null>(null);
+  const [hasWatchedVideo, setHasWatchedVideo] = useState(false);
+  const [watchedVideoId, setWatchedVideoId] = useState<string | null>(null);
 
   useEffect(() => {
     fetchChannelData();
@@ -223,6 +225,21 @@ export default function ChannelPage({
         className="fixed top-0 left-0 w-5 h-5 z-[100] opacity-0 hover:opacity-0"
         aria-label="View all channels"
       />
+
+      {/* Replay Video Button (shown after watching a Fast Video) */}
+      {hasWatchedVideo && !muxVideoId && watchedVideoId && (
+        <div className="fixed top-4 left-1/2 transform -translate-x-1/2 z-50">
+          <button
+            onClick={() => setMuxVideoId(watchedVideoId)}
+            className="px-6 py-3 bg-white text-black font-semibold rounded-lg shadow-lg hover:bg-gray-100 transition-colors flex items-center gap-2"
+          >
+            <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M12 5V1L7 6l5 5V7c3.31 0 6 2.69 6 6s-2.69 6-6 6-6-2.69-6-6H4c0 4.42 3.58 8 8 8s8-3.58 8-8-3.58-8-8-8z"/>
+            </svg>
+            Replay Video
+          </button>
+        </div>
+      )}
 
       {/* Back Button Bar (shown when search results exist) */}
       {searchResults.length > 0 && (
@@ -373,12 +390,13 @@ export default function ChannelPage({
                   className="bg-white rounded-lg shadow-md overflow-hidden"
                 >
                   <div className="flex flex-col md:flex-row">
-                    <div className="md:w-80 flex-shrink-0" style={{ backgroundColor: '#222529' }}>
+                    <div className="md:w-80 flex-shrink-0" style={{ backgroundColor: '#000000' }}>
                       <div className="relative w-full" style={{ paddingBottom: '56.25%' }}>
                         <img
                           src={getThumbnailUrl(result.thumbnail, result.youtubeVideoId)}
                           alt={result.title}
                           className="absolute top-0 left-0 w-full h-full object-contain cursor-pointer hover:opacity-90 transition-opacity"
+                          style={{ borderTopLeftRadius: '25px', borderBottomLeftRadius: '25px' }}
                           onClick={() => firstMatch
                             ? openVideo(result.youtubeVideoId, firstMatch.startTime, firstMatch.text, result.title)
                             : openVideo(result.youtubeVideoId)
@@ -643,7 +661,11 @@ export default function ChannelPage({
                 streamType="on-demand"
                 poster={`https://image.mux.com/${muxVideoId}/thumbnail.jpg?width=1200&height=675&fit_mode=smartcrop`}
                 preload="metadata"
-                onEnded={() => setMuxVideoId(null)}
+                onEnded={() => {
+                  setHasWatchedVideo(true);
+                  setWatchedVideoId(muxVideoId);
+                  setMuxVideoId(null);
+                }}
                 onTimeUpdate={(e) => {
                   const video = e.target as HTMLVideoElement;
                   const remaining = Math.ceil(video.duration - video.currentTime);
