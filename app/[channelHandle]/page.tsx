@@ -650,8 +650,15 @@ export default function ChannelPage({
               />
             </div>
             <div className="flex justify-between items-center mt-2">
-              <div className="flex items-center gap-1">
+              <div className="flex items-center gap-2">
                 <span className="text-white">Up Next:</span>
+                {channelData?.channel.thumbnail && (
+                  <img
+                    src={getThumbnailUrl(channelData.channel.thumbnail)}
+                    alt={channelData.channel.name}
+                    className="w-8 h-8 rounded-full"
+                  />
+                )}
                 <span className="text-gray-400">{channelData?.channel.name}</span>
               </div>
               <button
