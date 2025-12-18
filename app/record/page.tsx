@@ -389,9 +389,9 @@ export default function RecordPage() {
 
         {!playbackUrl && !isPreparing && (
           <div className="bg-gray-900 rounded-lg p-8">
-            <div className="flex flex-col md:flex-row gap-8 items-start">
+            <div className="flex flex-col md:flex-row gap-8 items-start md:items-start items-center justify-center">
               {/* Upload Section */}
-              <div className="flex-1 w-full">
+              <div className="flex-1 w-full md:w-auto">
                 <MuxUploader
                   endpoint={createUpload}
                   onUploadStart={handleUploadStart}
