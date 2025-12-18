@@ -172,15 +172,9 @@ export default function RecordPage() {
 
   return (
     <div className="min-h-screen bg-black text-white">
-      {/* Back Button Bar */}
-      <div
-        style={{
-          paddingTop: 'calc(env(safe-area-inset-top) + 11px)',
-          paddingBottom: '12px'
-        }}
-        className="sticky top-0 z-50 bg-black"
-      >
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="max-w-4xl mx-auto p-8">
+        {/* Back Button */}
+        <div className="mb-6">
           <button
             onClick={() => {
               if (channelHandle) {
@@ -197,9 +191,7 @@ export default function RecordPage() {
             Back
           </button>
         </div>
-      </div>
 
-      <div className="max-w-4xl mx-auto p-8">
         <div className="mb-8">
           <h1 className="text-4xl font-bold mb-2 flex items-center gap-3">
             <svg className="w-20 h-20 flex-shrink-0" viewBox="0 0 530 510" fill="none" xmlns="http://www.w3.org/2000/svg">
