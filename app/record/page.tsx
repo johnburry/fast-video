@@ -456,28 +456,28 @@ export default function RecordPage() {
               />
               {showVideoEndedOverlay && (
                 <div className="absolute inset-0 bg-black bg-opacity-90 flex flex-col items-center justify-center p-8 text-center">
-                  <p className="text-white text-xl md:text-2xl mb-6 max-w-2xl">
+                  <p className="text-white text-xl md:text-2xl max-w-2xl">
                     When it has been shared, at the end of the video, it will automatically take the viewer to the content specified above.
                   </p>
-                  <button
-                    onClick={() => {
-                      const shareUrl = getShareableUrl();
-                      window.open(shareUrl, '_blank');
-                    }}
-                    className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors"
-                  >
-                    Test in new tab
-                  </button>
                 </div>
               )}
             </div>
 
-            <div className="text-center">
+            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
               <button
                 onClick={copyShareLink}
                 className="px-8 py-3 bg-blue-600 hover:bg-blue-700 rounded-lg font-medium transition-colors text-lg"
               >
                 Copy Video Link for Sharing
+              </button>
+              <button
+                onClick={() => {
+                  const shareUrl = getShareableUrl();
+                  window.open(shareUrl, '_blank');
+                }}
+                className="px-8 py-3 bg-green-600 hover:bg-green-700 rounded-lg font-medium transition-colors text-lg"
+              >
+                Test in new tab
               </button>
             </div>
           </div>
