@@ -104,7 +104,7 @@ export default function ChannelPage({
 
   useEffect(() => {
     if (channelData?.channel.handle) {
-      document.title = `@${channelData.channel.handle} Fast Video Transcript Search`;
+      document.title = `@${channelData.channel.handle} Fast.Video`;
     }
   }, [channelData]);
 
