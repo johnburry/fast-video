@@ -641,14 +641,15 @@ export default function ChannelPage({
                 Continue →
               </button>
             </div>
-            <div className="bg-white rounded-lg overflow-hidden" style={{ height: 'calc(100% - 52px)' }}>
+            <div className="bg-white rounded-lg overflow-hidden" style={{ height: 'calc(100% - 52px)', backgroundColor: '#000' }}>
               <MuxPlayer
                 playbackId={muxVideoId}
                 streamType="on-demand"
                 poster={`https://image.mux.com/${muxVideoId}/thumbnail.jpg?width=1200&height=675&fit_mode=smartcrop`}
                 autoPlay
+                preload="none"
                 onEnded={() => setMuxVideoId(null)}
-                style={{ width: '100%', height: '100%' }}
+                style={{ width: '100%', height: '100%', '--controls': 'none' }}
               />
             </div>
           </div>
