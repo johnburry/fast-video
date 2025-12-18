@@ -628,20 +628,11 @@ export default function ChannelPage({
       {/* Mux Video Modal (from ?v= parameter) */}
       {muxVideoId && (
         <div
-          className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4"
+          className="fixed inset-0 bg-black bg-opacity-75 flex items-start justify-center z-50 p-4"
           onClick={() => setMuxVideoId(null)}
         >
-          <div className="w-full" style={{ maxWidth: '90vw', height: '80vh' }} onClick={(e) => e.stopPropagation()}>
-            <div className="flex justify-end mb-2">
-              <button
-                onClick={() => setMuxVideoId(null)}
-                className="px-6 py-2 text-white rounded-lg hover:opacity-80 transition-opacity"
-                style={{ backgroundColor: '#165DFC' }}
-              >
-                Continue →
-              </button>
-            </div>
-            <div className="bg-white rounded-lg overflow-hidden" style={{ height: 'calc(100% - 52px)', backgroundColor: '#000' }}>
+          <div className="w-full flex flex-col" style={{ maxWidth: '90vw', height: '80vh' }} onClick={(e) => e.stopPropagation()}>
+            <div className="bg-white rounded-lg overflow-hidden flex-1" style={{ backgroundColor: '#000' }}>
               <MuxPlayer
                 playbackId={muxVideoId}
                 streamType="on-demand"
@@ -651,6 +642,15 @@ export default function ChannelPage({
                 onEnded={() => setMuxVideoId(null)}
                 style={{ width: '100%', height: '100%', '--poster': 'auto' }}
               />
+            </div>
+            <div className="flex justify-end mt-2">
+              <button
+                onClick={() => setMuxVideoId(null)}
+                className="px-6 py-2 text-white rounded-lg hover:opacity-80 transition-opacity"
+                style={{ backgroundColor: '#165DFC' }}
+              >
+                Continue →
+              </button>
             </div>
           </div>
         </div>
