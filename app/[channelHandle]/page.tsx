@@ -316,8 +316,6 @@ export default function ChannelPage({
                     </svg>
                     <a
                       href="/record"
-                      target="_blank"
-                      rel="noopener noreferrer"
                       className="underline cursor-pointer transition-colors font-bold text-base md:text-2xl"
                       style={{ color: '#FF0000' }}
                     >
