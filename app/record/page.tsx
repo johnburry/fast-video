@@ -363,8 +363,8 @@ export default function RecordPage() {
             </MuxUploader>
             {!isMobile && (
               <div className="mt-6 text-center">
-                <p className="text-gray-300 text-base mb-4">
-                  Scan QR code to use your mobile for recording a Fast Video
+                <p className="text-gray-300 mb-4" style={{ fontSize: '1rem' }}>
+                  Record using your mobile phone using this QR Code
                 </p>
                 {recordUrl && (
                   <div className="inline-block p-4 bg-white rounded-lg">
