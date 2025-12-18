@@ -23,6 +23,11 @@ export default function RecordPage() {
   const [destinationOption, setDestinationOption] = useState<'default' | 'other'>('default');
   const [customDestination, setCustomDestination] = useState('');
   const [showLinkPreview, setShowLinkPreview] = useState(false);
+  const [ogData, setOgData] = useState<{
+    image: string | null;
+    title: string | null;
+    description: string | null;
+  } | null>(null);
 
   // Detect subdomain and fetch channel info
   useEffect(() => {
@@ -179,8 +184,25 @@ export default function RecordPage() {
     // Update link preview visibility based on selection
     if (destinationOption === 'other' && customDestination) {
       setShowLinkPreview(true);
+
+      // Fetch OpenGraph data for the custom destination
+      try {
+        const ogResponse = await fetch('/api/opengraph', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ url: customDestination }),
+        });
+
+        if (ogResponse.ok) {
+          const ogData = await ogResponse.json();
+          setOgData(ogData);
+        }
+      } catch (err) {
+        console.error('Error fetching OpenGraph data:', err);
+      }
     } else {
       setShowLinkPreview(false);
+      setOgData(null);
     }
 
     // If video is already uploaded, save immediately
@@ -256,16 +278,37 @@ export default function RecordPage() {
                 A Fast Video is a quick video you can record here, it's uploaded to the cloud and you get a link to share with others. When it has been shared, at the end of the video, it will automatically take the viewer to this content:
               </p>
               {showLinkPreview ? (
-                <div className="w-full border border-gray-300 rounded-lg p-4 bg-gray-50">
-                  <p className="text-xs text-gray-500 mb-2">Link Preview</p>
-                  <a
-                    href={customDestination}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-blue-600 hover:text-blue-800 break-all text-sm"
-                  >
-                    {customDestination}
-                  </a>
+                <div className="w-full border border-gray-300 rounded-lg overflow-hidden bg-white">
+                  {ogData?.image && (
+                    <img
+                      src={ogData.image}
+                      alt={ogData.title || 'Link preview'}
+                      className="w-full h-48 object-cover"
+                      onError={(e) => {
+                        e.currentTarget.style.display = 'none';
+                      }}
+                    />
+                  )}
+                  <div className="p-4">
+                    {ogData?.title && (
+                      <h3 className="text-black font-semibold text-lg mb-2">
+                        {ogData.title}
+                      </h3>
+                    )}
+                    {ogData?.description && (
+                      <p className="text-gray-600 text-sm mb-2 line-clamp-2">
+                        {ogData.description}
+                      </p>
+                    )}
+                    <a
+                      href={customDestination}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-blue-600 hover:text-blue-800 break-all text-xs"
+                    >
+                      {customDestination}
+                    </a>
+                  </div>
                 </div>
               ) : (
                 <>
