@@ -306,7 +306,7 @@ export default function ChannelPage({
                   )}
                   <div className="flex items-center gap-1 md:gap-2 md:ml-20">
                     <img
-                      src="/camera.png"
+                      src="/camera-icon.svg"
                       alt="Camera"
                       className="w-6 h-6"
                     />

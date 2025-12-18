@@ -200,7 +200,7 @@ export default function RecordPage() {
         <div className="mb-8">
           <h1 className="text-4xl font-bold mb-2 flex items-center gap-3">
             <img
-              src="/camera.png"
+              src="/camera-icon.svg"
               alt="Camera"
               className="w-20 h-20 flex-shrink-0"
             />
