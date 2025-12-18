@@ -231,9 +231,12 @@ export default function ChannelPage({
         <div className="fixed top-4 left-1/2 transform -translate-x-1/2 z-50">
           <button
             onClick={() => setMuxVideoId(watchedVideoId)}
-            className="px-6 py-3 bg-white text-black font-semibold rounded-lg shadow-lg hover:bg-gray-100 transition-colors flex items-center gap-2"
+            className="px-6 py-3 text-white font-semibold rounded-lg shadow-lg transition-colors flex items-center gap-2"
+            style={{ backgroundColor: '#FF0000' }}
+            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#CC0000'}
+            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#FF0000'}
           >
-            <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+            <svg className="w-5 h-5" fill="white" viewBox="0 0 24 24">
               <path d="M12 5V1L7 6l5 5V7c3.31 0 6 2.69 6 6s-2.69 6-6 6-6-2.69-6-6H4c0 4.42 3.58 8 8 8s8-3.58 8-8-3.58-8-8-8z"/>
             </svg>
             Replay Video
@@ -266,7 +269,7 @@ export default function ChannelPage({
 
       {/* Channel Header - only show when no search results */}
       {searchResults.length === 0 && (
-        <div style={{ backgroundColor: '#ffffff', paddingTop: '0.5rem' }}>
+        <div style={{ backgroundColor: '#ffffff', paddingTop: hasWatchedVideo && !muxVideoId && watchedVideoId ? '4.5rem' : '0.5rem' }}>
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-8">
             {/* Mobile: Stack vertically, Desktop: Two columns */}
             <div className="flex flex-col md:flex-row md:justify-between md:items-start gap-4">
