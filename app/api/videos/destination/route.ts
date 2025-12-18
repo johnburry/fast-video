@@ -21,7 +21,7 @@ export async function POST(request: NextRequest) {
     const { error } = await supabase
       .from('mux_videos')
       .update({ alt_destination: altDestination })
-      .eq('playback_id', playbackId);
+      .eq('mux_playback_id', playbackId);
 
     if (error) {
       console.error('Error updating alt_destination:', error);
