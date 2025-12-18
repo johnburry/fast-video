@@ -390,8 +390,8 @@ export default function ChannelPage({
                   className="bg-white rounded-lg shadow-md overflow-hidden"
                 >
                   <div className="flex flex-col md:flex-row">
-                    <div className="md:w-80 flex-shrink-0" style={{ backgroundColor: '#000000' }}>
-                      <div className="relative w-full" style={{ paddingBottom: '56.25%' }}>
+                    <div className="md:w-80 flex-shrink-0" style={{ backgroundColor: '#000000', minHeight: '184px' }}>
+                      <div className="relative w-full" style={{ paddingBottom: '56.25%', minHeight: '184px' }}>
                         <img
                           src={getThumbnailUrl(result.thumbnail, result.youtubeVideoId)}
                           alt={result.title}
