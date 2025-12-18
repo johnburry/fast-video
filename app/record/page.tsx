@@ -74,15 +74,52 @@ export default function RecordPage() {
     getChannelFromSubdomain();
   }, []);
 
-  // Set the current URL for QR code and detect mobile
+  // Parse URL parameters on load and set destination
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      setRecordUrl(window.location.href);
+      const urlParams = new URLSearchParams(window.location.search);
+      const altDest = urlParams.get('dest');
+
+      if (altDest) {
+        setDestinationOption('other');
+        setCustomDestination(altDest);
+        setShowLinkPreview(true);
+
+        // Fetch OpenGraph data for the destination
+        fetch('/api/opengraph', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ url: altDest }),
+        })
+          .then(res => res.ok ? res.json() : null)
+          .then(data => {
+            if (data) setOgData(data);
+          })
+          .catch(err => console.error('Error fetching OpenGraph data:', err));
+      }
+
       // Detect if device is mobile
       const checkIsMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
       setIsMobile(checkIsMobile);
     }
   }, []);
+
+  // Update QR code URL when destination changes
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const baseUrl = window.location.origin + window.location.pathname;
+
+      if (destinationOption === 'other' && customDestination) {
+        // Add dest parameter to URL
+        const url = new URL(baseUrl);
+        url.searchParams.set('dest', customDestination);
+        setRecordUrl(url.toString());
+      } else {
+        // Use base URL without parameters
+        setRecordUrl(baseUrl);
+      }
+    }
+  }, [destinationOption, customDestination]);
 
   const createUpload = async () => {
     try {
