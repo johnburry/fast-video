@@ -4,6 +4,7 @@ import { use, useState, useEffect, ReactElement } from 'react';
 import { formatTimestamp } from '@/lib/youtube/transcript';
 import MuxPlayer from '@mux/mux-player-react';
 import { getThumbnailUrl } from '@/lib/thumbnail';
+import Image from 'next/image';
 
 // Helper function to process channel names with line break character
 function formatChannelName(name: string): ReactElement[] {
@@ -305,12 +306,13 @@ export default function ChannelPage({
                     </div>
                   )}
                   <div className="flex items-center gap-1 md:gap-2 md:ml-20">
-                    <svg className="w-6 h-6" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <rect width="32" height="32" rx="6" fill="#FF0000"/>
-                      <g transform="translate(2.5, 8) scale(1.35)">
-                        <path d="M17 10.5V7c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1v10c0 .55.45 1 1 1h12c.55 0 1-.45 1-1v-3.5l4 4v-11l-4 4z" fill="#FFFFFF"/>
-                      </g>
-                    </svg>
+                    <Image
+                      src="/camera.png"
+                      alt="Camera"
+                      width={24}
+                      height={24}
+                      className="w-6 h-6"
+                    />
                     <a
                       href="/record"
                       target="_blank"
