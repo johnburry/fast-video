@@ -19,8 +19,9 @@ export async function POST(request: NextRequest) {
     });
 
     if (!response.ok) {
+      console.error('Failed to fetch URL:', url, 'Status:', response.status);
       return NextResponse.json(
-        { error: 'Failed to fetch URL' },
+        { error: 'Failed to fetch URL', status: response.status },
         { status: 500 }
       );
     }
@@ -51,8 +52,9 @@ export async function POST(request: NextRequest) {
     });
   } catch (error) {
     console.error('Error fetching OpenGraph data:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { error: 'Internal server error', details: errorMessage },
       { status: 500 }
     );
   }

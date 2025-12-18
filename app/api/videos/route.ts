@@ -36,8 +36,9 @@ export async function POST(request: NextRequest) {
 
     if (error) {
       console.error('Error inserting video:', error);
+      console.error('Error details:', JSON.stringify(error, null, 2));
       return NextResponse.json(
-        { error: 'Failed to save video metadata' },
+        { error: 'Failed to save video metadata', details: error.message },
         { status: 500 }
       );
     }
