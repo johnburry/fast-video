@@ -10,6 +10,7 @@ interface Channel {
   handle: string;
   youtubeHandle: string | null;
   name: string;
+  shortName: string | null;
   description: string | null;
   thumbnail: string | null;
   bannerUrl: string | null;
@@ -35,6 +36,7 @@ export default function ManageChannelPage({
 
   // Form fields
   const [name, setName] = useState('');
+  const [shortName, setShortName] = useState('');
   const [channelHandle, setChannelHandle] = useState('');
   const [description, setDescription] = useState('');
   const [externalLink, setExternalLink] = useState('');
@@ -57,6 +59,7 @@ export default function ManageChannelPage({
       const ch = data.channel;
       setChannel(ch);
       setName(ch.name);
+      setShortName(ch.shortName || '');
       setChannelHandle(ch.handle);
       setDescription(ch.description || '');
       setExternalLink(ch.externalLink || '');
@@ -83,6 +86,7 @@ export default function ManageChannelPage({
         },
         body: JSON.stringify({
           name,
+          shortName,
           handle: channelHandle,
           description,
           externalLink,
@@ -245,6 +249,22 @@ export default function ManageChannelPage({
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 required
               />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Short Name
+              </label>
+              <input
+                type="text"
+                value={shortName}
+                onChange={(e) => setShortName(e.target.value)}
+                placeholder="e.g., Audra Lambert"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              />
+              <p className="mt-2 text-sm text-gray-500">
+                Used in video titles (e.g., "A Fast Video from Audra Lambert")
+              </p>
             </div>
 
             <div>

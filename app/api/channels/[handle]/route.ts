@@ -48,6 +48,7 @@ export async function GET(
         handle: channel.channel_handle,
         youtubeHandle: channel.youtube_channel_handle,
         name: channel.channel_name,
+        shortName: channel.short_name,
         description: channel.channel_description,
         thumbnail: channel.thumbnail_url,
         bannerUrl: channel.banner_url,

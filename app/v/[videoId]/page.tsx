@@ -11,6 +11,7 @@ interface VideoMetadata {
   playbackId: string;
   thumbnailUrl: string | null;
   channelName: string | null;
+  channelShortName: string | null;
   channelHandle: string | null;
 }
 
@@ -20,7 +21,7 @@ async function getVideoMetadata(videoId: string): Promise<VideoMetadata | null> 
 
     const { data: video, error } = await supabase
       .from('mux_videos')
-      .select('*, channels(channel_name, channel_handle)')
+      .select('*, channels(channel_name, short_name, channel_handle)')
       .eq('mux_playback_id', videoId)
       .maybeSingle();
 
@@ -38,6 +39,7 @@ async function getVideoMetadata(videoId: string): Promise<VideoMetadata | null> 
       playbackId: video.mux_playback_id,
       thumbnailUrl: video.thumbnail_url,
       channelName: video.channels?.channel_name || null,
+      channelShortName: video.channels?.short_name || null,
       channelHandle: video.channels?.channel_handle || null,
     };
 
@@ -60,9 +62,12 @@ export async function generateMetadata({
   console.log('generateMetadata - videoId:', videoId);
   console.log('generateMetadata - metadata:', metadata);
   console.log('generateMetadata - channelName from API:', metadata?.channelName);
+  console.log('generateMetadata - channelShortName from API:', metadata?.channelShortName);
 
-  const title = metadata?.channelName
-    ? `A Fast Video from ${metadata.channelName}`
+  // Use short_name if available, otherwise fall back to channel_name
+  const displayName = metadata?.channelShortName || metadata?.channelName;
+  const title = displayName
+    ? `A Fast Video from ${displayName}`
     : 'A Fast Video';
 
   console.log('generateMetadata - final title:', title);

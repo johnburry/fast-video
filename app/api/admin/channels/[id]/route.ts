@@ -9,12 +9,13 @@ export async function PATCH(
     const { id } = await params;
     const body = await request.json();
 
-    const { name, handle, description, externalLink, externalLinkName, isActive } = body;
+    const { name, shortName, handle, description, externalLink, externalLinkName, isActive } = body;
 
     const { data, error } = await supabaseAdmin
       .from('channels')
       .update({
         channel_name: name,
+        short_name: shortName,
         channel_handle: handle,
         channel_description: description,
         external_link: externalLink,
