@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import MuxUploader from '@mux/mux-uploader-react';
 import MuxPlayer from '@mux/mux-player-react';
 import { QRCodeSVG } from 'qrcode.react';
+import { getThumbnailUrl } from '@/lib/thumbnail';
 
 export default function RecordPage() {
   const [uploadId, setUploadId] = useState<string>('');
@@ -14,6 +15,7 @@ export default function RecordPage() {
   const [channelId, setChannelId] = useState<string | null>(null);
   const [channelName, setChannelName] = useState<string | null>(null);
   const [channelHandle, setChannelHandle] = useState<string | null>(null);
+  const [channelThumbnail, setChannelThumbnail] = useState<string | null>(null);
   const [recordUrl, setRecordUrl] = useState<string>('');
   const [isMobile, setIsMobile] = useState<boolean>(false);
   const [channelLoading, setChannelLoading] = useState<boolean>(true);
@@ -46,6 +48,7 @@ export default function RecordPage() {
             console.log('Channel found:', data);
             setChannelId(data.id);
             setChannelName(data.name);
+            setChannelThumbnail(data.thumbnail);
           } else {
             console.error('Channel not found for subdomain:', subdomain, 'Status:', res.status);
           }
@@ -212,11 +215,21 @@ export default function RecordPage() {
             </span>
           </h1>
           {channelName && (
-            <p className="text-gray-400">
-              A Fast Video recorded here, after being shared, will play then automatically load the channel:
-              <br />
-              <strong className="text-white">{channelName}</strong>
-            </p>
+            <div className="text-gray-400">
+              <p className="mb-2">
+                A Fast Video recorded here, after being shared, will play then automatically load the channel:
+              </p>
+              <div className="flex items-center gap-2">
+                {channelThumbnail && (
+                  <img
+                    src={getThumbnailUrl(channelThumbnail)}
+                    alt={channelName}
+                    className="w-8 h-8 rounded-full"
+                  />
+                )}
+                <strong className="text-white">{channelName}</strong>
+              </div>
+            </div>
           )}
         </div>
 
