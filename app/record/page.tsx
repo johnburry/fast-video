@@ -28,6 +28,7 @@ export default function RecordPage() {
     title: string | null;
     description: string | null;
   } | null>(null);
+  const [showVideoEndedOverlay, setShowVideoEndedOverlay] = useState(false);
 
   // Detect subdomain and fetch channel info
   useEffect(() => {
@@ -445,13 +446,30 @@ export default function RecordPage() {
 
         {playbackUrl && (
           <div className="space-y-6">
-            <div className="bg-gray-900 rounded-lg overflow-hidden">
+            <div className="bg-gray-900 rounded-lg overflow-hidden relative">
               <MuxPlayer
                 playbackId={playbackUrl.split('/').pop()?.replace('.m3u8', '') || ''}
                 metadata={{
                   video_title: 'Hello Video',
                 }}
+                onEnded={() => setShowVideoEndedOverlay(true)}
               />
+              {showVideoEndedOverlay && (
+                <div className="absolute inset-0 bg-black bg-opacity-90 flex flex-col items-center justify-center p-8 text-center">
+                  <p className="text-white text-xl md:text-2xl mb-6 max-w-2xl">
+                    When it has been shared, at the end of the video, it will automatically take the viewer to the content specified above.
+                  </p>
+                  <button
+                    onClick={() => {
+                      const shareUrl = getShareableUrl();
+                      window.open(shareUrl, '_blank');
+                    }}
+                    className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors"
+                  >
+                    Test in new tab
+                  </button>
+                </div>
+              )}
             </div>
 
             <div className="text-center">
