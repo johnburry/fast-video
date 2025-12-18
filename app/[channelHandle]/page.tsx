@@ -169,6 +169,8 @@ export default function ChannelPage({
     setSearchResults([]);
     setHasSearched(false);
     setExpandedVideos(new Set());
+    // Remove query string from URL
+    window.history.pushState({}, '', `/${channelHandle}`);
   };
 
   const toggleExpandMatches = (videoId: string) => {
@@ -279,8 +281,9 @@ export default function ChannelPage({
                   <img
                     src={getThumbnailUrl(channelData.channel.thumbnail)}
                     alt={channelData.channel.name}
-                    className="w-35 h-35 rounded-full"
+                    className="w-35 h-35 rounded-full cursor-pointer hover:opacity-80 transition-opacity"
                     style={{ width: '140px', height: '140px' }}
+                    onClick={resetSearch}
                   />
                 )}
                 <h1
