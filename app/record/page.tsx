@@ -216,10 +216,10 @@ export default function RecordPage() {
           </h1>
           {channelName && (
             <div className="text-gray-400">
-              <p className="mb-2">
+              <p className="mb-4">
                 A Fast Video recorded here, after being shared, will play then automatically load the channel:
               </p>
-              <div className="flex items-center gap-2">
+              <div className="bg-white rounded-lg p-6 md:p-8 flex flex-col items-center gap-4">
                 {channelThumbnail && (
                   <img
                     src={getThumbnailUrl(channelThumbnail)}
@@ -227,7 +227,7 @@ export default function RecordPage() {
                     className="w-16 h-16 rounded-full"
                   />
                 )}
-                <strong className="text-white">{channelName}</strong>
+                <strong className="text-black text-2xl md:text-4xl text-center">{channelName}</strong>
               </div>
             </div>
           )}
