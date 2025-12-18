@@ -395,7 +395,7 @@ export default function ChannelPage({
                   key={result.videoId}
                   className="bg-white rounded-lg shadow-md overflow-hidden"
                 >
-                  <div className="flex flex-col md:flex-row">
+                  <div className="flex flex-col md:flex-row md:items-start">
                     <div className="md:w-80 flex-shrink-0" style={{ backgroundColor: '#000000', minHeight: '184px' }}>
                       <div className="relative w-full" style={{ paddingBottom: '56.25%', minHeight: '184px' }}>
                         <img
@@ -410,9 +410,10 @@ export default function ChannelPage({
                         />
                       </div>
                     </div>
-                    <div className="p-6 flex-1">
+                    <div className="p-6 flex-1" style={{ paddingTop: '0' }}>
                       <h3
                         className="text-xl font-semibold text-gray-900 mb-2 cursor-pointer hover:text-blue-600 transition-colors"
+                        style={{ marginTop: '1.5rem' }}
                         onClick={() => firstMatch
                           ? openVideo(result.youtubeVideoId, firstMatch.startTime, firstMatch.text, result.title)
                           : openVideo(result.youtubeVideoId)
