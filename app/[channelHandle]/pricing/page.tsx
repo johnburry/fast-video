@@ -141,7 +141,7 @@ export default function PricingPage() {
             <div className="mb-6">
               <div className="flex items-baseline gap-2 mb-2">
                 <span className="text-5xl font-bold text-white">$99</span>
-                <span className="text-gray-400">/year</span>
+                <span className="text-2xl text-gray-400">/year</span>
               </div>
               <div className="text-red-400 font-semibold">
                 <span className="line-through text-gray-500">$199</span> Save $100!
@@ -181,7 +181,7 @@ export default function PricingPage() {
             <div className="mb-6">
               <div className="flex items-baseline gap-2 mb-2">
                 <span className="text-5xl font-bold text-white">$199</span>
-                <span className="text-blue-200">/year</span>
+                <span className="text-2xl text-blue-200">/year</span>
               </div>
               <div className="text-yellow-300 font-semibold">
                 <span className="line-through text-blue-300">$399</span> Save $200!
@@ -218,11 +218,11 @@ export default function PricingPage() {
             <div className="mb-6">
               <div className="flex items-baseline gap-2 mb-2">
                 <span className="text-5xl font-bold text-white">$499</span>
+                <span className="text-2xl text-gray-400">one-time</span>
               </div>
               <div className="text-purple-400 font-semibold">
                 <span className="line-through text-gray-500">$999</span> Save $500!
               </div>
-              <p className="text-gray-400 text-sm mt-2">One-time payment</p>
             </div>
             <ul className="space-y-4 mb-8">
               <li className="flex items-start gap-3 text-gray-300">
