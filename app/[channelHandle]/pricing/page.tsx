@@ -13,6 +13,7 @@ interface ChannelData {
   thumbnail: string;
   subscriberCount: number;
   videoCount: number;
+  shortName: string;
 }
 
 export default function PricingPage() {
@@ -93,9 +94,6 @@ export default function PricingPage() {
       {/* Header with Channel Branding */}
       <div style={{ backgroundColor: '#000000' }} className="py-16 px-4">
         <div className="max-w-6xl mx-auto text-center">
-          <h1 className="text-4xl md:text-6xl font-bold text-white mb-4">
-            {channelData.name}
-          </h1>
           <div className="flex justify-center mb-4">
             <img
               src="https://reorbit.com/fast.video.png"
@@ -145,16 +143,13 @@ export default function PricingPage() {
         <div className="bg-white rounded-lg p-6 flex flex-col items-center mb-6 max-w-md mx-auto">
           <img
             src={getThumbnailUrl(channelData.thumbnail)}
-            alt={channelData.name}
+            alt={channelData.shortName || channelData.name}
             className="w-24 h-24 rounded-full mb-4"
           />
           <h2 className="text-2xl md:text-3xl font-bold text-gray-900 text-center">
-            {channelData.name.split('|').map((part, index) => (
-              <span key={index}>
-                {part.trim()}
-                {index < channelData.name.split('|').length - 1 && <br />}
-              </span>
-            ))}
+            {channelData.shortName || channelData.name}
+            <br />
+            YouTube Transcription Search and Fast.Video Service
           </h2>
         </div>
         <h2 className="text-4xl md:text-6xl font-bold text-white text-center mb-12">
