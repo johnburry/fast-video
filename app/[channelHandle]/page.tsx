@@ -294,12 +294,17 @@ export default function ChannelPage({
                   >
                     {channelData?.channel.name && formatChannelName(channelData.channel.name)}
                   </h1>
-                  <a
-                    href={`/${channelHandle}/pricing`}
-                    className="text-xs md:text-sm text-blue-600 hover:text-blue-800 underline mt-1 inline-block"
-                  >
-                    View Pricing Plans<br />(this link is removed with a subscription)
-                  </a>
+                  <div className="mt-2">
+                    <a
+                      href={`/${channelHandle}/pricing`}
+                      className="inline-block px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-lg transition-colors text-sm md:text-base"
+                    >
+                      View Pricing Plans
+                    </a>
+                    <p className="text-xs text-gray-500 mt-1">
+                      This button is removed with a subscription
+                    </p>
+                  </div>
                 </div>
               </div>
 
