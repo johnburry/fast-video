@@ -92,7 +92,7 @@ export default function PricingPage() {
       <HeadLinks />
 
       {/* Header with Channel Branding */}
-      <div style={{ backgroundColor: '#000000' }} className="py-16 px-4">
+      <div style={{ backgroundColor: '#000000' }} className="py-2 px-4">
         <div className="max-w-6xl mx-auto text-center">
           <div className="flex justify-center mb-4">
             <img
@@ -140,7 +140,7 @@ export default function PricingPage() {
 
       {/* Pricing Cards */}
       <div className="max-w-7xl mx-auto px-4 pb-8" style={{ paddingTop: '0.2rem' }}>
-        <div className="bg-white rounded-lg p-6 flex flex-col items-center mb-6 max-w-md mx-auto">
+        <div className="bg-white rounded-lg p-6 flex flex-col items-center mb-6 inline-block">
           <img
             src={getThumbnailUrl(channelData.thumbnail)}
             alt={channelData.shortName || channelData.name}
@@ -149,7 +149,7 @@ export default function PricingPage() {
           <h2 className="text-2xl md:text-3xl font-bold text-gray-900 text-center">
             {channelData.shortName || channelData.name}
             <br />
-            YouTube Transcription Search and Fast.Video Service
+            <span className="text-red-600">YouTube Transcription Search and Fast.Video Service</span>
           </h2>
         </div>
         <h2 className="text-4xl md:text-6xl font-bold text-white text-center mb-12">
