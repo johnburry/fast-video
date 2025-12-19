@@ -143,14 +143,14 @@ export default function PricingPage() {
         <div className="flex justify-center">
           <a
             href={`https://${channelData.handle}.fast.video`}
-            className="bg-white rounded-lg p-6 flex flex-col items-center mb-6 inline-block hover:shadow-lg transition-shadow cursor-pointer"
+            className="bg-white rounded-lg p-6 flex flex-row items-center gap-6 mb-6 inline-block hover:shadow-lg transition-shadow cursor-pointer"
           >
           <img
             src={getThumbnailUrl(channelData.thumbnail)}
             alt={channelData.shortName || channelData.name}
-            className="w-24 h-24 rounded-full mb-4"
+            className="w-24 h-24 rounded-full"
           />
-          <h2 className="text-2xl md:text-3xl font-bold text-gray-900 text-center">
+          <h2 className="text-2xl md:text-3xl font-bold text-gray-900">
             {channelData.shortName || channelData.name}
             <br />
             <span className="text-red-600">YouTube Transcription Search and Fast.Video Service</span>
