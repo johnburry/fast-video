@@ -286,13 +286,21 @@ export default function ChannelPage({
                     onClick={resetSearch}
                   />
                 )}
-                <h1
-                  className="text-2xl md:text-5xl font-black cursor-pointer transition-colors"
-                  style={{ color: '#000000' }}
-                  onClick={resetSearch}
-                >
-                  {channelData?.channel.name && formatChannelName(channelData.channel.name)}
-                </h1>
+                <div>
+                  <h1
+                    className="text-2xl md:text-5xl font-black cursor-pointer transition-colors"
+                    style={{ color: '#000000' }}
+                    onClick={resetSearch}
+                  >
+                    {channelData?.channel.name && formatChannelName(channelData.channel.name)}
+                  </h1>
+                  <a
+                    href={`/${channelHandle}/pricing`}
+                    className="text-xs md:text-sm text-blue-600 hover:text-blue-800 underline mt-1 inline-block"
+                  >
+                    View Pricing Plans<br />(this link is removed with a subscription)
+                  </a>
+                </div>
               </div>
 
               {/* Right: Links and Actions - centered on mobile, column on desktop */}
