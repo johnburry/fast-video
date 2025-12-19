@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import MuxUploader from '@mux/mux-uploader-react';
 import MuxPlayer from '@mux/mux-player-react';
 import { QRCodeSVG } from 'qrcode.react';
@@ -30,6 +30,8 @@ export default function RecordPage() {
   } | null>(null);
   const [showVideoEndedOverlay, setShowVideoEndedOverlay] = useState(false);
   const [overrideVideoThumbnail, setOverrideVideoThumbnail] = useState(false);
+  const [videoKey, setVideoKey] = useState(0);
+  const playerRef = useRef<any>(null);
 
   // Detect subdomain and fetch channel info
   useEffect(() => {
@@ -226,7 +228,6 @@ export default function RecordPage() {
 
   const toggleVideoThumbnail = async () => {
     const newOverrideValue = !overrideVideoThumbnail;
-    setOverrideVideoThumbnail(newOverrideValue);
 
     // Save to database
     const playbackId = playbackUrl.split('/').pop()?.replace('.m3u8', '') || '';
@@ -245,12 +246,11 @@ export default function RecordPage() {
         throw new Error('Failed to update thumbnail override');
       }
 
-      alert(`Video thumbnail ${newOverrideValue ? 'now using channel thumbnail' : 'reset to Mux thumbnail'}`);
+      // Update state and force video player to remount with new poster
+      setOverrideVideoThumbnail(newOverrideValue);
+      setVideoKey(prev => prev + 1);
     } catch (err) {
       console.error('Error updating thumbnail override:', err);
-      alert('Failed to update thumbnail');
-      // Revert the state on error
-      setOverrideVideoThumbnail(!newOverrideValue);
     }
   };
 
@@ -479,7 +479,14 @@ export default function RecordPage() {
           <div className="space-y-6">
             <div className="bg-gray-900 rounded-lg overflow-hidden relative">
               <MuxPlayer
+                key={videoKey}
+                ref={playerRef}
                 playbackId={playbackUrl.split('/').pop()?.replace('.m3u8', '') || ''}
+                poster={
+                  overrideVideoThumbnail && channelThumbnail
+                    ? getThumbnailUrl(channelThumbnail)
+                    : `https://image.mux.com/${playbackUrl.split('/').pop()?.replace('.m3u8', '')}/thumbnail.jpg?width=1200&height=675&fit_mode=smartcrop`
+                }
                 metadata={{
                   video_title: 'Hello Video',
                 }}
