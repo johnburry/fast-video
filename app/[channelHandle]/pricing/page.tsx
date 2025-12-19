@@ -118,7 +118,7 @@ export default function PricingPage() {
           </p>
 
           {/* Anniversary Sale Countdown */}
-          <div className="bg-red-600 text-white py-6 px-8 rounded-lg inline-block mb-8">
+          <div className="bg-red-600 text-white py-6 px-8 rounded-lg inline-block">
             <p className="text-xl md:text-2xl font-bold mb-3">
               🎉 Anniversary Sale Ends at Midnight! 🎉
             </p>
@@ -141,15 +141,20 @@ export default function PricingPage() {
       </div>
 
       {/* Pricing Cards */}
-      <div className="max-w-7xl mx-auto px-4 py-16">
-        <div className="flex flex-col items-center mb-8">
+      <div className="max-w-7xl mx-auto px-4 py-8">
+        <div className="bg-white rounded-lg p-6 flex flex-col items-center mb-6 max-w-md mx-auto">
           <img
             src={getThumbnailUrl(channelData.thumbnail)}
             alt={channelData.name}
             className="w-24 h-24 rounded-full mb-4"
           />
-          <h2 className="text-3xl md:text-4xl font-bold text-white mb-6">
-            {channelData.name}
+          <h2 className="text-2xl md:text-3xl font-bold text-gray-900 text-center">
+            {channelData.name.split('|').map((part, index) => (
+              <span key={index}>
+                {part.trim()}
+                {index < channelData.name.split('|').length - 1 && <br />}
+              </span>
+            ))}
           </h2>
         </div>
         <h2 className="text-4xl md:text-6xl font-bold text-white text-center mb-12">
