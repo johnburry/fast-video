@@ -139,7 +139,7 @@ export default function PricingPage() {
       </div>
 
       {/* Pricing Cards */}
-      <div className="max-w-7xl mx-auto px-4 py-8">
+      <div className="max-w-7xl mx-auto px-4 pt-4 pb-8">
         <div className="bg-white rounded-lg p-6 flex flex-col items-center mb-6 max-w-md mx-auto">
           <img
             src={getThumbnailUrl(channelData.thumbnail)}
