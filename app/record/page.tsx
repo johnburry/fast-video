@@ -29,6 +29,7 @@ export default function RecordPage() {
     description: string | null;
   } | null>(null);
   const [showVideoEndedOverlay, setShowVideoEndedOverlay] = useState(false);
+  const [overrideVideoThumbnail, setOverrideVideoThumbnail] = useState(false);
 
   // Detect subdomain and fetch channel info
   useEffect(() => {
@@ -221,6 +222,36 @@ export default function RecordPage() {
     const shareUrl = getShareableUrl();
     navigator.clipboard.writeText(shareUrl);
     alert('Video link copied to clipboard!');
+  };
+
+  const toggleVideoThumbnail = async () => {
+    const newOverrideValue = !overrideVideoThumbnail;
+    setOverrideVideoThumbnail(newOverrideValue);
+
+    // Save to database
+    const playbackId = playbackUrl.split('/').pop()?.replace('.m3u8', '') || '';
+
+    try {
+      const response = await fetch('/api/videos/thumbnail-override', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          playbackId,
+          overrideVideoThumbnail: newOverrideValue,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to update thumbnail override');
+      }
+
+      alert(`Video thumbnail ${newOverrideValue ? 'now using channel thumbnail' : 'reset to Mux thumbnail'}`);
+    } catch (err) {
+      console.error('Error updating thumbnail override:', err);
+      alert('Failed to update thumbnail');
+      // Revert the state on error
+      setOverrideVideoThumbnail(!newOverrideValue);
+    }
   };
 
   const handleSaveDestination = async () => {
@@ -465,6 +496,12 @@ export default function RecordPage() {
             </div>
 
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+              <button
+                onClick={toggleVideoThumbnail}
+                className="px-8 py-3 bg-purple-600 hover:bg-purple-700 rounded-lg font-medium transition-colors text-lg"
+              >
+                Toggle Video Thumbnail
+              </button>
               <button
                 onClick={copyShareLink}
                 className="px-8 py-3 bg-blue-600 hover:bg-blue-700 rounded-lg font-medium transition-colors text-lg"

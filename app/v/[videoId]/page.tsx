@@ -13,6 +13,8 @@ interface VideoMetadata {
   channelName: string | null;
   channelShortName: string | null;
   channelHandle: string | null;
+  overrideVideoThumbnail: boolean;
+  channelThumbnail: string | null;
 }
 
 async function getVideoMetadata(videoId: string): Promise<VideoMetadata | null> {
@@ -21,7 +23,7 @@ async function getVideoMetadata(videoId: string): Promise<VideoMetadata | null> 
 
     const { data: video, error } = await supabase
       .from('mux_videos')
-      .select('*, channels(channel_name, short_name, channel_handle)')
+      .select('*, channels(channel_name, short_name, channel_handle, thumbnail_url)')
       .eq('mux_playback_id', videoId)
       .maybeSingle();
 
@@ -41,6 +43,8 @@ async function getVideoMetadata(videoId: string): Promise<VideoMetadata | null> 
       channelName: video.channels?.channel_name || null,
       channelShortName: video.channels?.short_name || null,
       channelHandle: video.channels?.channel_handle || null,
+      overrideVideoThumbnail: video.override_video_thumbnail || false,
+      channelThumbnail: video.channels?.thumbnail_url || null,
     };
 
     console.log('Video metadata retrieved:', metadata);
@@ -72,7 +76,11 @@ export async function generateMetadata({
 
   console.log('generateMetadata - final title:', title);
 
-  const thumbnailUrl = metadata?.thumbnailUrl || `https://image.mux.com/${videoId}/thumbnail.jpg`;
+  // Use channel thumbnail if override is true, otherwise use video thumbnail
+  let thumbnailUrl = metadata?.thumbnailUrl || `https://image.mux.com/${videoId}/thumbnail.jpg`;
+  if (metadata?.overrideVideoThumbnail && metadata?.channelThumbnail) {
+    thumbnailUrl = metadata.channelThumbnail;
+  }
 
   return {
     title,

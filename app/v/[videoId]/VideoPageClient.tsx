@@ -9,6 +9,8 @@ interface VideoMetadata {
   channelName: string | null;
   channelHandle: string | null;
   altDestination: string | null;
+  overrideVideoThumbnail: boolean;
+  channelThumbnail: string | null;
 }
 
 export default function VideoPageClient({ videoId }: { videoId: string }) {
@@ -95,12 +97,18 @@ export default function VideoPageClient({ videoId }: { videoId: string }) {
     );
   }
 
+  // Determine which poster image to use
+  const posterUrl = metadata.overrideVideoThumbnail && metadata.channelThumbnail
+    ? metadata.channelThumbnail
+    : `https://image.mux.com/${videoId}/thumbnail.jpg?width=1200&height=675&fit_mode=smartcrop`;
+
   return (
     <div className="min-h-screen bg-black">
       <MuxPlayer
         playbackId={videoId}
         streamType="on-demand"
         autoPlay
+        poster={posterUrl}
         onEnded={handleVideoEnd}
         style={{ width: '100%', height: '100vh' }}
       />
