@@ -110,8 +110,8 @@ export default function PricingPage() {
               hello@reorbit.com
             </a>
             {' '}or call{' '}
-            <a href="tel:+14258320493" className="text-blue-400 hover:text-blue-300 underline">
-              +1-425-832-0493
+            <a href="tel:+14252709171" className="text-blue-400 hover:text-blue-300 underline">
+              425-270-9171
             </a>
           </p>
 
@@ -315,8 +315,8 @@ export default function PricingPage() {
                 hello@reorbit.com
               </a>
               {' '}or call{' '}
-              <a href="tel:+14258320493" className="text-blue-400 hover:text-blue-300 underline">
-                +1-425-832-0493
+              <a href="tel:+14252709171" className="text-blue-400 hover:text-blue-300 underline">
+                425-270-9171
               </a>
             </div>
 
