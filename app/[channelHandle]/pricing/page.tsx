@@ -188,9 +188,14 @@ export default function PricingPage() {
                 <span>Create up to <strong className="text-white">100 Fast.Videos</strong> a month</span>
               </li>
             </ul>
-            <button className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 px-6 rounded-lg transition-colors">
+            <a
+              href="https://square.link/u/wf6U6Fux"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="block w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 px-6 rounded-lg transition-colors text-center"
+            >
               Get Started
-            </button>
+            </a>
           </div>
 
           {/* Pro Plan - Featured */}
@@ -228,9 +233,14 @@ export default function PricingPage() {
                 <span>Create up to <strong className="text-yellow-300">500 Fast.Videos</strong> a month</span>
               </li>
             </ul>
-            <button className="w-full bg-yellow-500 hover:bg-yellow-600 text-black font-bold py-4 px-6 rounded-lg transition-colors">
+            <a
+              href="https://square.link/u/81njSMLC"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="block w-full bg-yellow-500 hover:bg-yellow-600 text-black font-bold py-4 px-6 rounded-lg transition-colors text-center"
+            >
               Get Started
-            </button>
+            </a>
           </div>
 
           {/* Lifetime License */}
@@ -277,12 +287,41 @@ export default function PricingPage() {
                 <span>Create <strong className="text-white">unlimited Fast.Videos</strong> a month</span>
               </li>
             </ul>
-            <button className="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-4 px-6 rounded-lg transition-colors">
+            <a
+              href="https://square.link/u/81njSMLC"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="block w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-4 px-6 rounded-lg transition-colors text-center"
+            >
               Get Lifetime Access
-            </button>
+            </a>
           </div>
         </div>
       </div>
+
+      {/* Footer */}
+      <footer className="bg-gray-900 border-t border-gray-800 py-8 px-4 mt-16">
+        <div className="max-w-7xl mx-auto">
+          <div className="flex flex-col md:flex-row justify-between items-center gap-4">
+            {/* Left side - Contact */}
+            <div className="text-gray-400 text-sm md:text-base text-center md:text-left">
+              Any questions? Email us at:{' '}
+              <a href="mailto:hello@reorbit.com" className="text-blue-400 hover:text-blue-300 underline">
+                hello@reorbit.com
+              </a>
+              {' '}or call{' '}
+              <a href="tel:+14258006619" className="text-blue-400 hover:text-blue-300 underline">
+                +1-425-800-6619
+              </a>
+            </div>
+
+            {/* Right side - Copyright */}
+            <div className="text-gray-400 text-sm md:text-base">
+              Copyright Reorbit {new Date().getFullYear()}
+            </div>
+          </div>
+        </div>
+      </footer>
     </div>
   );
 }
