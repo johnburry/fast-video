@@ -90,7 +90,7 @@ export default function PricingPage() {
       <HeadLinks />
 
       {/* Header with Channel Branding */}
-      <div className="bg-gradient-to-b from-gray-900 to-black py-16 px-4">
+      <div style={{ backgroundColor: '#000000' }} className="py-16 px-4">
         <div className="max-w-6xl mx-auto text-center">
           <h1 className="text-4xl md:text-6xl font-bold text-white mb-4">
             {channelData.name}
@@ -99,7 +99,7 @@ export default function PricingPage() {
             <img
               src="https://reorbit.com/fast.video.png"
               alt="Fast.Video"
-              className="h-24 md:h-32"
+              className="h-48 md:h-64"
             />
           </div>
           <p className="text-2xl md:text-4xl text-gray-400 mb-8">
