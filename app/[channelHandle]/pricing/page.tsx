@@ -288,7 +288,7 @@ export default function PricingPage() {
               </li>
             </ul>
             <a
-              href="https://square.link/u/81njSMLC"
+              href="https://square.link/u/oFgPCR6x"
               target="_blank"
               rel="noopener noreferrer"
               className="block w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-4 px-6 rounded-lg transition-colors text-center"
