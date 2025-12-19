@@ -155,9 +155,9 @@ export default function PricingPage() {
             className="w-24 h-24 rounded-full"
           />
           <h2 className="text-2xl md:text-3xl font-bold text-gray-900">
-            {channelData.shortName || channelData.name}
-            <br />
             <span className="text-sm text-gray-500">(Click to view)</span>
+            <br />
+            {channelData.shortName || channelData.name}
             <br />
             <span className="text-red-600">YouTube Transcription Search and Fast.Video Service</span>
           </h2>
