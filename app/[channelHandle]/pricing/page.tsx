@@ -140,7 +140,10 @@ export default function PricingPage() {
 
       {/* Pricing Cards */}
       <div className="max-w-7xl mx-auto px-4 pb-8" style={{ paddingTop: '0.2rem' }}>
-        <div className="bg-white rounded-lg p-6 flex flex-col items-center mb-6 inline-block">
+        <a
+          href={`https://${channelData.handle}.fast.video`}
+          className="bg-white rounded-lg p-6 flex flex-col items-center mb-6 inline-block hover:shadow-lg transition-shadow cursor-pointer"
+        >
           <img
             src={getThumbnailUrl(channelData.thumbnail)}
             alt={channelData.shortName || channelData.name}
@@ -151,7 +154,7 @@ export default function PricingPage() {
             <br />
             <span className="text-red-600">YouTube Transcription Search and Fast.Video Service</span>
           </h2>
-        </div>
+        </a>
         <h2 className="text-4xl md:text-6xl font-bold text-white text-center mb-12">
           Subscription and One-Time Plans
         </h2>
