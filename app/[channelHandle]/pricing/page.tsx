@@ -94,7 +94,7 @@ export default function PricingPage() {
         <div className="max-w-6xl mx-auto text-center">
           <div className="flex justify-center mb-6">
             <img
-              src="https://www.reorbit.com/assets/1eae13fa-e22c-4095-9489-0c90c2788865.png"
+              src="http://reorbit.com/reorbit-logo-white.png"
               alt="Fast.Video"
               className="h-24 md:h-32"
             />
