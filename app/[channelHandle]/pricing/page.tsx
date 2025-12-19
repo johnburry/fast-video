@@ -94,16 +94,19 @@ export default function PricingPage() {
         <div className="max-w-6xl mx-auto text-center">
           <div className="flex justify-center mb-6">
             <img
-              src={getThumbnailUrl(channelData.thumbnail)}
-              alt={channelData.name}
-              className="w-32 h-32 rounded-full border-4 border-red-600"
+              src="https://www.reorbit.com/assets/1eae13fa-e22c-4095-9489-0c90c2788865.png"
+              alt="Fast.Video"
+              className="h-24 md:h-32"
             />
           </div>
           <h1 className="text-4xl md:text-6xl font-bold text-white mb-4">
             {channelData.name}
           </h1>
-          <p className="text-2xl md:text-3xl text-gray-300 mb-8">
-            Fast Video Pricing
+          <p className="text-2xl md:text-3xl text-gray-300 mb-2">
+            Fast.Video Pricing
+          </p>
+          <p className="text-lg text-gray-400 mb-8">
+            a Reorbit, Inc. Service
           </p>
 
           {/* Anniversary Sale Countdown */}
@@ -161,7 +164,7 @@ export default function PricingPage() {
                 <svg className="w-6 h-6 text-green-500 flex-shrink-0 mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                 </svg>
-                <span>Create up to <strong className="text-white">100 Fast Videos</strong> a month</span>
+                <span>Create up to <strong className="text-white">100 Fast.Videos</strong> a month</span>
               </li>
             </ul>
             <button className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 px-6 rounded-lg transition-colors">
@@ -201,7 +204,7 @@ export default function PricingPage() {
                 <svg className="w-6 h-6 text-green-400 flex-shrink-0 mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                 </svg>
-                <span>Create up to <strong className="text-yellow-300">500 Fast Videos</strong> a month</span>
+                <span>Create up to <strong className="text-yellow-300">500 Fast.Videos</strong> a month</span>
               </li>
             </ul>
             <button className="w-full bg-yellow-500 hover:bg-yellow-600 text-black font-bold py-4 px-6 rounded-lg transition-colors">
@@ -250,7 +253,7 @@ export default function PricingPage() {
                 <svg className="w-6 h-6 text-green-500 flex-shrink-0 mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                 </svg>
-                <span>Create <strong className="text-white">unlimited Fast Videos</strong> a month</span>
+                <span>Create <strong className="text-white">unlimited Fast.Videos</strong> a month</span>
               </li>
             </ul>
             <button className="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-4 px-6 rounded-lg transition-colors">
