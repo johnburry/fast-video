@@ -131,6 +131,16 @@ export default function PricingPage() {
 
       {/* Pricing Cards */}
       <div className="max-w-7xl mx-auto px-4 py-16">
+        <div className="flex flex-col items-center mb-8">
+          <img
+            src={getThumbnailUrl(channelData.thumbnail)}
+            alt={channelData.name}
+            className="w-24 h-24 rounded-full mb-4"
+          />
+          <h2 className="text-3xl md:text-4xl font-bold text-white mb-6">
+            {channelData.name}
+          </h2>
+        </div>
         <h2 className="text-4xl md:text-6xl font-bold text-white text-center mb-12">
           Subscription and One-Time Plans
         </h2>
