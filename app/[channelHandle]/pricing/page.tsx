@@ -33,7 +33,8 @@ export default function PricingPage() {
         const response = await fetch(`/api/channels/${channelHandle}`);
         if (response.ok) {
           const data = await response.json();
-          setChannelData(data);
+          // The API returns { channel: {...} }, so we need to extract the channel object
+          setChannelData(data.channel);
         }
       } catch (error) {
         console.error('Error fetching channel data:', error);
@@ -102,8 +103,18 @@ export default function PricingPage() {
               className="h-48 md:h-64"
             />
           </div>
-          <p className="text-2xl md:text-4xl text-gray-400 mb-8">
+          <p className="text-2xl md:text-4xl text-gray-400 mb-4">
             a Reorbit, Inc. Service
+          </p>
+          <p className="text-lg md:text-xl text-gray-400 mb-8">
+            Any questions? Email us at:{' '}
+            <a href="mailto:hello@reorbit.com" className="text-blue-400 hover:text-blue-300 underline">
+              hello@reorbit.com
+            </a>
+            {' '}or call{' '}
+            <a href="tel:+14258006619" className="text-blue-400 hover:text-blue-300 underline">
+              +1-425-800-6619
+            </a>
           </p>
 
           {/* Anniversary Sale Countdown */}
