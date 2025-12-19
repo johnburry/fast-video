@@ -89,7 +89,11 @@ export default function PricingPage() {
 
   return (
     <div className="min-h-screen bg-black">
-      <HeadLinks />
+      <HeadLinks
+        title="Pricing Page"
+        description="Fast.Video subscription and one-time pricing plans"
+        image="https://reorbit.com/fast.video.png"
+      />
 
       {/* Header with Channel Branding */}
       <div style={{ backgroundColor: '#000000' }} className="py-2 px-4">
