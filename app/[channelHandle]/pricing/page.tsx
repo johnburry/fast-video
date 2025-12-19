@@ -143,7 +143,7 @@ export default function PricingPage() {
         <div className="flex justify-center">
           <a
             href={`https://${channelData.handle}.fast.video`}
-            className="bg-white rounded-lg p-6 flex flex-row items-center gap-6 mb-6 inline-block hover:shadow-lg transition-shadow cursor-pointer"
+            className="bg-white rounded-lg p-6 flex flex-row items-center gap-6 mb-6 hover:shadow-lg transition-shadow cursor-pointer"
           >
           <img
             src={getThumbnailUrl(channelData.thumbnail)}
