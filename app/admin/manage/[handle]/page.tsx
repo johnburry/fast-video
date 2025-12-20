@@ -62,7 +62,7 @@ export default function ManageChannelPage({
 
   const fetchChannel = async () => {
     try {
-      const response = await fetch(`/api/channels/${handle}`);
+      const response = await fetch(`/api/admin/channels/handle/${handle}`);
       if (!response.ok) {
         throw new Error('Channel not found');
       }
