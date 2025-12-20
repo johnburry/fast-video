@@ -52,6 +52,7 @@ interface ChannelData {
     externalLink?: string;
     externalLinkName?: string;
     helloVideoUrl?: string;
+    subscriptionType?: string;
   };
   recentVideos: Array<any>;
 }
@@ -310,17 +311,19 @@ export default function ChannelPage({
                   >
                     {channelData?.channel.name && formatChannelName(channelData.channel.name)}
                   </h1>
-                  <div className="mt-2">
-                    <a
-                      href={`/${channelHandle}/pricing`}
-                      className="inline-block px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-lg transition-colors text-sm md:text-base"
-                    >
-                      View Pricing Plans
-                    </a>
-                    <p className="text-xs text-gray-500 mt-1">
-                      This button is removed with a subscription
-                    </p>
-                  </div>
+                  {(!channelData?.channel.subscriptionType || channelData.channel.subscriptionType === 'trial') && (
+                    <div className="mt-2">
+                      <a
+                        href={`/${channelHandle}/pricing`}
+                        className="inline-block px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-lg transition-colors text-sm md:text-base"
+                      >
+                        View Pricing Plans
+                      </a>
+                      <p className="text-xs text-gray-500 mt-1">
+                        This button is removed with a subscription
+                      </p>
+                    </div>
+                  )}
                 </div>
               </div>
 
