@@ -17,6 +17,9 @@ interface Channel {
   externalLink: string | null;
   externalLinkName: string | null;
   isActive: boolean;
+  subscriptionType: string | null;
+  subscriptionStartDate: string | null;
+  channelHistory: string | null;
 }
 
 export default function ManageChannelPage({
@@ -42,8 +45,16 @@ export default function ManageChannelPage({
   const [externalLink, setExternalLink] = useState('');
   const [externalLinkName, setExternalLinkName] = useState('');
   const [isActive, setIsActive] = useState(true);
+  const [subscriptionType, setSubscriptionType] = useState('trial');
+  const [subscriptionStartDate, setSubscriptionStartDate] = useState('');
+  const [channelHistory, setChannelHistory] = useState('');
   const [thumbnailFile, setThumbnailFile] = useState<File | null>(null);
   const [uploadingThumbnail, setUploadingThumbnail] = useState(false);
+
+  // Track previous values for change detection
+  const [prevSubscriptionType, setPrevSubscriptionType] = useState('');
+  const [prevSubscriptionStartDate, setPrevSubscriptionStartDate] = useState('');
+  const [prevIsActive, setPrevIsActive] = useState(true);
 
   useEffect(() => {
     fetchChannel();
@@ -65,6 +76,14 @@ export default function ManageChannelPage({
       setExternalLink(ch.externalLink || '');
       setExternalLinkName(ch.externalLinkName || '');
       setIsActive(ch.isActive !== false);
+      setSubscriptionType(ch.subscriptionType || 'trial');
+      setSubscriptionStartDate(ch.subscriptionStartDate ? ch.subscriptionStartDate.split('T')[0] : '');
+      setChannelHistory(ch.channelHistory || '');
+
+      // Set previous values for change tracking
+      setPrevSubscriptionType(ch.subscriptionType || 'trial');
+      setPrevSubscriptionStartDate(ch.subscriptionStartDate ? ch.subscriptionStartDate.split('T')[0] : '');
+      setPrevIsActive(ch.isActive !== false);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load channel');
     } finally {
@@ -79,6 +98,29 @@ export default function ManageChannelPage({
     setSuccess(null);
 
     try {
+      // Build history log for changes
+      const now = new Date().toISOString().replace('T', ' ').substring(0, 19);
+      let historyUpdates: string[] = [];
+
+      if (subscriptionType !== prevSubscriptionType) {
+        historyUpdates.push(`${now} subscription_type: ${subscriptionType}`);
+      }
+
+      if (subscriptionStartDate !== prevSubscriptionStartDate) {
+        historyUpdates.push(`${now} subscription_start_date`);
+      }
+
+      if (isActive !== prevIsActive) {
+        historyUpdates.push(`${now} is_active: ${isActive}`);
+      }
+
+      // Append new history entries to existing history
+      let updatedHistory = channelHistory;
+      if (historyUpdates.length > 0) {
+        const newEntries = historyUpdates.join('\n');
+        updatedHistory = channelHistory ? `${channelHistory}\n${newEntries}` : newEntries;
+      }
+
       const response = await fetch(`/api/admin/channels/${channel?.id}`, {
         method: 'PATCH',
         headers: {
@@ -92,6 +134,9 @@ export default function ManageChannelPage({
           externalLink,
           externalLinkName,
           isActive,
+          subscriptionType,
+          subscriptionStartDate: subscriptionStartDate || null,
+          channelHistory: updatedHistory,
         }),
       });
 
@@ -382,6 +427,56 @@ export default function ManageChannelPage({
                 placeholder="https://example.com"
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               />
+            </div>
+
+            <div className="pt-6 border-t border-gray-200">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">Subscription Settings</h3>
+
+              <div className="space-y-6">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Subscription Type
+                  </label>
+                  <select
+                    value={subscriptionType}
+                    onChange={(e) => setSubscriptionType(e.target.value)}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  >
+                    <option value="trial">Trial</option>
+                    <option value="intro">Intro</option>
+                    <option value="pro">Pro</option>
+                    <option value="lifetime">Lifetime</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Subscription Start Date
+                  </label>
+                  <input
+                    type="date"
+                    value={subscriptionStartDate}
+                    onChange={(e) => setSubscriptionStartDate(e.target.value)}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Channel History
+                  </label>
+                  <textarea
+                    value={channelHistory}
+                    readOnly
+                    rows={8}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-50 cursor-not-allowed font-mono text-xs"
+                    placeholder="History will be automatically logged here..."
+                  />
+                  <p className="mt-2 text-sm text-gray-500">
+                    This log is automatically updated when subscription type, start date, or active status changes.
+                  </p>
+                </div>
+              </div>
             </div>
 
             <div className="flex items-center gap-3">

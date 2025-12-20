@@ -9,7 +9,18 @@ export async function PATCH(
     const { id } = await params;
     const body = await request.json();
 
-    const { name, shortName, handle, description, externalLink, externalLinkName, isActive } = body;
+    const {
+      name,
+      shortName,
+      handle,
+      description,
+      externalLink,
+      externalLinkName,
+      isActive,
+      subscriptionType,
+      subscriptionStartDate,
+      channelHistory
+    } = body;
 
     const { data, error } = await supabaseAdmin
       .from('channels')
@@ -21,6 +32,9 @@ export async function PATCH(
         external_link: externalLink,
         external_link_name: externalLinkName,
         is_active: isActive,
+        subscription_type: subscriptionType,
+        subscription_start_date: subscriptionStartDate,
+        channel_history: channelHistory,
       })
       .eq('id', id)
       .select()

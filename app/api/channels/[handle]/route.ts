@@ -59,6 +59,9 @@ export async function GET(
         externalLinkName: channel.external_link_name,
         helloVideoUrl: channel.hello_video_url,
         isActive: channel.is_active,
+        subscriptionType: channel.subscription_type,
+        subscriptionStartDate: channel.subscription_start_date,
+        channelHistory: channel.channel_history,
       },
       recentVideos: videos || [],
     });
