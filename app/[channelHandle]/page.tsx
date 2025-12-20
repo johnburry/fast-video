@@ -84,6 +84,7 @@ export default function ChannelPage({
   const [videoTimeRemaining, setVideoTimeRemaining] = useState<number | null>(null);
   const [hasWatchedVideo, setHasWatchedVideo] = useState(false);
   const [watchedVideoId, setWatchedVideoId] = useState<string | null>(null);
+  const [copySuccess, setCopySuccess] = useState(false);
 
   useEffect(() => {
     fetchChannelData();
@@ -187,6 +188,21 @@ export default function ChannelPage({
 
   const loadMoreVideos = () => {
     setVisibleVideoCount((prev) => prev + 30);
+  };
+
+  const copyVideoLocationToClipboard = async () => {
+    if (!selectedVideo) return;
+
+    const startTime = selectedVideo.startTime ? Math.floor(selectedVideo.startTime) : 0;
+    const url = `https://www.youtube.com/watch?v=${selectedVideo.youtubeVideoId}&t=${startTime}s`;
+
+    try {
+      await navigator.clipboard.writeText(url);
+      setCopySuccess(true);
+      setTimeout(() => setCopySuccess(false), 2000);
+    } catch (err) {
+      console.error('Failed to copy:', err);
+    }
   };
 
   if (channelLoading) {
@@ -581,6 +597,26 @@ export default function ChannelPage({
                     </div>
                     <p className="text-sm text-gray-700">{selectedVideo.matchText}</p>
                   </div>
+                  <button
+                    onClick={copyVideoLocationToClipboard}
+                    className="mt-4 w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg transition-colors flex items-center justify-center gap-2"
+                  >
+                    {copySuccess ? (
+                      <>
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                        </svg>
+                        Copied!
+                      </>
+                    ) : (
+                      <>
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                        </svg>
+                        Share this location in video
+                      </>
+                    )}
+                  </button>
                 </div>
               )}
               {/* Video player */}
