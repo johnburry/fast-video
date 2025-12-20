@@ -11,6 +11,9 @@ export default function ManageChannelsPage() {
   const [filterText, setFilterText] = useState('');
 
   useEffect(() => {
+    // Set page title
+    document.title = 'FV Admin';
+
     // Fetch channels if authenticated
     if (user) {
       fetchChannels();

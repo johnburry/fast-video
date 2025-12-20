@@ -69,6 +69,10 @@ export default function ManageChannelPage({
       const data = await response.json();
       const ch = data.channel;
       setChannel(ch);
+
+      // Set page title
+      document.title = `FV Admin: ${ch.handle}`;
+
       setName(ch.name);
       setShortName(ch.shortName || '');
       setChannelHandle(ch.handle);

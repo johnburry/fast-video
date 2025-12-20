@@ -14,6 +14,9 @@ export default function AdminPage() {
   const [progressStatus, setProgressStatus] = useState<string>('');
   const [currentVideo, setCurrentVideo] = useState<{ current: number; total: number; title: string } | null>(null);
   useEffect(() => {
+    // Set page title
+    document.title = 'FV Admin: Import';
+
     // Extract subdomain from hostname
     const hostname = window.location.hostname;
     const parts = hostname.split('.');
