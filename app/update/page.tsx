@@ -90,6 +90,12 @@ export default function UpdateChannelPage() {
       }
 
       setSuccess(true);
+
+      // Close the tab after successful update
+      // Small delay to allow the user to see the success message
+      setTimeout(() => {
+        window.close();
+      }, 500);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred');
     } finally {
