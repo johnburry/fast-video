@@ -418,12 +418,23 @@ export default function RecordPage() {
                   </strong>
                 </>
               )}
-              <button
-                onClick={() => setShowDestinationModal(true)}
-                className="text-blue-600 hover:text-blue-800 underline text-lg md:text-xl mt-2"
-              >
-                Change end of video redirect address
-              </button>
+              <div className="text-center">
+                <span className="text-gray-600 text-base md:text-lg">
+                  End of video redirect address:{' '}
+                </span>
+                <span className="text-gray-900 font-medium text-base md:text-lg">
+                  {destinationOption === 'other' && customDestination
+                    ? customDestination
+                    : channelExternalLinkName || 'Channel page'}
+                </span>
+                {' '}
+                <button
+                  onClick={() => setShowDestinationModal(true)}
+                  className="text-blue-600 hover:text-blue-800 underline text-base md:text-lg"
+                >
+                  (change)
+                </button>
+              </div>
             </div>
           )}
         </div>
