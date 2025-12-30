@@ -8,40 +8,61 @@ export default function UpdateChannelPage() {
   const [externalLink, setExternalLink] = useState('');
   const [externalLinkName, setExternalLinkName] = useState('');
   const [loading, setLoading] = useState(false);
-  const [fetchingChannel, setFetchingChannel] = useState(false);
+  const [fetchingChannel, setFetchingChannel] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
 
   useEffect(() => {
     document.title = 'Update Channel External Link';
-  }, []);
 
-  const handleFetchChannel = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setFetchingChannel(true);
-    setError(null);
-    setSuccess(false);
+    // Extract subdomain from hostname
+    const hostname = window.location.hostname;
+    const parts = hostname.split('.');
 
-    try {
-      const response = await fetch(`/api/update-channel?handle=${encodeURIComponent(channelHandle)}`);
-      const data = await response.json();
+    let subdomain: string | null = null;
 
-      if (!response.ok) {
-        throw new Error(data.error || 'Failed to fetch channel');
+    if (hostname.includes('localhost')) {
+      // Local development: subdomain.localhost:3000
+      if (parts.length >= 2 && parts[0] !== 'localhost') {
+        subdomain = parts[0];
       }
-
-      setChannelName(data.name || '');
-      setExternalLink(data.externalLink || '');
-      setExternalLinkName(data.externalLinkName || '');
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'An error occurred');
-      setChannelName('');
-      setExternalLink('');
-      setExternalLinkName('');
-    } finally {
-      setFetchingChannel(false);
+    } else {
+      // Production: subdomain.fast.video
+      if (parts.length >= 3 && parts[0] !== 'www') {
+        subdomain = parts[0];
+      }
     }
-  };
+
+    if (!subdomain) {
+      setError('This page must be accessed from a channel subdomain (e.g., channelhandle.fast.video/update)');
+      setFetchingChannel(false);
+      return;
+    }
+
+    setChannelHandle(subdomain);
+
+    // Fetch channel data
+    const fetchChannel = async () => {
+      try {
+        const response = await fetch(`/api/update-channel?handle=${encodeURIComponent(subdomain)}`);
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data.error || 'Failed to fetch channel');
+        }
+
+        setChannelName(data.name || '');
+        setExternalLink(data.externalLink || '');
+        setExternalLinkName(data.externalLinkName || '');
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'An error occurred');
+      } finally {
+        setFetchingChannel(false);
+      }
+    };
+
+    fetchChannel();
+  }, []);
 
   const handleUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -76,6 +97,21 @@ export default function UpdateChannelPage() {
     }
   };
 
+  if (fetchingChannel) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-md w-full">
+          <div className="bg-white rounded-lg shadow-lg p-8">
+            <div className="text-center">
+              <div className="inline-block animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500 mb-4"></div>
+              <p className="text-gray-600">Loading channel...</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-2xl mx-auto">
@@ -87,41 +123,13 @@ export default function UpdateChannelPage() {
             Update the external link that videos from this channel will redirect to after playback
           </p>
 
-          {/* Step 1: Fetch Channel */}
-          <form onSubmit={handleFetchChannel} className="space-y-6 mb-8 pb-8 border-b border-gray-200">
-            <div>
-              <label
-                htmlFor="channelHandle"
-                className="block text-sm font-medium text-gray-700 mb-2"
-              >
-                Channel Handle
-              </label>
-              <div className="flex gap-3">
-                <input
-                  type="text"
-                  id="channelHandle"
-                  value={channelHandle}
-                  onChange={(e) => setChannelHandle(e.target.value)}
-                  placeholder="@channelhandle"
-                  className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  required
-                  disabled={fetchingChannel}
-                />
-                <button
-                  type="submit"
-                  disabled={fetchingChannel || !channelHandle}
-                  className="bg-blue-600 text-white py-2 px-6 rounded-lg font-medium hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
-                >
-                  {fetchingChannel ? 'Loading...' : 'Load Channel'}
-                </button>
-              </div>
-              <p className="mt-2 text-sm text-gray-500">
-                Enter the channel handle (e.g., @mkbhd, @veritasium)
-              </p>
+          {error && !channelName && (
+            <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
+              <p className="text-red-800 font-medium">Error</p>
+              <p className="text-red-600 text-sm mt-1">{error}</p>
             </div>
-          </form>
+          )}
 
-          {/* Step 2: Update External Link */}
           {channelName && (
             <form onSubmit={handleUpdate} className="space-y-6">
               <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
@@ -129,7 +137,7 @@ export default function UpdateChannelPage() {
                   Channel: {channelName}
                 </p>
                 <p className="text-blue-700 text-sm mt-1">
-                  Handle: {channelHandle}
+                  Handle: @{channelHandle}
                 </p>
               </div>
 
@@ -182,35 +190,35 @@ export default function UpdateChannelPage() {
               >
                 {loading ? 'Updating...' : 'Update External Link'}
               </button>
+
+              {error && channelName && (
+                <div className="mt-6 p-4 bg-red-50 border border-red-200 rounded-lg">
+                  <p className="text-red-800 font-medium">Error</p>
+                  <p className="text-red-600 text-sm mt-1">{error}</p>
+                </div>
+              )}
+
+              {success && (
+                <div className="mt-6 p-4 bg-green-50 border border-green-200 rounded-lg">
+                  <p className="text-green-800 font-medium">Success!</p>
+                  <p className="text-green-600 text-sm mt-1">
+                    External link has been updated successfully. New videos from this channel will now redirect to{' '}
+                    {externalLink ? (
+                      <a
+                        href={externalLink}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="underline font-medium"
+                      >
+                        {externalLinkName || externalLink}
+                      </a>
+                    ) : (
+                      'the channel page'
+                    )}.
+                  </p>
+                </div>
+              )}
             </form>
-          )}
-
-          {error && (
-            <div className="mt-6 p-4 bg-red-50 border border-red-200 rounded-lg">
-              <p className="text-red-800 font-medium">Error</p>
-              <p className="text-red-600 text-sm mt-1">{error}</p>
-            </div>
-          )}
-
-          {success && (
-            <div className="mt-6 p-4 bg-green-50 border border-green-200 rounded-lg">
-              <p className="text-green-800 font-medium">Success!</p>
-              <p className="text-green-600 text-sm mt-1">
-                External link has been updated successfully. New videos from this channel will now redirect to{' '}
-                {externalLink ? (
-                  <a
-                    href={externalLink}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="underline font-medium"
-                  >
-                    {externalLinkName || externalLink}
-                  </a>
-                ) : (
-                  'the channel page'
-                )}.
-              </p>
-            </div>
           )}
         </div>
       </div>

@@ -32,6 +32,11 @@ export function middleware(request: NextRequest) {
     return NextResponse.redirect('https://reorbit.com')
   }
 
+  // If no subdomain, block access to /update (only accessible from subdomains)
+  if (!subdomain && url.pathname.startsWith('/update')) {
+    return NextResponse.redirect(new URL('https://reorbit.com', request.url))
+  }
+
   // If we have a subdomain, check if we're accessing a special path that should NOT be rewritten
   if (subdomain) {
     // Special case: 'all' subdomain routes to /all page
