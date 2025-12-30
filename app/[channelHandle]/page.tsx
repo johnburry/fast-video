@@ -340,15 +340,7 @@ export default function ChannelPage({
                       rel="noopener noreferrer"
                       className="underline cursor-pointer hover:text-blue-400 transition-colors"
                     >
-                      YouTube Channel:
-                    </a>
-                    <a
-                      href={`https://www.youtube.com/@${channelData?.channel.youtubeHandle || channelData?.channel.handle}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="cursor-pointer hover:text-blue-400 transition-colors"
-                    >
-                      @{channelData?.channel.youtubeHandle || channelData?.channel.handle}
+                      YouTube Channel
                     </a>
                   </div>
                   {channelData?.channel.externalLink && channelData?.channel.externalLinkName && (
