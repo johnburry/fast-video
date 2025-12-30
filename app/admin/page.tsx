@@ -105,8 +105,8 @@ export default function AdminPage() {
     }
   };
 
-  // Show loading state while checking auth
-  if (authLoading) {
+  // Show loading state while checking auth or if not authenticated
+  if (authLoading || !user) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
         <div className="max-w-md w-full">
