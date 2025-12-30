@@ -23,13 +23,29 @@ export async function POST(request: NextRequest) {
       console.warn('WARNING: Saving video without channelId!');
     }
 
+    // If channelId is provided and no altDestination is specified, fetch the channel's external_link
+    let finalAltDestination = altDestination || null;
+
+    if (channelId && !altDestination) {
+      const { data: channelData } = await supabase
+        .from('channels')
+        .select('external_link')
+        .eq('id', channelId)
+        .single();
+
+      if (channelData?.external_link) {
+        finalAltDestination = channelData.external_link;
+        console.log('Using channel external_link as alt_destination:', finalAltDestination);
+      }
+    }
+
     const { data, error } = await supabase
       .from('mux_videos')
       .insert({
         mux_playback_id: playbackId,
         channel_id: channelId || null,
         thumbnail_url: thumbnailUrl || null,
-        alt_destination: altDestination || null,
+        alt_destination: finalAltDestination,
       })
       .select()
       .single();
