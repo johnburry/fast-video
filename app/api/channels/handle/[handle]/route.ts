@@ -16,7 +16,7 @@ export async function GET(
 
     const { data: channel, error } = await supabase
       .from('channels')
-      .select('id, channel_name, channel_handle, thumbnail_url')
+      .select('id, channel_name, channel_handle, thumbnail_url, external_link, external_link_name')
       .eq('channel_handle', handle)
       .single();
 
@@ -53,6 +53,8 @@ export async function GET(
       name: channel.channel_name,
       handle: channel.channel_handle,
       thumbnail: channel.thumbnail_url,
+      externalLink: channel.external_link,
+      externalLinkName: channel.external_link_name,
     });
   } catch (error) {
     console.error('Error in GET /api/channels/handle/[handle]:', error);

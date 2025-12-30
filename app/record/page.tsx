@@ -16,6 +16,8 @@ export default function RecordPage() {
   const [channelName, setChannelName] = useState<string | null>(null);
   const [channelHandle, setChannelHandle] = useState<string | null>(null);
   const [channelThumbnail, setChannelThumbnail] = useState<string | null>(null);
+  const [channelExternalLink, setChannelExternalLink] = useState<string | null>(null);
+  const [channelExternalLinkName, setChannelExternalLinkName] = useState<string | null>(null);
   const [recordUrl, setRecordUrl] = useState<string>('');
   const [isMobile, setIsMobile] = useState<boolean>(false);
   const [channelLoading, setChannelLoading] = useState<boolean>(true);
@@ -62,6 +64,8 @@ export default function RecordPage() {
             setChannelId(data.id);
             setChannelName(data.name);
             setChannelThumbnail(data.thumbnail);
+            setChannelExternalLink(data.externalLink || null);
+            setChannelExternalLinkName(data.externalLinkName || null);
           } else {
             console.error('Channel not found for subdomain:', subdomain, 'Status:', res.status);
           }
@@ -545,8 +549,28 @@ export default function RecordPage() {
                     onChange={() => setDestinationOption('default')}
                     className="w-4 h-4"
                   />
-                  <span className="text-gray-900">Default destination</span>
+                  <span className="text-gray-900">
+                    Default destination
+                    {channelExternalLinkName && (
+                      <span className="text-gray-600 ml-2">
+                        ({channelExternalLinkName})
+                      </span>
+                    )}
+                  </span>
                 </label>
+
+                {channelHandle && (
+                  <div className="ml-7 mb-2">
+                    <a
+                      href={`/update`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-blue-600 hover:text-blue-800 text-sm underline"
+                    >
+                      Change default destination
+                    </a>
+                  </div>
+                )}
 
                 <label className="flex items-center space-x-3 cursor-pointer">
                   <input
