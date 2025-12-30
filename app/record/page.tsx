@@ -66,6 +66,26 @@ export default function RecordPage() {
             setChannelThumbnail(data.thumbnail);
             setChannelExternalLink(data.externalLink || null);
             setChannelExternalLinkName(data.externalLinkName || null);
+
+            // If there's an external link and no URL param override, fetch OpenGraph data
+            if (data.externalLink && !new URLSearchParams(window.location.search).get('dest')) {
+              setShowLinkPreview(true);
+              try {
+                const ogResponse = await fetch('/api/opengraph', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ url: data.externalLink }),
+                });
+
+                if (ogResponse.ok) {
+                  const ogData = await ogResponse.json();
+                  setOgData(ogData);
+                  setCustomDestination(data.externalLink);
+                }
+              } catch (err) {
+                console.error('Error fetching OpenGraph data for external link:', err);
+              }
+            }
           } else {
             console.error('Channel not found for subdomain:', subdomain, 'Status:', res.status);
           }
@@ -82,8 +102,54 @@ export default function RecordPage() {
     getChannelFromSubdomain();
 
     // Refresh channel data when window regains focus (e.g., user returns from update page)
-    const handleFocus = () => {
-      getChannelFromSubdomain();
+    const handleFocus = async () => {
+      await getChannelFromSubdomain();
+
+      // If using default destination and there's an external link, fetch OpenGraph data
+      if (destinationOption === 'default') {
+        const hostname = window.location.hostname;
+        const parts = hostname.split('.');
+        let subdomain: string | null = null;
+
+        if (hostname.includes('localhost')) {
+          if (parts.length >= 2 && parts[0] !== 'localhost') {
+            subdomain = parts[0];
+          }
+        } else {
+          if (parts.length >= 3 && parts[0] !== 'www' && parts[0] !== 'all') {
+            subdomain = parts[0];
+          }
+        }
+
+        if (subdomain) {
+          try {
+            const res = await fetch(`/api/channels/handle/${subdomain}`);
+            if (res.ok) {
+              const data = await res.json();
+              if (data.externalLink) {
+                // Fetch OpenGraph data for the external link
+                setShowLinkPreview(true);
+                const ogResponse = await fetch('/api/opengraph', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ url: data.externalLink }),
+                });
+
+                if (ogResponse.ok) {
+                  const ogData = await ogResponse.json();
+                  setOgData(ogData);
+                  setCustomDestination(data.externalLink);
+                }
+              } else {
+                setShowLinkPreview(false);
+                setOgData(null);
+              }
+            }
+          } catch (err) {
+            console.error('Error refreshing external link preview:', err);
+          }
+        }
+      }
     };
 
     window.addEventListener('focus', handleFocus);
@@ -91,7 +157,7 @@ export default function RecordPage() {
     return () => {
       window.removeEventListener('focus', handleFocus);
     };
-  }, []);
+  }, [destinationOption]);
 
   // Parse URL parameters on load and set destination
   useEffect(() => {
