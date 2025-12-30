@@ -458,9 +458,14 @@ export default function RecordPage() {
                     {channelExternalLinkName}
                   </a>
                 ) : (
-                  <span className="text-gray-600 text-base md:text-2xl">
-                    Channel page
-                  </span>
+                  <a
+                    href={channelHandle ? `/${channelHandle}` : '/'}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-gray-600 hover:text-blue-600 underline text-base md:text-2xl"
+                  >
+                    Fast.Video Channel Page
+                  </a>
                 )}
                 {' '}
                 <button
