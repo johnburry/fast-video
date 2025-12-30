@@ -171,8 +171,8 @@ export default function ChannelPage({
     setSearchResults([]);
     setHasSearched(false);
     setExpandedVideos(new Set());
-    // Remove query string from URL
-    window.history.pushState({}, '', `/${channelHandle}`);
+    // Remove query string from URL (keep clean subdomain URL)
+    window.history.pushState({}, '', '/');
   };
 
   const toggleExpandMatches = (videoId: string) => {
