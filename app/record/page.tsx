@@ -435,21 +435,6 @@ export default function RecordPage() {
               <p className="text-gray-600 text-center text-base md:text-2xl">
                 A Fast Video is a quick video you can record here, it's uploaded to the cloud and you get a link to share with others. When it has been shared, at the end of the video, it will automatically take the viewer to this content:
               </p>
-              {channelThumbnail && (
-                <img
-                  src={getThumbnailUrl(channelThumbnail)}
-                  alt={channelName}
-                  className="w-24 h-24 rounded-full"
-                />
-              )}
-              <strong className="text-black text-2xl md:text-4xl text-center">
-                {channelName.split('|').map((part, index, array) => (
-                  <span key={index}>
-                    {part}
-                    {index < array.length - 1 && <br />}
-                  </span>
-                ))}
-              </strong>
               <div className="text-center">
                 <span className="text-gray-900 font-medium text-base md:text-lg">
                   {destinationOption === 'other' && customDestination
