@@ -435,69 +435,22 @@ export default function RecordPage() {
               <p className="text-gray-600 text-center text-base md:text-2xl">
                 A Fast Video is a quick video you can record here, it's uploaded to the cloud and you get a link to share with others. When it has been shared, at the end of the video, it will automatically take the viewer to this content:
               </p>
-              {showLinkPreview ? (
-                !ogData ? (
-                  <div className="w-full border border-gray-300 rounded-lg overflow-hidden bg-white p-8 flex flex-col items-center justify-center">
-                    <div className="inline-block animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500 mb-4"></div>
-                    <p className="text-gray-600">Loading preview...</p>
-                  </div>
-                ) : (
-                  <div className="w-full border border-gray-300 rounded-lg overflow-hidden bg-white">
-                    {ogData.image && (
-                      <img
-                        src={ogData.image}
-                        alt={ogData.title || 'Link preview'}
-                        className="w-full h-48 object-cover"
-                        onError={(e) => {
-                          e.currentTarget.style.display = 'none';
-                        }}
-                      />
-                    )}
-                    <div className="p-4">
-                      {ogData.title && (
-                        <h3 className="text-black font-semibold text-lg mb-2">
-                          {ogData.title}
-                        </h3>
-                      )}
-                      {ogData.description && (
-                        <p className="text-gray-600 text-sm mb-2 line-clamp-2">
-                          {ogData.description}
-                        </p>
-                      )}
-                      <a
-                        href={customDestination}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-blue-600 hover:text-blue-800 break-all text-xs"
-                      >
-                        {customDestination}
-                      </a>
-                    </div>
-                  </div>
-                )
-              ) : (
-                <>
-                  {channelThumbnail && (
-                    <img
-                      src={getThumbnailUrl(channelThumbnail)}
-                      alt={channelName}
-                      className="w-24 h-24 rounded-full"
-                    />
-                  )}
-                  <strong className="text-black text-2xl md:text-4xl text-center">
-                    {channelName.split('|').map((part, index, array) => (
-                      <span key={index}>
-                        {part}
-                        {index < array.length - 1 && <br />}
-                      </span>
-                    ))}
-                  </strong>
-                </>
+              {channelThumbnail && (
+                <img
+                  src={getThumbnailUrl(channelThumbnail)}
+                  alt={channelName}
+                  className="w-24 h-24 rounded-full"
+                />
               )}
+              <strong className="text-black text-2xl md:text-4xl text-center">
+                {channelName.split('|').map((part, index, array) => (
+                  <span key={index}>
+                    {part}
+                    {index < array.length - 1 && <br />}
+                  </span>
+                ))}
+              </strong>
               <div className="text-center">
-                <span className="text-gray-600 text-base md:text-lg">
-                  End of video redirect address:{' '}
-                </span>
                 <span className="text-gray-900 font-medium text-base md:text-lg">
                   {destinationOption === 'other' && customDestination
                     ? customDestination
