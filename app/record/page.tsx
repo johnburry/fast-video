@@ -433,18 +433,39 @@ export default function RecordPage() {
           {channelName && (
             <div className="bg-white rounded-lg p-6 md:p-8 flex flex-col items-center gap-4">
               <p className="text-gray-600 text-center text-base md:text-2xl">
-                A Fast Video is a quick video you can record here, it's uploaded to the cloud and you get a link to share with others. When it has been shared, at the end of the video, it will automatically take the viewer to this content:
+                A Fast Video is a quick video you can record here, it's uploaded to the cloud and you get a link to share with others.
+              </p>
+              <p className="text-gray-600 text-center text-base md:text-2xl">
+                When it has been shared, at the end of the video, it will automatically take the viewer to this content:
               </p>
               <div className="text-center">
-                <span className="text-gray-900 font-medium text-base md:text-lg">
-                  {destinationOption === 'other' && customDestination
-                    ? customDestination
-                    : channelExternalLinkName || 'Channel page'}
-                </span>
+                {destinationOption === 'other' && customDestination ? (
+                  <a
+                    href={customDestination}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-gray-600 hover:text-blue-600 underline text-base md:text-2xl"
+                  >
+                    {customDestination}
+                  </a>
+                ) : channelExternalLink && channelExternalLinkName ? (
+                  <a
+                    href={channelExternalLink}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-gray-600 hover:text-blue-600 underline text-base md:text-2xl"
+                  >
+                    {channelExternalLinkName}
+                  </a>
+                ) : (
+                  <span className="text-gray-600 text-base md:text-2xl">
+                    Channel page
+                  </span>
+                )}
                 {' '}
                 <button
                   onClick={() => setShowDestinationModal(true)}
-                  className="text-blue-600 hover:text-blue-800 underline text-base md:text-lg"
+                  className="text-blue-600 hover:text-blue-800 underline text-base md:text-2xl"
                 >
                   (change)
                 </button>
