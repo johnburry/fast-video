@@ -80,6 +80,17 @@ export default function RecordPage() {
     };
 
     getChannelFromSubdomain();
+
+    // Refresh channel data when window regains focus (e.g., user returns from update page)
+    const handleFocus = () => {
+      getChannelFromSubdomain();
+    };
+
+    window.addEventListener('focus', handleFocus);
+
+    return () => {
+      window.removeEventListener('focus', handleFocus);
+    };
   }, []);
 
   // Parse URL parameters on load and set destination
