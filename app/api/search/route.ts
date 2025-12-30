@@ -168,6 +168,13 @@ export async function GET(request: NextRequest) {
 
     const results = Array.from(resultsByVideo.values());
 
+    // Sort results by published date (newest first)
+    results.sort((a, b) => {
+      const dateA = new Date(a.publishedAt).getTime();
+      const dateB = new Date(b.publishedAt).getTime();
+      return dateB - dateA;
+    });
+
     return NextResponse.json({
       query,
       results,
