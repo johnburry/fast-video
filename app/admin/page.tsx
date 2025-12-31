@@ -17,6 +17,15 @@ export default function AdminPage() {
     // Set page title
     document.title = 'FV Admin: Import';
 
+    // Check for querystring parameter first
+    const urlParams = new URLSearchParams(window.location.search);
+    const channelParam = urlParams.get('channel');
+
+    if (channelParam) {
+      setChannelHandle(channelParam);
+      return;
+    }
+
     // Extract subdomain from hostname
     const hostname = window.location.hostname;
     const parts = hostname.split('.');
