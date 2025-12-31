@@ -23,6 +23,11 @@ export default function VideoPageClient({ videoId }: { videoId: string }) {
         const res = await fetch(`/api/videos/${videoId}`);
         if (res.ok) {
           const data = await res.json();
+          console.log('VideoPageClient - metadata received:', {
+            overrideVideoThumbnail: data.overrideVideoThumbnail,
+            channelThumbnail: data.channelThumbnail,
+            altDestination: data.altDestination,
+          });
           setMetadata(data);
 
           // If there's NO alt_destination (regular Fast Video), redirect immediately to channel page
@@ -101,6 +106,13 @@ export default function VideoPageClient({ videoId }: { videoId: string }) {
   const posterUrl = metadata.overrideVideoThumbnail && metadata.channelThumbnail
     ? metadata.channelThumbnail
     : `https://image.mux.com/${videoId}/thumbnail.jpg?width=1200&height=675&fit_mode=smartcrop`;
+
+  console.log('VideoPageClient - rendering with:', {
+    overrideVideoThumbnail: metadata.overrideVideoThumbnail,
+    channelThumbnail: metadata.channelThumbnail,
+    willShowAudioPlayer: metadata.overrideVideoThumbnail,
+    willShowChannelThumbnail: metadata.overrideVideoThumbnail && metadata.channelThumbnail,
+  });
 
   return (
     <div className="min-h-screen bg-black flex flex-col items-center justify-center p-4">

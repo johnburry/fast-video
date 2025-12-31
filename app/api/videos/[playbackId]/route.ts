@@ -35,7 +35,7 @@ export async function GET(
       );
     }
 
-    return NextResponse.json({
+    const response = {
       playbackId: video.mux_playback_id,
       thumbnailUrl: video.thumbnail_url,
       channelName: video.channels?.channel_name || null,
@@ -46,7 +46,15 @@ export async function GET(
       externalLink: video.channels?.external_link || null,
       externalLinkName: video.channels?.external_link_name || null,
       createdAt: video.created_at,
+    };
+
+    console.log('API /api/videos/[playbackId] response:', {
+      playbackId,
+      overrideVideoThumbnail: response.overrideVideoThumbnail,
+      channelThumbnail: response.channelThumbnail,
     });
+
+    return NextResponse.json(response);
   } catch (error) {
     console.error('Error in GET /api/videos/[playbackId]:', error);
     return NextResponse.json(
