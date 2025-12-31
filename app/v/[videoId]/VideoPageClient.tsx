@@ -103,15 +103,27 @@ export default function VideoPageClient({ videoId }: { videoId: string }) {
     : `https://image.mux.com/${videoId}/thumbnail.jpg?width=1200&height=675&fit_mode=smartcrop`;
 
   return (
-    <div className="min-h-screen bg-black">
-      <MuxPlayer
-        playbackId={videoId}
-        streamType="on-demand"
-        autoPlay
-        poster={posterUrl}
-        onEnded={handleVideoEnd}
-        style={{ width: '100%', height: '100vh' }}
-      />
+    <div className="min-h-screen bg-black flex flex-col items-center justify-center p-4">
+      {/* Channel Thumbnail for Audio-Only (when override is true) */}
+      {metadata.overrideVideoThumbnail && metadata.channelThumbnail && (
+        <div className="mb-6 max-w-2xl w-full">
+          <img
+            src={metadata.channelThumbnail}
+            alt={metadata.channelName || 'Channel'}
+            className="rounded-lg w-full"
+          />
+        </div>
+      )}
+      <div className="w-full max-w-4xl">
+        <MuxPlayer
+          playbackId={videoId}
+          streamType="on-demand"
+          autoPlay
+          poster={posterUrl}
+          onEnded={handleVideoEnd}
+          style={{ width: '100%', maxHeight: '80vh' }}
+        />
+      </div>
     </div>
   );
 }

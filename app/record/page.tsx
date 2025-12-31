@@ -389,86 +389,6 @@ export default function RecordPage() {
     }
   };
 
-  const createVideoWithAudio = async (audioBlob: Blob, imageUrl: string | null): Promise<Blob> => {
-    return new Promise(async (resolve, reject) => {
-      try {
-        // Create a canvas element
-        const canvas = document.createElement('canvas');
-        canvas.width = 1280;
-        canvas.height = 720;
-        const ctx = canvas.getContext('2d');
-
-        if (!ctx) {
-          throw new Error('Failed to get canvas context');
-        }
-
-        // Load the thumbnail image
-        const img = new Image();
-        img.crossOrigin = 'anonymous';
-
-        await new Promise((resolveImg, rejectImg) => {
-          img.onload = () => resolveImg(null);
-          img.onerror = () => rejectImg(new Error('Failed to load image'));
-          img.src = imageUrl || 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="1280" height="720"%3E%3Crect width="1280" height="720" fill="%23000"/%3E%3C/svg%3E';
-        });
-
-        // Draw image to canvas (cover the whole canvas)
-        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-
-        // Create a video stream from the canvas
-        const canvasStream = canvas.captureStream(30); // 30 FPS
-
-        // Create an audio context and decode the audio blob
-        const audioContext = new AudioContext();
-        const audioArrayBuffer = await audioBlob.arrayBuffer();
-        const audioBuffer = await audioContext.decodeAudioData(audioArrayBuffer);
-
-        // Create a media stream destination
-        const audioDestination = audioContext.createMediaStreamDestination();
-        const audioSource = audioContext.createBufferSource();
-        audioSource.buffer = audioBuffer;
-        audioSource.connect(audioDestination);
-
-        // Combine video and audio streams
-        const combinedStream = new MediaStream([
-          ...canvasStream.getVideoTracks(),
-          ...audioDestination.stream.getAudioTracks()
-        ]);
-
-        // Record the combined stream
-        const mediaRecorder = new MediaRecorder(combinedStream, {
-          mimeType: 'video/webm;codecs=vp8,opus'
-        });
-
-        const chunks: Blob[] = [];
-
-        mediaRecorder.ondataavailable = (e) => {
-          if (e.data.size > 0) {
-            chunks.push(e.data);
-          }
-        };
-
-        mediaRecorder.onstop = () => {
-          const videoBlob = new Blob(chunks, { type: 'video/webm' });
-          audioContext.close();
-          resolve(videoBlob);
-        };
-
-        mediaRecorder.start();
-        audioSource.start();
-
-        // Stop recording when audio ends
-        audioSource.onended = () => {
-          setTimeout(() => {
-            mediaRecorder.stop();
-          }, 100);
-        };
-      } catch (err) {
-        reject(err);
-      }
-    });
-  };
-
   const uploadAudioRecording = async () => {
     if (!audioBlob) return;
 
@@ -479,15 +399,6 @@ export default function RecordPage() {
       // For audio recordings, set thumbnail override to true by default
       setOverrideVideoThumbnail(true);
 
-      // Convert audio to video with channel thumbnail
-      // Use proxy to avoid CORS issues
-      let imageUrl = null;
-      if (channelThumbnail) {
-        const thumbnailUrl = getThumbnailUrl(channelThumbnail);
-        imageUrl = `/api/proxy-image?url=${encodeURIComponent(thumbnailUrl)}`;
-      }
-      const videoBlob = await createVideoWithAudio(audioBlob, imageUrl);
-
       // Create upload URL
       const uploadUrlRes = await fetch('/api/mux/upload', { method: 'POST' });
       if (!uploadUrlRes.ok) {
@@ -496,17 +407,17 @@ export default function RecordPage() {
       const { id, url } = await uploadUrlRes.json();
       setUploadId(id);
 
-      // Upload video file to Mux
+      // Upload audio file directly to Mux
       const uploadRes = await fetch(url, {
         method: 'PUT',
-        body: videoBlob,
+        body: audioBlob,
         headers: {
-          'Content-Type': 'video/webm',
+          'Content-Type': 'audio/webm',
         },
       });
 
       if (!uploadRes.ok) {
-        throw new Error('Failed to upload video');
+        throw new Error('Failed to upload audio');
       }
 
       setIsPreparing(true);
@@ -828,6 +739,16 @@ export default function RecordPage() {
 
         {playbackUrl && (
           <div className="space-y-6">
+            {/* Channel Thumbnail for Audio-Only */}
+            {recordingMode === 'audio' && channelThumbnail && (
+              <div className="flex justify-center mb-4">
+                <img
+                  src={getThumbnailUrl(channelThumbnail)}
+                  alt={channelName || 'Channel'}
+                  className="rounded-lg max-w-md w-full"
+                />
+              </div>
+            )}
             <div className="bg-gray-900 rounded-lg overflow-hidden relative">
               <MuxPlayer
                 key={videoKey}
