@@ -224,13 +224,7 @@ export default function ChannelPage({
           <h1 className="text-2xl font-bold text-gray-900 mb-2">
             Channel Not Found
           </h1>
-          <p className="text-gray-600 mb-4">{error}</p>
-          <a
-            href="/admin"
-            className="text-blue-600 hover:text-blue-800 font-medium"
-          >
-            Import a channel →
-          </a>
+          <p className="text-gray-600">{error}</p>
         </div>
       </div>
     );
