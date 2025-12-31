@@ -31,6 +31,7 @@ export default function RecordPage() {
   const [recordingMode, setRecordingMode] = useState<'video' | 'audio'>('video');
   const [isRecording, setIsRecording] = useState(false);
   const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
+  const [audioBlobUrl, setAudioBlobUrl] = useState<string | null>(null);
   const [recordingTime, setRecordingTime] = useState(0);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
@@ -302,7 +303,9 @@ export default function RecordPage() {
 
       mediaRecorder.onstop = () => {
         const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
+        const blobUrl = URL.createObjectURL(audioBlob);
         setAudioBlob(audioBlob);
+        setAudioBlobUrl(blobUrl);
         stream.getTracks().forEach(track => track.stop());
       };
 
@@ -364,7 +367,13 @@ export default function RecordPage() {
 
       setIsPreparing(true);
       setIsUploading(false);
+
+      // Clean up blob URL after upload
+      if (audioBlobUrl) {
+        URL.revokeObjectURL(audioBlobUrl);
+      }
       setAudioBlob(null);
+      setAudioBlobUrl(null);
     } catch (err) {
       console.error('Error uploading audio:', err);
       setError('Failed to upload audio recording');
@@ -379,9 +388,14 @@ export default function RecordPage() {
   };
 
   const resetRecording = () => {
+    // Clean up blob URL if it exists
+    if (audioBlobUrl) {
+      URL.revokeObjectURL(audioBlobUrl);
+    }
     // Clear all recording-related state
     setPlaybackUrl('');
     setAudioBlob(null);
+    setAudioBlobUrl(null);
     setUploadId('');
     setIsUploading(false);
     setIsPreparing(false);
@@ -642,17 +656,23 @@ export default function RecordPage() {
                       <div className="bg-green-900 border border-green-700 rounded-lg p-6">
                         <p className="text-green-300 text-lg mb-2">✓ Audio recorded successfully!</p>
                         <p className="text-gray-300 mb-4">Duration: {formatTime(recordingTime)}</p>
-                        <audio
-                          controls
-                          src={URL.createObjectURL(audioBlob)}
-                          className="w-full max-w-md mx-auto"
-                          style={{ marginTop: '1rem' }}
-                        />
+                        {audioBlobUrl && (
+                          <audio
+                            controls
+                            src={audioBlobUrl}
+                            className="w-full max-w-md mx-auto"
+                            style={{ marginTop: '1rem' }}
+                          />
+                        )}
                       </div>
                       <div className="flex gap-4 justify-center">
                         <button
                           onClick={() => {
+                            if (audioBlobUrl) {
+                              URL.revokeObjectURL(audioBlobUrl);
+                            }
                             setAudioBlob(null);
+                            setAudioBlobUrl(null);
                             setRecordingTime(0);
                           }}
                           className="px-6 py-3 bg-gray-700 hover:bg-gray-600 rounded-lg font-medium transition-colors"
