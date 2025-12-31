@@ -437,6 +437,20 @@ export default function RecordPage() {
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
+  const resetRecording = () => {
+    // Clear all recording-related state
+    setPlaybackUrl('');
+    setAudioBlob(null);
+    setUploadId('');
+    setIsUploading(false);
+    setIsPreparing(false);
+    setRecordingTime(0);
+    setShowVideoEndedOverlay(false);
+    setOverrideVideoThumbnail(false);
+    setVideoKey(prev => prev + 1);
+    setError('');
+  };
+
   const handleSaveDestination = async () => {
     // Update link preview visibility based on selection
     if (destinationOption === 'other' && customDestination) {
@@ -739,18 +753,30 @@ export default function RecordPage() {
         )}
 
         {playbackUrl && (
-          <div className="space-y-6">
-            {/* Channel Thumbnail for Audio-Only */}
-            {recordingMode === 'audio' && channelThumbnail && (
-              <div className="flex justify-center mb-4">
-                <img
-                  src={getThumbnailUrl(channelThumbnail)}
-                  alt={channelName || 'Channel'}
-                  className="rounded-lg max-w-md w-full"
-                />
-              </div>
-            )}
-            {recordingMode === 'audio' ? (
+          <div className="relative bg-gray-800 rounded-lg border-2 border-gray-700 p-6">
+            {/* Close Button */}
+            <button
+              onClick={resetRecording}
+              className="absolute top-4 right-4 z-10 bg-gray-900 hover:bg-red-600 rounded-full p-2 transition-colors"
+              title="Reset and record new"
+            >
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+
+            <div className="space-y-6">
+              {/* Channel Thumbnail for Audio-Only */}
+              {recordingMode === 'audio' && channelThumbnail && (
+                <div className="flex justify-center mb-4">
+                  <img
+                    src={getThumbnailUrl(channelThumbnail)}
+                    alt={channelName || 'Channel'}
+                    className="rounded-lg max-w-md w-full"
+                  />
+                </div>
+              )}
+              {recordingMode === 'audio' ? (
               /* Audio Player for Audio-Only Mode */
               <div className="bg-gray-900 rounded-lg p-8 flex justify-center">
                 <MuxPlayer
