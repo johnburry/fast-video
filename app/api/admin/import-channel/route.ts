@@ -343,18 +343,22 @@ export async function POST(request: NextRequest) {
             console.log(`[IMPORT] Successfully saved transcript for video ${video.videoId}`);
             // Update video to mark transcript as available
             console.log(`[IMPORT] Updating has_transcript flag for database video ID: ${videoId}, YouTube ID: ${video.videoId}`);
-            const { error: updateError } = await supabaseAdmin
+            const { data: updateData, error: updateError, count } = await supabaseAdmin
               .from('videos')
               .update({
                 has_transcript: true,
                 transcript_language: 'en',
               })
-              .eq('id', videoId);
+              .eq('id', videoId)
+              .select();
 
             if (updateError) {
-              console.error(`[IMPORT] Error updating has_transcript flag for video ${video.videoId} (DB ID: ${videoId}):`, updateError);
+              console.error(`[IMPORT] ERROR updating has_transcript flag for video ${video.videoId} (DB ID: ${videoId}):`, updateError);
+            } else if (!updateData || updateData.length === 0) {
+              console.error(`[IMPORT] WARNING: Update returned no rows for video ${video.videoId} (DB ID: ${videoId}). This means the video was not found or RLS policy blocked the update.`);
             } else {
-              console.log(`[IMPORT] Successfully updated has_transcript=true for video ${video.videoId} (DB ID: ${videoId})`);
+              console.log(`[IMPORT] ✓ Successfully updated has_transcript=true for video ${video.videoId} (DB ID: ${videoId})`);
+              console.log(`[IMPORT] Updated row:`, updateData[0]);
             }
 
             transcriptCount++;
