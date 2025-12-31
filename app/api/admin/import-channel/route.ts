@@ -109,11 +109,11 @@ export async function POST(request: NextRequest) {
           );
         }
 
-        // Check if channel already exists (by handle or youtube_channel_id)
+        // Check if channel already exists (by handle, youtube_channel_handle, or youtube_channel_id)
         const { data: existingChannels } = await supabaseAdmin
       .from('channels')
       .select('id, channel_handle, youtube_channel_id')
-      .or(`channel_handle.eq.${channelInfo.handle},youtube_channel_id.eq.${channelInfo.channelId}`)
+      .or(`channel_handle.eq.${channelInfo.handle},youtube_channel_handle.eq.${channelInfo.handle},youtube_channel_id.eq.${channelInfo.channelId}`)
       .limit(1);
 
     let channelId: string;
