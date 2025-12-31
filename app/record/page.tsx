@@ -271,7 +271,7 @@ export default function RecordPage() {
           const thumbnailUrl = `https://image.mux.com/${playbackId}/thumbnail.jpg`;
 
           try {
-            console.log('Saving video metadata with channelId:', channelId);
+            console.log('Saving video metadata with channelId:', channelId, 'overrideVideoThumbnail:', overrideVideoThumbnail);
             const saveRes = await fetch('/api/videos', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
@@ -280,6 +280,7 @@ export default function RecordPage() {
                 thumbnailUrl,
                 channelId: channelId, // Associate with channel from subdomain
                 altDestination: destinationOption === 'other' ? customDestination : null,
+                overrideVideoThumbnail: overrideVideoThumbnail,
               }),
             });
 
@@ -301,7 +302,7 @@ export default function RecordPage() {
     }, 3000);
 
     return () => clearInterval(pollInterval);
-  }, [isPreparing, uploadId, channelId]);
+  }, [isPreparing, uploadId, channelId, destinationOption, customDestination, overrideVideoThumbnail]);
 
   const getShareableUrl = () => {
     // Extract playback ID from Mux URL (e.g., https://stream.mux.com/PLAYBACK_ID.m3u8)

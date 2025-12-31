@@ -8,9 +8,9 @@ const supabase = createClient(
 
 export async function POST(request: NextRequest) {
   try {
-    const { playbackId, channelId, thumbnailUrl, altDestination } = await request.json();
+    const { playbackId, channelId, thumbnailUrl, altDestination, overrideVideoThumbnail } = await request.json();
 
-    console.log('Saving video with:', { playbackId, channelId, thumbnailUrl, altDestination });
+    console.log('Saving video with:', { playbackId, channelId, thumbnailUrl, altDestination, overrideVideoThumbnail });
 
     if (!playbackId) {
       return NextResponse.json(
@@ -46,6 +46,7 @@ export async function POST(request: NextRequest) {
         channel_id: channelId || null,
         thumbnail_url: thumbnailUrl || null,
         alt_destination: finalAltDestination,
+        override_video_thumbnail: overrideVideoThumbnail || false,
       })
       .select()
       .single();
