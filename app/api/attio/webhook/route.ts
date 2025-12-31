@@ -6,9 +6,7 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
 
-// Attio API configuration
-const ATTIO_API_TOKEN = '2fae068af1d007a686d73a0d35e3732c400be0d9466e398c48f41aa1e4ffabdc';
-const ATTIO_API_BASE = 'https://api.attio.com/v2';
+// Bearer token for webhook authentication
 const EXPECTED_BEARER_TOKEN = 'sdj48slks84jh9zk3kgj';
 
 export async function POST(request: NextRequest) {
@@ -114,65 +112,15 @@ export async function POST(request: NextRequest) {
       console.log('Channel created successfully:', channel);
     }
 
-    // Update Attio with the Supabase channel ID
+    // Return the channel ID for Attio to read
     const supabaseChannelId = channel.id;
-    console.log('Updating Attio list entry:', attioListEntryId, 'with Supabase channel ID:', supabaseChannelId);
+    console.log('Channel operation completed:', { channelId: supabaseChannelId, isUpdate });
 
-    try {
-      const attioResponse = await fetch(
-        `${ATTIO_API_BASE}/lists/fast-video-people/entries/${attioListEntryId}`,
-        {
-          method: 'PUT',
-          headers: {
-            'Authorization': `Bearer ${ATTIO_API_TOKEN}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            data: {
-              values: {
-                supabase_channel_id: [
-                  {
-                    target_object: 'uuid',
-                    target_record_id: supabaseChannelId,
-                  }
-                ]
-              }
-            }
-          }),
-        }
-      );
-
-      if (!attioResponse.ok) {
-        const errorText = await attioResponse.text();
-        console.error('Failed to update Attio:', attioResponse.status, errorText);
-        // Don't fail the entire request if Attio update fails
-        return NextResponse.json({
-          success: true,
-          channelId: supabaseChannelId,
-          warning: 'Channel created but failed to update Attio',
-          attioError: errorText,
-        });
-      }
-
-      const attioData = await attioResponse.json();
-      console.log('Attio updated successfully:', attioData);
-
-      return NextResponse.json({
-        success: true,
-        channelId: supabaseChannelId,
-        attioUpdated: true,
-        isUpdate,
-      });
-    } catch (attioError) {
-      console.error('Error updating Attio:', attioError);
-      // Don't fail the entire request if Attio update fails
-      return NextResponse.json({
-        success: true,
-        channelId: supabaseChannelId,
-        warning: 'Channel created but failed to update Attio',
-        attioError: attioError instanceof Error ? attioError.message : 'Unknown error',
-      });
-    }
+    return NextResponse.json({
+      success: true,
+      channelId: supabaseChannelId,
+      isUpdate,
+    });
   } catch (error) {
     console.error('Error in POST /api/attio/webhook:', error);
     return NextResponse.json(
