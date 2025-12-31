@@ -34,6 +34,13 @@ export default function RecordPage() {
   const [overrideVideoThumbnail, setOverrideVideoThumbnail] = useState(false);
   const [videoKey, setVideoKey] = useState(0);
   const playerRef = useRef<any>(null);
+  const [recordingMode, setRecordingMode] = useState<'video' | 'audio'>('video');
+  const [isRecording, setIsRecording] = useState(false);
+  const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
+  const [recordingTime, setRecordingTime] = useState(0);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const audioChunksRef = useRef<Blob[]>([]);
+  const recordingTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   // Detect subdomain and fetch channel info
   useEffect(() => {
@@ -338,6 +345,94 @@ export default function RecordPage() {
     }
   };
 
+  const startAudioRecording = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const mediaRecorder = new MediaRecorder(stream);
+      mediaRecorderRef.current = mediaRecorder;
+      audioChunksRef.current = [];
+
+      mediaRecorder.ondataavailable = (event) => {
+        if (event.data.size > 0) {
+          audioChunksRef.current.push(event.data);
+        }
+      };
+
+      mediaRecorder.onstop = () => {
+        const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
+        setAudioBlob(audioBlob);
+        stream.getTracks().forEach(track => track.stop());
+      };
+
+      mediaRecorder.start();
+      setIsRecording(true);
+      setRecordingTime(0);
+
+      // Start timer
+      recordingTimerRef.current = setInterval(() => {
+        setRecordingTime(prev => prev + 1);
+      }, 1000);
+    } catch (err) {
+      console.error('Error starting audio recording:', err);
+      setError('Failed to access microphone. Please allow microphone access.');
+    }
+  };
+
+  const stopAudioRecording = () => {
+    if (mediaRecorderRef.current && isRecording) {
+      mediaRecorderRef.current.stop();
+      setIsRecording(false);
+      if (recordingTimerRef.current) {
+        clearInterval(recordingTimerRef.current);
+        recordingTimerRef.current = null;
+      }
+    }
+  };
+
+  const uploadAudioRecording = async () => {
+    if (!audioBlob) return;
+
+    try {
+      setIsUploading(true);
+      setError('');
+
+      // Create upload URL
+      const uploadUrlRes = await fetch('/api/mux/upload', { method: 'POST' });
+      if (!uploadUrlRes.ok) {
+        throw new Error('Failed to create upload URL');
+      }
+      const { id, url } = await uploadUrlRes.json();
+      setUploadId(id);
+
+      // Upload audio file to Mux
+      const uploadRes = await fetch(url, {
+        method: 'PUT',
+        body: audioBlob,
+        headers: {
+          'Content-Type': 'audio/webm',
+        },
+      });
+
+      if (!uploadRes.ok) {
+        throw new Error('Failed to upload audio');
+      }
+
+      setIsPreparing(true);
+      setIsUploading(false);
+      setAudioBlob(null);
+    } catch (err) {
+      console.error('Error uploading audio:', err);
+      setError('Failed to upload audio recording');
+      setIsUploading(false);
+    }
+  };
+
+  const formatTime = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
+  };
+
   const handleSaveDestination = async () => {
     // Update link preview visibility based on selection
     if (destinationOption === 'other' && customDestination) {
@@ -424,12 +519,36 @@ export default function RecordPage() {
               <path d="M380 210L450 160V350L380 300V210Z" fill="white"/>
             </svg>
             <span className="hidden md:inline">
-              Record a Fast Video
+              Record a Fast {recordingMode === 'video' ? 'Video' : 'Audio'}
             </span>
             <span className="md:hidden inline">
-              Record a<br />Fast Video
+              Record a<br />Fast {recordingMode === 'video' ? 'Video' : 'Audio'}
             </span>
           </h1>
+
+          {/* Recording Mode Toggle */}
+          <div className="mb-6 flex gap-4 items-center">
+            <button
+              onClick={() => setRecordingMode('video')}
+              className={`px-6 py-3 rounded-lg font-medium transition-colors ${
+                recordingMode === 'video'
+                  ? 'bg-blue-600 text-white'
+                  : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+              }`}
+            >
+              📹 Video
+            </button>
+            <button
+              onClick={() => setRecordingMode('audio')}
+              className={`px-6 py-3 rounded-lg font-medium transition-colors ${
+                recordingMode === 'audio'
+                  ? 'bg-blue-600 text-white'
+                  : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+              }`}
+            >
+              🎙️ Audio
+            </button>
+          </div>
           {channelName && (
             <div className="bg-white rounded-lg p-6 md:p-8 flex flex-col items-center gap-4">
               <p className="text-gray-600 text-center text-base md:text-2xl">
@@ -487,49 +606,115 @@ export default function RecordPage() {
 
         {!playbackUrl && !isPreparing && (
           <div className="bg-gray-900 rounded-lg p-8">
-            <div className="flex flex-col md:flex-row gap-8 items-center md:items-start justify-center">
-              {/* Upload Section */}
-              <div className={isMobile ? 'w-auto' : 'flex-1 w-full'}>
-                <MuxUploader
-                  endpoint={createUpload}
-                  onUploadStart={handleUploadStart}
-                  onSuccess={handleSuccess}
-                  onUploadError={handleError}
-                  noDrop={isMobile}
-                >
-                  {!isMobile && (
-                    <span slot="heading">Drop a video file here to upload, or</span>
-                  )}
-                  <button slot="file-select" type="button" className="px-6 py-3 rounded font-medium transition-colors cursor-pointer" style={{ backgroundColor: '#FF0000' }}>
-                    {isMobile ? 'Record or Upload Video' : 'Upload Video'}
-                  </button>
-                </MuxUploader>
-                {isUploading && (
-                  <div className="mt-4 text-center">
-                    <p className="text-lg">Uploading your video...</p>
-                  </div>
-                )}
-              </div>
-
-              {/* QR Code Section */}
-              {!isMobile && (
-                <div className="flex-1 w-full text-center flex flex-col items-center justify-center">
-                  <p className="text-gray-300 mb-4" style={{ fontSize: '1.75rem' }}>
-                    Scan to record with a phone
-                  </p>
-                  {recordUrl && (
-                    <div className="inline-block p-4 bg-white rounded-lg">
-                      <QRCodeSVG
-                        value={recordUrl}
-                        size={150}
-                        level="H"
-                        includeMargin={true}
-                      />
+            {recordingMode === 'video' ? (
+              <div className="flex flex-col md:flex-row gap-8 items-center md:items-start justify-center">
+                {/* Upload Section */}
+                <div className={isMobile ? 'w-auto' : 'flex-1 w-full'}>
+                  <MuxUploader
+                    endpoint={createUpload}
+                    onUploadStart={handleUploadStart}
+                    onSuccess={handleSuccess}
+                    onUploadError={handleError}
+                    noDrop={isMobile}
+                  >
+                    {!isMobile && (
+                      <span slot="heading">Drop a video file here to upload, or</span>
+                    )}
+                    <button slot="file-select" type="button" className="px-6 py-3 rounded font-medium transition-colors cursor-pointer" style={{ backgroundColor: '#FF0000' }}>
+                      {isMobile ? 'Record or Upload Video' : 'Upload Video'}
+                    </button>
+                  </MuxUploader>
+                  {isUploading && (
+                    <div className="mt-4 text-center">
+                      <p className="text-lg">Uploading your video...</p>
                     </div>
                   )}
                 </div>
-              )}
-            </div>
+
+                {/* QR Code Section */}
+                {!isMobile && (
+                  <div className="flex-1 w-full text-center flex flex-col items-center justify-center">
+                    <p className="text-gray-300 mb-4" style={{ fontSize: '1.75rem' }}>
+                      Scan to record with a phone
+                    </p>
+                    {recordUrl && (
+                      <div className="inline-block p-4 bg-white rounded-lg">
+                        <QRCodeSVG
+                          value={recordUrl}
+                          size={150}
+                          level="H"
+                          includeMargin={true}
+                        />
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            ) : (
+              /* Audio Recording Section */
+              <div className="flex flex-col items-center justify-center space-y-6">
+                {!audioBlob ? (
+                  <>
+                    <div className="text-center">
+                      {isRecording && (
+                        <div className="mb-6">
+                          <div className="inline-flex items-center gap-3 bg-red-600 px-6 py-3 rounded-lg">
+                            <div className="w-4 h-4 bg-white rounded-full animate-pulse"></div>
+                            <span className="text-2xl font-bold">{formatTime(recordingTime)}</span>
+                          </div>
+                        </div>
+                      )}
+                      {!isRecording ? (
+                        <button
+                          onClick={startAudioRecording}
+                          className="px-8 py-4 bg-red-600 hover:bg-red-700 rounded-lg font-medium text-xl transition-colors flex items-center gap-3"
+                        >
+                          <svg className="w-8 h-8" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M7 4a3 3 0 016 0v4a3 3 0 11-6 0V4zm4 10.93A7.001 7.001 0 0017 8a1 1 0 10-2 0A5 5 0 015 8a1 1 0 00-2 0 7.001 7.001 0 006 6.93V17H6a1 1 0 100 2h8a1 1 0 100-2h-3v-2.07z" clipRule="evenodd" />
+                          </svg>
+                          Start Recording
+                        </button>
+                      ) : (
+                        <button
+                          onClick={stopAudioRecording}
+                          className="px-8 py-4 bg-gray-700 hover:bg-gray-600 rounded-lg font-medium text-xl transition-colors"
+                        >
+                          Stop Recording
+                        </button>
+                      )}
+                    </div>
+                    <p className="text-gray-400 text-center">
+                      Click the button to start recording your audio message
+                    </p>
+                  </>
+                ) : (
+                  <div className="text-center space-y-4">
+                    <div className="bg-green-900 border border-green-700 rounded-lg p-6">
+                      <p className="text-green-300 text-lg mb-2">✓ Audio recorded successfully!</p>
+                      <p className="text-gray-300">Duration: {formatTime(recordingTime)}</p>
+                    </div>
+                    <div className="flex gap-4 justify-center">
+                      <button
+                        onClick={() => {
+                          setAudioBlob(null);
+                          setRecordingTime(0);
+                        }}
+                        className="px-6 py-3 bg-gray-700 hover:bg-gray-600 rounded-lg font-medium transition-colors"
+                      >
+                        Re-record
+                      </button>
+                      <button
+                        onClick={uploadAudioRecording}
+                        disabled={isUploading}
+                        className="px-6 py-3 bg-blue-600 hover:bg-blue-700 rounded-lg font-medium transition-colors disabled:bg-gray-600 disabled:cursor-not-allowed"
+                      >
+                        {isUploading ? 'Uploading...' : 'Upload Audio'}
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         )}
 
