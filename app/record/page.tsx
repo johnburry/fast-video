@@ -708,34 +708,47 @@ export default function RecordPage() {
                     )}
                   </>
                 ) : (
-                  <div className="text-center space-y-4">
-                    <div className="bg-green-900 border border-green-700 rounded-lg p-6">
-                      <p className="text-green-300 text-lg mb-2">✓ Audio recorded successfully!</p>
-                      <p className="text-gray-300 mb-4">Duration: {formatTime(recordingTime)}</p>
-                      <audio
-                        controls
-                        src={URL.createObjectURL(audioBlob)}
-                        className="w-full max-w-md mx-auto"
-                        style={{ marginTop: '1rem' }}
-                      />
-                    </div>
-                    <div className="flex gap-4 justify-center">
-                      <button
-                        onClick={() => {
-                          setAudioBlob(null);
-                          setRecordingTime(0);
-                        }}
-                        className="px-6 py-3 bg-gray-700 hover:bg-gray-600 rounded-lg font-medium transition-colors"
-                      >
-                        Re-record
-                      </button>
-                      <button
-                        onClick={uploadAudioRecording}
-                        disabled={isUploading}
-                        className="px-6 py-3 bg-blue-600 hover:bg-blue-700 rounded-lg font-medium transition-colors disabled:bg-gray-600 disabled:cursor-not-allowed"
-                      >
-                        {isUploading ? 'Uploading...' : 'Upload Audio'}
-                      </button>
+                  <div className="relative bg-gray-800 rounded-lg border-2 border-gray-700 p-6">
+                    {/* Close Button */}
+                    <button
+                      onClick={resetRecording}
+                      className="absolute top-4 right-4 z-10 bg-gray-900 hover:bg-red-600 rounded-full p-2 transition-colors"
+                      title="Reset and record new"
+                    >
+                      <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    </button>
+
+                    <div className="text-center space-y-4">
+                      <div className="bg-green-900 border border-green-700 rounded-lg p-6">
+                        <p className="text-green-300 text-lg mb-2">✓ Audio recorded successfully!</p>
+                        <p className="text-gray-300 mb-4">Duration: {formatTime(recordingTime)}</p>
+                        <audio
+                          controls
+                          src={URL.createObjectURL(audioBlob)}
+                          className="w-full max-w-md mx-auto"
+                          style={{ marginTop: '1rem' }}
+                        />
+                      </div>
+                      <div className="flex gap-4 justify-center">
+                        <button
+                          onClick={() => {
+                            setAudioBlob(null);
+                            setRecordingTime(0);
+                          }}
+                          className="px-6 py-3 bg-gray-700 hover:bg-gray-600 rounded-lg font-medium transition-colors"
+                        >
+                          Re-record
+                        </button>
+                        <button
+                          onClick={uploadAudioRecording}
+                          disabled={isUploading}
+                          className="px-6 py-3 bg-blue-600 hover:bg-blue-700 rounded-lg font-medium transition-colors disabled:bg-gray-600 disabled:cursor-not-allowed"
+                        >
+                          {isUploading ? 'Uploading...' : 'Upload Audio'}
+                        </button>
+                      </div>
                     </div>
                   </div>
                 )}
