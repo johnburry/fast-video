@@ -303,9 +303,15 @@ export default function RecordPage() {
 
       mediaRecorder.onstop = () => {
         const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
-        const blobUrl = URL.createObjectURL(audioBlob);
         setAudioBlob(audioBlob);
-        setAudioBlobUrl(blobUrl);
+
+        // Convert blob to data URL for Safari compatibility
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          setAudioBlobUrl(reader.result as string);
+        };
+        reader.readAsDataURL(audioBlob);
+
         stream.getTracks().forEach(track => track.stop());
       };
 
@@ -368,10 +374,7 @@ export default function RecordPage() {
       setIsPreparing(true);
       setIsUploading(false);
 
-      // Clean up blob URL after upload
-      if (audioBlobUrl) {
-        URL.revokeObjectURL(audioBlobUrl);
-      }
+      // Clear audio data after upload (data URLs don't need revocation)
       setAudioBlob(null);
       setAudioBlobUrl(null);
     } catch (err) {
@@ -388,11 +391,7 @@ export default function RecordPage() {
   };
 
   const resetRecording = () => {
-    // Clean up blob URL if it exists
-    if (audioBlobUrl) {
-      URL.revokeObjectURL(audioBlobUrl);
-    }
-    // Clear all recording-related state
+    // Clear all recording-related state (data URLs don't need revocation)
     setPlaybackUrl('');
     setAudioBlob(null);
     setAudioBlobUrl(null);
@@ -668,9 +667,7 @@ export default function RecordPage() {
                       <div className="flex gap-4 justify-center">
                         <button
                           onClick={() => {
-                            if (audioBlobUrl) {
-                              URL.revokeObjectURL(audioBlobUrl);
-                            }
+                            // Clear audio data (data URLs don't need revocation)
                             setAudioBlob(null);
                             setAudioBlobUrl(null);
                             setRecordingTime(0);
