@@ -546,13 +546,13 @@ export default function RecordPage() {
                   : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
               }`}
             >
-              🎙️ Audio
+              🎙️ Audio Only
             </button>
           </div>
           {channelName && (
             <div className="bg-white rounded-lg p-6 md:p-8 flex flex-col items-center gap-4">
               <p className="text-gray-600 text-center text-base md:text-2xl">
-                A Fast Video is a quick video you can record here, it's uploaded to the cloud and you get a link to share with others.
+                A Fast Video is a quick video (or audio recording) you can record here, it's uploaded to the cloud and you get a link to share with others.
               </p>
               <p className="text-gray-600 text-center text-base md:text-2xl">
                 When it has been shared, at the end of the video, it will automatically take the viewer to this content:
