@@ -37,9 +37,17 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Prepare channel data for insertion
+    // Check if channel already exists by attio_list_entry_id
+    const { data: existingChannel } = await supabase
+      .from('channels')
+      .select('id')
+      .eq('attio_list_entry_id', attioListEntryId)
+      .single();
+
+    // Prepare channel data for upsert
     // Use attio_list_entry_id for channel_handle if not provided to ensure uniqueness
     const channelData: any = {
+      attio_list_entry_id: attioListEntryId,
       youtube_channel_id: body.youtube_channel_id || '',
       channel_handle: body.channel_handle || attioListEntryId,
       channel_name: body.channel_name || '',
@@ -61,23 +69,50 @@ export async function POST(request: NextRequest) {
     if (body.is_active !== undefined) channelData.is_active = body.is_active;
     if (body.last_synced_at) channelData.last_synced_at = body.last_synced_at;
 
-    // Insert channel into Supabase
-    console.log('Inserting channel into Supabase:', channelData);
-    const { data: channel, error: insertError } = await supabase
-      .from('channels')
-      .insert(channelData)
-      .select('id')
-      .single();
+    let channel;
+    let isUpdate = false;
 
-    if (insertError) {
-      console.error('Error inserting channel into Supabase:', insertError);
-      return NextResponse.json(
-        { error: 'Failed to create channel', details: insertError.message },
-        { status: 500 }
-      );
+    if (existingChannel) {
+      // Update existing channel
+      console.log('Updating existing channel in Supabase:', existingChannel.id, channelData);
+      const { data: updatedChannel, error: updateError } = await supabase
+        .from('channels')
+        .update(channelData)
+        .eq('id', existingChannel.id)
+        .select('id')
+        .single();
+
+      if (updateError) {
+        console.error('Error updating channel in Supabase:', updateError);
+        return NextResponse.json(
+          { error: 'Failed to update channel', details: updateError.message },
+          { status: 500 }
+        );
+      }
+
+      channel = updatedChannel;
+      isUpdate = true;
+      console.log('Channel updated successfully:', channel);
+    } else {
+      // Insert new channel
+      console.log('Inserting new channel into Supabase:', channelData);
+      const { data: newChannel, error: insertError } = await supabase
+        .from('channels')
+        .insert(channelData)
+        .select('id')
+        .single();
+
+      if (insertError) {
+        console.error('Error inserting channel into Supabase:', insertError);
+        return NextResponse.json(
+          { error: 'Failed to create channel', details: insertError.message },
+          { status: 500 }
+        );
+      }
+
+      channel = newChannel;
+      console.log('Channel created successfully:', channel);
     }
-
-    console.log('Channel created successfully:', channel);
 
     // Update Attio with the Supabase channel ID
     const supabaseChannelId = channel.id;
@@ -126,6 +161,7 @@ export async function POST(request: NextRequest) {
         success: true,
         channelId: supabaseChannelId,
         attioUpdated: true,
+        isUpdate,
       });
     } catch (attioError) {
       console.error('Error updating Attio:', attioError);
