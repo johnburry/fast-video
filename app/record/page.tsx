@@ -848,6 +848,7 @@ export default function RecordPage() {
                 Test in new tab
               </button>
             </div>
+            </div>
           </div>
         )}
 
