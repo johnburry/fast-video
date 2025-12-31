@@ -749,30 +749,51 @@ export default function RecordPage() {
                 />
               </div>
             )}
-            <div className="bg-gray-900 rounded-lg overflow-hidden relative">
-              <MuxPlayer
-                key={videoKey}
-                ref={playerRef}
-                playbackId={playbackUrl.split('/').pop()?.replace('.m3u8', '') || ''}
-                poster={
-                  overrideVideoThumbnail && channelThumbnail
-                    ? getThumbnailUrl(channelThumbnail)
-                    : `https://image.mux.com/${playbackUrl.split('/').pop()?.replace('.m3u8', '')}/thumbnail.jpg?width=1200&height=675&fit_mode=smartcrop`
-                }
-                metadata={{
-                  video_title: 'Hello Video',
-                }}
-                onPlay={() => setShowVideoEndedOverlay(false)}
-                onEnded={() => setShowVideoEndedOverlay(true)}
-              />
-              {showVideoEndedOverlay && (
-                <div className="absolute inset-0 bg-black bg-opacity-90 flex flex-col items-center justify-center p-8 text-center">
-                  <p className="text-white text-xl md:text-2xl max-w-2xl">
-                    When it has been shared, at the end of the video, it will automatically take the viewer to the content specified above.
-                  </p>
-                </div>
-              )}
-            </div>
+            {recordingMode === 'audio' ? (
+              /* Audio Player for Audio-Only Mode */
+              <div className="bg-gray-900 rounded-lg p-8 flex justify-center">
+                <audio
+                  controls
+                  autoPlay
+                  src={playbackUrl}
+                  className="w-full max-w-2xl"
+                  onEnded={() => setShowVideoEndedOverlay(true)}
+                />
+              </div>
+            ) : (
+              /* Video Player for Video Mode */
+              <div className="bg-gray-900 rounded-lg overflow-hidden relative">
+                <MuxPlayer
+                  key={videoKey}
+                  ref={playerRef}
+                  playbackId={playbackUrl.split('/').pop()?.replace('.m3u8', '') || ''}
+                  poster={
+                    overrideVideoThumbnail && channelThumbnail
+                      ? getThumbnailUrl(channelThumbnail)
+                      : `https://image.mux.com/${playbackUrl.split('/').pop()?.replace('.m3u8', '')}/thumbnail.jpg?width=1200&height=675&fit_mode=smartcrop`
+                  }
+                  metadata={{
+                    video_title: 'Hello Video',
+                  }}
+                  onPlay={() => setShowVideoEndedOverlay(false)}
+                  onEnded={() => setShowVideoEndedOverlay(true)}
+                />
+                {showVideoEndedOverlay && (
+                  <div className="absolute inset-0 bg-black bg-opacity-90 flex flex-col items-center justify-center p-8 text-center">
+                    <p className="text-white text-xl md:text-2xl max-w-2xl">
+                      When it has been shared, at the end of the video, it will automatically take the viewer to the content specified above.
+                    </p>
+                  </div>
+                )}
+              </div>
+            )}
+            {showVideoEndedOverlay && recordingMode === 'audio' && (
+              <div className="bg-black bg-opacity-90 rounded-lg p-8 text-center">
+                <p className="text-white text-xl md:text-2xl max-w-2xl mx-auto">
+                  When it has been shared, at the end of the audio, it will automatically take the viewer to the content specified above.
+                </p>
+              </div>
+            )}
 
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
               {recordingMode === 'video' && (

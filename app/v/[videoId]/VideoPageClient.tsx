@@ -115,14 +115,28 @@ export default function VideoPageClient({ videoId }: { videoId: string }) {
         </div>
       )}
       <div className="w-full max-w-4xl">
-        <MuxPlayer
-          playbackId={videoId}
-          streamType="on-demand"
-          autoPlay
-          poster={posterUrl}
-          onEnded={handleVideoEnd}
-          style={{ width: '100%', maxHeight: '80vh' }}
-        />
+        {metadata.overrideVideoThumbnail ? (
+          /* Audio Player for Audio-Only Mode */
+          <div className="bg-gray-900 rounded-lg p-8 flex justify-center">
+            <audio
+              controls
+              autoPlay
+              src={`https://stream.mux.com/${videoId}.m3u8`}
+              className="w-full max-w-2xl"
+              onEnded={handleVideoEnd}
+            />
+          </div>
+        ) : (
+          /* Video Player for Video Mode */
+          <MuxPlayer
+            playbackId={videoId}
+            streamType="on-demand"
+            autoPlay
+            poster={posterUrl}
+            onEnded={handleVideoEnd}
+            style={{ width: '100%', maxHeight: '80vh' }}
+          />
+        )}
       </div>
     </div>
   );
