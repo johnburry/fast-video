@@ -52,6 +52,7 @@ export async function POST(request: NextRequest) {
     };
 
     // Add optional fields if they exist
+    if (body.you_tube_channel_handle) channelData.you_tube_channel_handle = body.you_tube_channel_handle;
     if (body.channel_description) channelData.channel_description = body.channel_description;
     if (body.short_name) channelData.short_name = body.short_name;
     if (body.thumbnail_url) channelData.thumbnail_url = body.thumbnail_url;
