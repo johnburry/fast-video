@@ -330,13 +330,20 @@ export async function POST(request: NextRequest) {
           } else {
             console.log(`[IMPORT] Successfully saved transcript for video ${video.videoId}`);
             // Update video to mark transcript as available
-            await supabaseAdmin
+            console.log(`[IMPORT] Updating has_transcript flag for database video ID: ${videoId}, YouTube ID: ${video.videoId}`);
+            const { error: updateError } = await supabaseAdmin
               .from('videos')
               .update({
                 has_transcript: true,
                 transcript_language: 'en',
               })
               .eq('id', videoId);
+
+            if (updateError) {
+              console.error(`[IMPORT] Error updating has_transcript flag for video ${video.videoId} (DB ID: ${videoId}):`, updateError);
+            } else {
+              console.log(`[IMPORT] Successfully updated has_transcript=true for video ${video.videoId} (DB ID: ${videoId})`);
+            }
 
             transcriptCount++;
           }
