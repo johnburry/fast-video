@@ -5,6 +5,17 @@ import { getVideoTranscript } from '@/lib/youtube/transcript';
 import { uploadThumbnailToR2, uploadChannelThumbnailToR2, uploadChannelBannerToR2 } from '@/lib/r2';
 import type { Database } from '@/lib/supabase/database.types';
 
+// Sanitize handle for use as subdomain (replace invalid characters with hyphens)
+function sanitizeHandleForSubdomain(handle: string): string {
+  // Subdomains can only contain: a-z, 0-9, and hyphens (-)
+  // Cannot start or end with hyphen, cannot have consecutive hyphens
+  return handle
+    .toLowerCase()
+    .replace(/[^a-z0-9-]/g, '-') // Replace invalid chars with hyphen
+    .replace(/^-+|-+$/g, '')      // Remove leading/trailing hyphens
+    .replace(/-{2,}/g, '-');       // Replace consecutive hyphens with single hyphen
+}
+
 // Parse relative time strings like "5 days ago" to ISO timestamp
 function parseRelativeTime(relativeTime: string): string | null {
   if (!relativeTime) return null;
@@ -135,11 +146,12 @@ export async function POST(request: NextRequest) {
         .eq('id', channelId);
     } else {
       // Create new channel
+      const sanitizedHandle = sanitizeHandleForSubdomain(channelInfo.handle);
       const { data: newChannel, error: channelError } = await supabaseAdmin
         .from('channels')
         .insert({
           youtube_channel_id: channelInfo.channelId,
-          channel_handle: channelInfo.handle,
+          channel_handle: sanitizedHandle,
           youtube_channel_handle: channelInfo.handle,
           channel_name: channelInfo.name,
           channel_description: channelInfo.description,
