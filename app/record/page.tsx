@@ -24,12 +24,6 @@ export default function RecordPage() {
   const [showDestinationModal, setShowDestinationModal] = useState(false);
   const [destinationOption, setDestinationOption] = useState<'default' | 'other'>('default');
   const [customDestination, setCustomDestination] = useState('');
-  const [showLinkPreview, setShowLinkPreview] = useState(false);
-  const [ogData, setOgData] = useState<{
-    image: string | null;
-    title: string | null;
-    description: string | null;
-  } | null>(null);
   const [showVideoEndedOverlay, setShowVideoEndedOverlay] = useState(false);
   const [overrideVideoThumbnail, setOverrideVideoThumbnail] = useState(false);
   const [videoKey, setVideoKey] = useState(0);
@@ -73,26 +67,6 @@ export default function RecordPage() {
             setChannelThumbnail(data.thumbnail);
             setChannelExternalLink(data.externalLink || null);
             setChannelExternalLinkName(data.externalLinkName || null);
-
-            // If there's an external link and no URL param override, fetch OpenGraph data
-            if (data.externalLink && !new URLSearchParams(window.location.search).get('dest')) {
-              setShowLinkPreview(true);
-              try {
-                const ogResponse = await fetch('/api/opengraph', {
-                  method: 'POST',
-                  headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify({ url: data.externalLink }),
-                });
-
-                if (ogResponse.ok) {
-                  const ogData = await ogResponse.json();
-                  setOgData(ogData);
-                  setCustomDestination(data.externalLink);
-                }
-              } catch (err) {
-                console.error('Error fetching OpenGraph data for external link:', err);
-              }
-            }
           } else {
             console.error('Channel not found for subdomain:', subdomain, 'Status:', res.status);
           }
@@ -133,27 +107,7 @@ export default function RecordPage() {
             const res = await fetch(`/api/channels/handle/${subdomain}`);
             if (res.ok) {
               const data = await res.json();
-              if (data.externalLink) {
-                // Clear old preview data before fetching new one
-                setOgData(null);
-                setShowLinkPreview(true);
-
-                // Fetch OpenGraph data for the external link
-                const ogResponse = await fetch('/api/opengraph', {
-                  method: 'POST',
-                  headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify({ url: data.externalLink }),
-                });
-
-                if (ogResponse.ok) {
-                  const ogData = await ogResponse.json();
-                  setOgData(ogData);
-                  setCustomDestination(data.externalLink);
-                }
-              } else {
-                setShowLinkPreview(false);
-                setOgData(null);
-              }
+              // No need to fetch OpenGraph data anymore
             }
           } catch (err) {
             console.error('Error refreshing external link preview:', err);
@@ -178,19 +132,6 @@ export default function RecordPage() {
       if (altDest) {
         setDestinationOption('other');
         setCustomDestination(altDest);
-        setShowLinkPreview(true);
-
-        // Fetch OpenGraph data for the destination
-        fetch('/api/opengraph', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ url: altDest }),
-        })
-          .then(res => res.ok ? res.json() : null)
-          .then(data => {
-            if (data) setOgData(data);
-          })
-          .catch(err => console.error('Error fetching OpenGraph data:', err));
       }
 
       // Detect if device is iOS or Android (to hide QR code and enable mobile uploader)
@@ -452,29 +393,6 @@ export default function RecordPage() {
   };
 
   const handleSaveDestination = async () => {
-    // Update link preview visibility based on selection
-    if (destinationOption === 'other' && customDestination) {
-      setShowLinkPreview(true);
-
-      // Fetch OpenGraph data for the custom destination
-      try {
-        const ogResponse = await fetch('/api/opengraph', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ url: customDestination }),
-        });
-
-        if (ogResponse.ok) {
-          const ogData = await ogResponse.json();
-          setOgData(ogData);
-        }
-      } catch (err) {
-        console.error('Error fetching OpenGraph data:', err);
-      }
-    } else {
-      setShowLinkPreview(false);
-      setOgData(null);
-    }
 
     // If video is already uploaded, save immediately
     if (playbackUrl) {
