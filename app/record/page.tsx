@@ -476,6 +476,9 @@ export default function RecordPage() {
       setIsUploading(true);
       setError('');
 
+      // For audio recordings, set thumbnail override to true by default
+      setOverrideVideoThumbnail(true);
+
       // Convert audio to video with channel thumbnail
       // Use proxy to avoid CORS issues
       let imageUrl = null;
@@ -851,12 +854,14 @@ export default function RecordPage() {
             </div>
 
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-              <button
-                onClick={toggleVideoThumbnail}
-                className="px-8 py-3 bg-purple-600 hover:bg-purple-700 rounded-lg font-medium transition-colors text-lg"
-              >
-                Toggle Video Thumbnail
-              </button>
+              {recordingMode === 'video' && (
+                <button
+                  onClick={toggleVideoThumbnail}
+                  className="px-8 py-3 bg-purple-600 hover:bg-purple-700 rounded-lg font-medium transition-colors text-lg"
+                >
+                  Toggle Video Thumbnail
+                </button>
+              )}
               <button
                 onClick={copyShareLink}
                 className="px-8 py-3 bg-blue-600 hover:bg-blue-700 rounded-lg font-medium transition-colors text-lg"
