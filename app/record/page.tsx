@@ -866,7 +866,7 @@ export default function RecordPage() {
                 onClick={copyShareLink}
                 className="px-8 py-3 bg-blue-600 hover:bg-blue-700 rounded-lg font-medium transition-colors text-lg"
               >
-                Copy Video Link for Sharing
+                {recordingMode === 'video' ? 'Copy Video Link for Sharing' : 'Copy Link for Sharing'}
               </button>
               <button
                 onClick={() => {
