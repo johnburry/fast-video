@@ -752,12 +752,13 @@ export default function RecordPage() {
             {recordingMode === 'audio' ? (
               /* Audio Player for Audio-Only Mode */
               <div className="bg-gray-900 rounded-lg p-8 flex justify-center">
-                <audio
-                  controls
+                <MuxPlayer
+                  playbackId={playbackUrl.split('/').pop()?.replace('.m3u8', '') || ''}
+                  streamType="on-demand"
                   autoPlay
-                  src={playbackUrl}
-                  className="w-full max-w-2xl"
+                  audio
                   onEnded={() => setShowVideoEndedOverlay(true)}
+                  style={{ width: '100%', maxWidth: '700px' }}
                 />
               </div>
             ) : (

@@ -80,7 +80,13 @@ export async function generateMetadata({
   let thumbnailUrl = metadata?.thumbnailUrl || `https://image.mux.com/${videoId}/thumbnail.jpg`;
   if (metadata?.overrideVideoThumbnail && metadata?.channelThumbnail) {
     thumbnailUrl = metadata.channelThumbnail;
+    // Ensure absolute URL for OpenGraph
+    if (!thumbnailUrl.startsWith('http://') && !thumbnailUrl.startsWith('https://')) {
+      thumbnailUrl = `https://fast.video${thumbnailUrl.startsWith('/') ? '' : '/'}${thumbnailUrl}`;
+    }
   }
+
+  console.log('generateMetadata - thumbnailUrl:', thumbnailUrl);
 
   return {
     title,

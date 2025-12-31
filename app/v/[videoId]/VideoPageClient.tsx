@@ -118,12 +118,13 @@ export default function VideoPageClient({ videoId }: { videoId: string }) {
         {metadata.overrideVideoThumbnail ? (
           /* Audio Player for Audio-Only Mode */
           <div className="bg-gray-900 rounded-lg p-8 flex justify-center">
-            <audio
-              controls
+            <MuxPlayer
+              playbackId={videoId}
+              streamType="on-demand"
               autoPlay
-              src={`https://stream.mux.com/${videoId}.m3u8`}
-              className="w-full max-w-2xl"
+              audio
               onEnded={handleVideoEnd}
+              style={{ width: '100%', maxWidth: '700px' }}
             />
           </div>
         ) : (
