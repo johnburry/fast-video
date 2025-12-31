@@ -392,9 +392,19 @@ export async function POST(request: NextRequest) {
           }
         }
 
+        // Fetch the database channel info to get the channel_handle
+        const { data: dbChannel } = await supabaseAdmin
+          .from('channels')
+          .select('channel_handle')
+          .eq('id', channelId)
+          .single();
+
         sendProgress({
           type: 'complete',
-          channel: channelInfo,
+          channel: {
+            ...channelInfo,
+            channelHandle: dbChannel?.channel_handle || channelInfo.handle,
+          },
           videosProcessed: processedCount,
           transcriptsDownloaded: transcriptCount,
           skippedExisting: skippedCount,
