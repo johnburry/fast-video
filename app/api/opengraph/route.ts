@@ -11,15 +11,38 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Trim and validate URL
+    const trimmedUrl = url.trim();
+
+    // Check if URL is valid
+    try {
+      new URL(trimmedUrl);
+    } catch (e) {
+      console.error('Invalid URL provided:', trimmedUrl);
+      return NextResponse.json(
+        { error: 'Invalid URL format' },
+        { status: 400 }
+      );
+    }
+
+    // Ensure URL starts with http:// or https://
+    if (!trimmedUrl.startsWith('http://') && !trimmedUrl.startsWith('https://')) {
+      console.error('URL must start with http:// or https://:', trimmedUrl);
+      return NextResponse.json(
+        { error: 'URL must start with http:// or https://' },
+        { status: 400 }
+      );
+    }
+
     // Fetch the HTML from the URL
-    const response = await fetch(url, {
+    const response = await fetch(trimmedUrl, {
       headers: {
         'User-Agent': 'Mozilla/5.0 (compatible; FastVideoBot/1.0; +https://fast.video)',
       },
     });
 
     if (!response.ok) {
-      console.error('Failed to fetch URL:', url, 'Status:', response.status);
+      console.error('Failed to fetch URL:', trimmedUrl, 'Status:', response.status);
       return NextResponse.json(
         { error: 'Failed to fetch URL', status: response.status },
         { status: 500 }
@@ -48,7 +71,7 @@ export async function POST(request: NextRequest) {
       image: ogImage,
       title: ogTitle,
       description: ogDescription,
-      url: url,
+      url: trimmedUrl,
     });
   } catch (error) {
     console.error('Error fetching OpenGraph data:', error);
