@@ -477,7 +477,12 @@ export default function RecordPage() {
       setError('');
 
       // Convert audio to video with channel thumbnail
-      const imageUrl = channelThumbnail ? getThumbnailUrl(channelThumbnail) : null;
+      // Use proxy to avoid CORS issues
+      let imageUrl = null;
+      if (channelThumbnail) {
+        const thumbnailUrl = getThumbnailUrl(channelThumbnail);
+        imageUrl = `/api/proxy-image?url=${encodeURIComponent(thumbnailUrl)}`;
+      }
       const videoBlob = await createVideoWithAudio(audioBlob, imageUrl);
 
       // Create upload URL
