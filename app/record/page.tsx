@@ -729,7 +729,7 @@ export default function RecordPage() {
         {isPreparing && (
           <div className="bg-gray-900 rounded-lg p-8 text-center">
             <div className="inline-block animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500 mb-4"></div>
-            <p className="text-lg">Processing your video...</p>
+            <p className="text-lg">Processing your {recordingMode === 'video' ? 'video' : 'audio'}...</p>
             <p className="text-gray-400 text-sm mt-2">This may take a minute</p>
           </div>
         )}
