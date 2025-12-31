@@ -683,9 +683,11 @@ export default function RecordPage() {
                         </button>
                       )}
                     </div>
-                    <p className="text-gray-400 text-center">
-                      Click the button to start recording your audio message
-                    </p>
+                    {!isRecording && (
+                      <p className="text-gray-400 text-center">
+                        Click the button to start recording your audio message
+                      </p>
+                    )}
                   </>
                 ) : (
                   <div className="text-center space-y-4">
