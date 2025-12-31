@@ -347,7 +347,6 @@ export async function POST(request: NextRequest) {
               .from('videos')
               .update({
                 has_transcript: true,
-                transcript_language: 'en',
               })
               .eq('id', videoId)
               .select();
