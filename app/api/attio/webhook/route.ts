@@ -37,24 +37,12 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Validate required fields for channels table
-    if (!body.youtube_channel_id || !body.channel_handle || !body.channel_name) {
-      console.error('Missing required fields:', {
-        youtube_channel_id: body.youtube_channel_id,
-        channel_handle: body.channel_handle,
-        channel_name: body.channel_name
-      });
-      return NextResponse.json(
-        { error: 'Missing required fields: youtube_channel_id, channel_handle, channel_name' },
-        { status: 400 }
-      );
-    }
-
     // Prepare channel data for insertion
+    // Use empty strings for missing required fields instead of failing
     const channelData: any = {
-      youtube_channel_id: body.youtube_channel_id,
-      channel_handle: body.channel_handle,
-      channel_name: body.channel_name,
+      youtube_channel_id: body.youtube_channel_id || '',
+      channel_handle: body.channel_handle || '',
+      channel_name: body.channel_name || '',
     };
 
     // Add optional fields if they exist
