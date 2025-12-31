@@ -38,10 +38,10 @@ export async function POST(request: NextRequest) {
     }
 
     // Prepare channel data for insertion
-    // Use empty strings for missing required fields instead of failing
+    // Use attio_list_entry_id for channel_handle if not provided to ensure uniqueness
     const channelData: any = {
       youtube_channel_id: body.youtube_channel_id || '',
-      channel_handle: body.channel_handle || '',
+      channel_handle: body.channel_handle || attioListEntryId,
       channel_name: body.channel_name || '',
     };
 
