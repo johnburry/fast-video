@@ -77,16 +77,24 @@ export async function generateMetadata({
   console.log('generateMetadata - final title:', title);
 
   // Use channel thumbnail if override is true, otherwise use video thumbnail
-  let thumbnailUrl = metadata?.thumbnailUrl || `https://image.mux.com/${videoId}/thumbnail.jpg`;
+  let thumbnailUrl = `https://image.mux.com/${videoId}/thumbnail.jpg`;
+
   if (metadata?.overrideVideoThumbnail && metadata?.channelThumbnail) {
+    // Use channel thumbnail for audio-only
     thumbnailUrl = metadata.channelThumbnail;
-    // Ensure absolute URL for OpenGraph
-    if (!thumbnailUrl.startsWith('http://') && !thumbnailUrl.startsWith('https://')) {
-      thumbnailUrl = `https://fast.video${thumbnailUrl.startsWith('/') ? '' : '/'}${thumbnailUrl}`;
-    }
+  } else if (metadata?.thumbnailUrl) {
+    // Use video's custom thumbnail if set
+    thumbnailUrl = metadata.thumbnailUrl;
   }
 
-  console.log('generateMetadata - thumbnailUrl:', thumbnailUrl);
+  // Ensure absolute URL for OpenGraph
+  if (!thumbnailUrl.startsWith('http://') && !thumbnailUrl.startsWith('https://')) {
+    thumbnailUrl = `https://fast.video${thumbnailUrl.startsWith('/') ? '' : '/'}${thumbnailUrl}`;
+  }
+
+  console.log('generateMetadata - thumbnailUrl for OpenGraph:', thumbnailUrl);
+  console.log('generateMetadata - overrideVideoThumbnail:', metadata?.overrideVideoThumbnail);
+  console.log('generateMetadata - channelThumbnail:', metadata?.channelThumbnail);
 
   return {
     title,
