@@ -396,6 +396,24 @@ export default function RecordPage() {
       setIsUploading(true);
       setError('');
 
+      // Convert audio to video with channel thumbnail
+      const formData = new FormData();
+      formData.append('audio', audioBlob);
+      if (channelThumbnail) {
+        formData.append('imageUrl', getThumbnailUrl(channelThumbnail));
+      }
+
+      const convertRes = await fetch('/api/audio-to-video', {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (!convertRes.ok) {
+        throw new Error('Failed to convert audio to video');
+      }
+
+      const videoBlob = await convertRes.blob();
+
       // Create upload URL
       const uploadUrlRes = await fetch('/api/mux/upload', { method: 'POST' });
       if (!uploadUrlRes.ok) {
@@ -404,17 +422,17 @@ export default function RecordPage() {
       const { id, url } = await uploadUrlRes.json();
       setUploadId(id);
 
-      // Upload audio file to Mux
+      // Upload video file to Mux
       const uploadRes = await fetch(url, {
         method: 'PUT',
-        body: audioBlob,
+        body: videoBlob,
         headers: {
-          'Content-Type': 'audio/webm',
+          'Content-Type': 'video/mp4',
         },
       });
 
       if (!uploadRes.ok) {
-        throw new Error('Failed to upload audio');
+        throw new Error('Failed to upload video');
       }
 
       setIsPreparing(true);
