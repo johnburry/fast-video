@@ -691,7 +691,13 @@ export default function RecordPage() {
                   <div className="text-center space-y-4">
                     <div className="bg-green-900 border border-green-700 rounded-lg p-6">
                       <p className="text-green-300 text-lg mb-2">✓ Audio recorded successfully!</p>
-                      <p className="text-gray-300">Duration: {formatTime(recordingTime)}</p>
+                      <p className="text-gray-300 mb-4">Duration: {formatTime(recordingTime)}</p>
+                      <audio
+                        controls
+                        src={URL.createObjectURL(audioBlob)}
+                        className="w-full max-w-md mx-auto"
+                        style={{ marginTop: '1rem' }}
+                      />
                     </div>
                     <div className="flex gap-4 justify-center">
                       <button
