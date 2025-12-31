@@ -62,7 +62,7 @@ export async function POST(request: NextRequest) {
     if (body.external_link_name) channelData.external_link_name = body.external_link_name;
     if (body.hello_video_url) channelData.hello_video_url = body.hello_video_url;
     if (body.subscription_type) channelData.subscription_type = body.subscription_type;
-    if (body.subscription_start_date) channelData.subscription_start_date = body.subscription_start_date;
+    // subscription_start_date is ignored - managed manually in admin panel
     if (body.channel_history) channelData.channel_history = body.channel_history;
     if (body.is_active !== undefined) channelData.is_active = body.is_active;
     if (body.last_synced_at) channelData.last_synced_at = body.last_synced_at;
