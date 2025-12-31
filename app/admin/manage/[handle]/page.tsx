@@ -263,14 +263,24 @@ export default function ManageChannelPage({
                 Manage Channel
               </h1>
               <p className="text-gray-600 mb-2">@{channel.handle}</p>
-              <a
-                href={`https://${channel.handle}.fast.video`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-blue-600 hover:text-blue-800 underline text-sm"
-              >
-                View Channel →
-              </a>
+              <div className="flex items-center gap-4">
+                <a
+                  href={`https://${channel.handle}.fast.video`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-blue-600 hover:text-blue-800 underline text-sm"
+                >
+                  View Channel →
+                </a>
+                <a
+                  href={`https://fast.video/admin?channel=${channel.youtubeHandle || '@' + channel.handle}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-green-600 hover:text-green-800 underline text-sm"
+                >
+                  Import Channel →
+                </a>
+              </div>
             </div>
             <button
               onClick={handleSave}
