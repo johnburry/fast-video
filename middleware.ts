@@ -5,13 +5,20 @@ export function middleware(request: NextRequest) {
   const url = request.nextUrl.clone()
   const hostname = request.headers.get('host') || ''
 
+  console.log('===== MIDDLEWARE START =====')
+  console.log('Middleware - full URL:', request.url)
   console.log('Middleware - pathname:', url.pathname)
+  console.log('Middleware - pathname length:', url.pathname.length)
+  console.log('Middleware - pathname === "/":', url.pathname === '/')
   console.log('Middleware - hostname:', hostname)
+  console.log('Middleware - search:', url.search)
 
   // Check if this is a URL shortcut pattern FIRST (before subdomain check)
   // This handles URLs like fast.video/https://example.com
   const decodedPathname = decodeURIComponent(url.pathname)
   console.log('Middleware - decodedPathname:', decodedPathname)
+  console.log('Middleware - includes http://:', decodedPathname.includes('http://'))
+  console.log('Middleware - includes https://:', decodedPathname.includes('https://'))
 
   if (decodedPathname.includes('http://') || decodedPathname.includes('https://')) {
     console.log('Middleware - URL shortcut pattern detected, allowing through')
