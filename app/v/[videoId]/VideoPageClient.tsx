@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import MuxPlayer from '@mux/mux-player-react';
 
 interface VideoMetadata {
@@ -16,6 +16,8 @@ interface VideoMetadata {
 export default function VideoPageClient({ videoId }: { videoId: string }) {
   const [metadata, setMetadata] = useState<VideoMetadata | null>(null);
   const [redirecting, setRedirecting] = useState(false);
+  const [showAudioPlayer, setShowAudioPlayer] = useState(false);
+  const audioPlayerRef = useRef<any>(null);
 
   useEffect(() => {
     const fetchMetadata = async () => {
@@ -118,27 +120,45 @@ export default function VideoPageClient({ videoId }: { videoId: string }) {
     <div className="min-h-screen bg-black flex flex-col items-center justify-center p-4">
       {/* Channel Thumbnail for Audio-Only (when override is true) */}
       {metadata.overrideVideoThumbnail && metadata.channelThumbnail && (
-        <div className="mb-6 max-w-2xl w-full">
+        <div className="mb-6 max-w-2xl w-full flex flex-col items-center">
           <img
             src={metadata.channelThumbnail}
             alt={metadata.channelName || 'Channel'}
             className="rounded-lg w-full"
           />
+          {!showAudioPlayer && (
+            <button
+              onClick={() => {
+                setShowAudioPlayer(true);
+                // Small delay to ensure player is mounted before playing
+                setTimeout(() => {
+                  if (audioPlayerRef.current) {
+                    audioPlayerRef.current.play();
+                  }
+                }, 100);
+              }}
+              className="mt-6 px-8 py-3 bg-blue-600 hover:bg-blue-700 rounded-full font-medium transition-colors text-lg shadow-lg"
+            >
+              Play Audio
+            </button>
+          )}
         </div>
       )}
       <div className="w-full max-w-4xl">
         {metadata.overrideVideoThumbnail ? (
           /* Audio Player for Audio-Only Mode */
-          <div className="bg-gray-900 rounded-lg p-8 flex justify-center">
-            <MuxPlayer
-              playbackId={videoId}
-              streamType="on-demand"
-              autoPlay
-              audio
-              onEnded={handleVideoEnd}
-              style={{ width: '100%', maxWidth: '700px' }}
-            />
-          </div>
+          showAudioPlayer && (
+            <div className="bg-gray-900 rounded-lg p-8 flex justify-center">
+              <MuxPlayer
+                ref={audioPlayerRef}
+                playbackId={videoId}
+                streamType="on-demand"
+                audio
+                onEnded={handleVideoEnd}
+                style={{ width: '100%', maxWidth: '700px' }}
+              />
+            </div>
+          )
         ) : (
           /* Video Player for Video Mode */
           <MuxPlayer
