@@ -70,9 +70,12 @@ export async function generateMetadata({
 
   // Use short_name if available, otherwise fall back to channel_name
   const displayName = metadata?.channelShortName || metadata?.channelName;
+
+  // Use "A Fast Audio" for audio-only recordings (when override is true)
+  const contentType = metadata?.overrideVideoThumbnail ? 'Audio' : 'Video';
   const title = displayName
-    ? `A Fast Video from ${displayName}`
-    : 'A Fast Video';
+    ? `A Fast ${contentType} from ${displayName}`
+    : `A Fast ${contentType}`;
 
   console.log('generateMetadata - final title:', title);
 
