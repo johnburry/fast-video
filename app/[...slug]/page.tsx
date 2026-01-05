@@ -32,15 +32,33 @@ export default function CatchAllPage() {
     console.log('CatchAllPage - fullPath:', fullPath);
     console.log('CatchAllPage - window.location.pathname:', window.location.pathname);
 
-    // Check if this looks like a URL (contains http:// or https://)
-    if (fullPath.includes('http://') || fullPath.includes('https://')) {
-      // Extract the destination URL - start from "http" or "https"
-      const httpIndex = fullPath.indexOf('http://');
-      const httpsIndex = fullPath.indexOf('https://');
-      const startIndex = httpIndex !== -1 ? httpIndex : httpsIndex;
+    // Check if this looks like a URL (contains http:// or https:/)
+    // Note: browsers normalize https:// to https:/ in pathnames
+    if (fullPath.includes('http://') || fullPath.includes('https://') ||
+        fullPath.includes('http:/') || fullPath.includes('https:/')) {
 
-      if (startIndex !== -1) {
-        const extractedUrl = fullPath.substring(startIndex);
+      // Try to extract the destination URL
+      // First try with double slashes, then single slash
+      let extractedUrl = '';
+
+      const httpDoubleIndex = fullPath.indexOf('http://');
+      const httpsDoubleIndex = fullPath.indexOf('https://');
+      const httpSingleIndex = fullPath.indexOf('http:/');
+      const httpsSingleIndex = fullPath.indexOf('https:/');
+
+      if (httpDoubleIndex !== -1) {
+        extractedUrl = fullPath.substring(httpDoubleIndex);
+      } else if (httpsDoubleIndex !== -1) {
+        extractedUrl = fullPath.substring(httpsDoubleIndex);
+      } else if (httpSingleIndex !== -1) {
+        // Normalize single slash to double slash
+        extractedUrl = fullPath.substring(httpSingleIndex).replace('http:/', 'http://');
+      } else if (httpsSingleIndex !== -1) {
+        // Normalize single slash to double slash
+        extractedUrl = fullPath.substring(httpsSingleIndex).replace('https:/', 'https://');
+      }
+
+      if (extractedUrl) {
         console.log('CatchAllPage - extractedUrl:', extractedUrl);
         setDestinationUrl(extractedUrl);
         setShowModal(true);
