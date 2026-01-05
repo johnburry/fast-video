@@ -15,12 +15,16 @@ export function middleware(request: NextRequest) {
 
   // Check if this is a URL shortcut pattern FIRST (before subdomain check)
   // This handles URLs like fast.video/https://example.com
+  // Note: browsers normalize https:// to https:/ in the pathname
   const decodedPathname = decodeURIComponent(url.pathname)
   console.log('Middleware - decodedPathname:', decodedPathname)
   console.log('Middleware - includes http://:', decodedPathname.includes('http://'))
   console.log('Middleware - includes https://:', decodedPathname.includes('https://'))
+  console.log('Middleware - includes http:/:', decodedPathname.includes('http:/'))
+  console.log('Middleware - includes https:/:', decodedPathname.includes('https:/'))
 
-  if (decodedPathname.includes('http://') || decodedPathname.includes('https://')) {
+  if (decodedPathname.includes('http://') || decodedPathname.includes('https://') ||
+      decodedPathname.includes('http:/') || decodedPathname.includes('https:/')) {
     console.log('Middleware - URL shortcut pattern detected, allowing through')
     return NextResponse.next()
   }
