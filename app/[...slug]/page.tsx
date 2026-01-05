@@ -10,28 +10,50 @@ export default function CatchAllPage() {
   const [showModal, setShowModal] = useState(false);
   const [destinationUrl, setDestinationUrl] = useState('');
   const [error, setError] = useState('');
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     // Get the slug array from params
     const slug = params.slug as string[];
 
+    console.log('CatchAllPage - params:', params);
+    console.log('CatchAllPage - slug:', slug);
+    console.log('CatchAllPage - slug type:', typeof slug);
+    console.log('CatchAllPage - slug is array:', Array.isArray(slug));
+
     if (!slug || slug.length === 0) {
+      console.log('CatchAllPage - no slug, redirecting to home');
+      router.push('/');
       return;
     }
 
     // Reconstruct the full URL from the slug
     const fullPath = slug.join('/');
+    console.log('CatchAllPage - fullPath:', fullPath);
+    console.log('CatchAllPage - window.location.pathname:', window.location.pathname);
 
     // Check if this looks like a URL (contains http:// or https://)
     if (fullPath.includes('http://') || fullPath.includes('https://')) {
-      // Extract the destination URL
-      const urlMatch = fullPath.match(/(https?:\/\/.+)/);
-      if (urlMatch) {
-        setDestinationUrl(urlMatch[1]);
+      // Extract the destination URL - start from "http" or "https"
+      const httpIndex = fullPath.indexOf('http://');
+      const httpsIndex = fullPath.indexOf('https://');
+      const startIndex = httpIndex !== -1 ? httpIndex : httpsIndex;
+
+      if (startIndex !== -1) {
+        const extractedUrl = fullPath.substring(startIndex);
+        console.log('CatchAllPage - extractedUrl:', extractedUrl);
+        setDestinationUrl(extractedUrl);
         setShowModal(true);
+        setIsLoading(false);
+      } else {
+        console.log('CatchAllPage - no URL found, redirecting to home');
+        router.push('/');
       }
+    } else {
+      console.log('CatchAllPage - no http/https found in path, redirecting to home');
+      router.push('/');
     }
-  }, [params]);
+  }, [params, router]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -64,6 +86,17 @@ export default function CatchAllPage() {
 
     window.location.href = targetUrl;
   };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-black text-white flex items-center justify-center">
+        <div className="text-center">
+          <div className="inline-block animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500 mb-4"></div>
+          <p className="text-lg">Processing URL...</p>
+        </div>
+      </div>
+    );
+  }
 
   if (!showModal) {
     return null;
