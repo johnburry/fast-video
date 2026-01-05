@@ -20,9 +20,23 @@ export default function CatchAllPage() {
     console.log('CatchAllPage - slug:', slug);
     console.log('CatchAllPage - slug type:', typeof slug);
     console.log('CatchAllPage - slug is array:', Array.isArray(slug));
+    console.log('CatchAllPage - window.location:', window.location.href);
 
-    if (!slug || slug.length === 0) {
-      console.log('CatchAllPage - no slug, redirecting to home');
+    // Prevent redirect if we're still on a URL shortcut path
+    if (window.location.pathname.includes('http:/') || window.location.pathname.includes('https:/')) {
+      console.log('CatchAllPage - URL shortcut detected in pathname, waiting for params');
+
+      if (!slug || slug.length === 0) {
+        console.log('CatchAllPage - slug not loaded yet, waiting...');
+        // Don't redirect yet, params might still be loading
+        setTimeout(() => {
+          // Force a re-check after a brief delay
+          console.log('CatchAllPage - retrying after delay');
+        }, 100);
+        return;
+      }
+    } else if (!slug || slug.length === 0) {
+      console.log('CatchAllPage - no slug and no URL shortcut in pathname, redirecting to home');
       router.push('/');
       return;
     }
