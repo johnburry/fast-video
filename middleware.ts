@@ -27,6 +27,12 @@ export function middleware(request: NextRequest) {
     }
   }
 
+  // If no subdomain, check if this is a URL shortcut pattern (e.g., /https://example.com)
+  if (!subdomain && (url.pathname.includes('http://') || url.pathname.includes('https://'))) {
+    // Allow catch-all route to handle URL shortcut pattern
+    return NextResponse.next()
+  }
+
   // If no subdomain and we're on the root path (bare domain), redirect to reorbit.com
   if (!subdomain && url.pathname === '/' && !hostname.includes('localhost')) {
     return NextResponse.redirect('https://reorbit.com')
