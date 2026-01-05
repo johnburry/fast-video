@@ -5,6 +5,19 @@ export function middleware(request: NextRequest) {
   const url = request.nextUrl.clone()
   const hostname = request.headers.get('host') || ''
 
+  console.log('Middleware - pathname:', url.pathname)
+  console.log('Middleware - hostname:', hostname)
+
+  // Check if this is a URL shortcut pattern FIRST (before subdomain check)
+  // This handles URLs like fast.video/https://example.com
+  const decodedPathname = decodeURIComponent(url.pathname)
+  console.log('Middleware - decodedPathname:', decodedPathname)
+
+  if (decodedPathname.includes('http://') || decodedPathname.includes('https://')) {
+    console.log('Middleware - URL shortcut pattern detected, allowing through')
+    return NextResponse.next()
+  }
+
   // Extract subdomain from hostname
   // Expected formats:
   // - channelhandle.fast.video
@@ -27,14 +40,9 @@ export function middleware(request: NextRequest) {
     }
   }
 
-  // If no subdomain, check if this is a URL shortcut pattern (e.g., /https://example.com)
-  if (!subdomain && (url.pathname.includes('http://') || url.pathname.includes('https://'))) {
-    // Allow catch-all route to handle URL shortcut pattern
-    return NextResponse.next()
-  }
-
   // If no subdomain and we're on the root path (bare domain), redirect to reorbit.com
   if (!subdomain && url.pathname === '/' && !hostname.includes('localhost')) {
+    console.log('Middleware - bare domain root, redirecting to reorbit.com')
     return NextResponse.redirect('https://reorbit.com')
   }
 
