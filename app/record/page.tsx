@@ -33,6 +33,7 @@ export default function RecordPage() {
   const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
   const [audioBlobUrl, setAudioBlobUrl] = useState<string | null>(null);
   const [recordingTime, setRecordingTime] = useState(0);
+  const [audioMimeType, setAudioMimeType] = useState<string>('audio/webm');
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
   const recordingTimerRef = useRef<NodeJS.Timeout | null>(null);
@@ -291,7 +292,27 @@ export default function RecordPage() {
   const startAudioRecording = async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      const mediaRecorder = new MediaRecorder(stream);
+
+      // Determine the best supported audio format
+      let mimeType = 'audio/webm';
+      let options: MediaRecorderOptions | undefined = undefined;
+
+      // Safari supports audio/mp4 but not audio/webm
+      if (MediaRecorder.isTypeSupported('audio/mp4')) {
+        mimeType = 'audio/mp4';
+        options = { mimeType: 'audio/mp4' };
+      } else if (MediaRecorder.isTypeSupported('audio/webm;codecs=opus')) {
+        mimeType = 'audio/webm;codecs=opus';
+        options = { mimeType: 'audio/webm;codecs=opus' };
+      } else if (MediaRecorder.isTypeSupported('audio/webm')) {
+        mimeType = 'audio/webm';
+        options = { mimeType: 'audio/webm' };
+      }
+
+      console.log('Using audio MIME type:', mimeType);
+      setAudioMimeType(mimeType);
+
+      const mediaRecorder = options ? new MediaRecorder(stream, options) : new MediaRecorder(stream);
       mediaRecorderRef.current = mediaRecorder;
       audioChunksRef.current = [];
 
@@ -302,7 +323,7 @@ export default function RecordPage() {
       };
 
       mediaRecorder.onstop = () => {
-        const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
+        const audioBlob = new Blob(audioChunksRef.current, { type: mimeType });
         setAudioBlob(audioBlob);
 
         // Convert blob to data URL for Safari compatibility
@@ -363,7 +384,7 @@ export default function RecordPage() {
         method: 'PUT',
         body: audioBlob,
         headers: {
-          'Content-Type': 'audio/webm',
+          'Content-Type': audioMimeType,
         },
       });
 
