@@ -496,28 +496,30 @@ export default function RecordPage() {
             </span>
           </h1>
 
-          {/* Recording Mode Toggle */}
-          <div className="mb-6 flex gap-4 items-center">
-            <button
-              onClick={() => setRecordingMode('video')}
-              className={`px-6 py-3 rounded-lg font-medium transition-colors ${
-                recordingMode === 'video'
-                  ? 'bg-blue-600 text-white'
-                  : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
-              }`}
-            >
-              📹 Video
-            </button>
-            <button
-              onClick={() => setRecordingMode('audio')}
-              className={`px-6 py-3 rounded-lg font-medium transition-colors ${
-                recordingMode === 'audio'
-                  ? 'bg-blue-600 text-white'
-                  : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
-              }`}
-            >
-              🎙️ Audio Only
-            </button>
+          {/* Recording Mode Tabs */}
+          <div className="mb-6">
+            <div className="flex border-b border-gray-700">
+              <button
+                onClick={() => setRecordingMode('video')}
+                className={`px-6 py-3 font-medium transition-colors border-b-2 ${
+                  recordingMode === 'video'
+                    ? 'border-blue-500 text-blue-500'
+                    : 'border-transparent text-gray-400 hover:text-gray-300 hover:border-gray-600'
+                }`}
+              >
+                📹 Video
+              </button>
+              <button
+                onClick={() => setRecordingMode('audio')}
+                className={`px-6 py-3 font-medium transition-colors border-b-2 ${
+                  recordingMode === 'audio'
+                    ? 'border-blue-500 text-blue-500'
+                    : 'border-transparent text-gray-400 hover:text-gray-300 hover:border-gray-600'
+                }`}
+              >
+                🎙️ Audio Only
+              </button>
+            </div>
           </div>
           {channelName && (
             <div className="bg-white rounded-lg p-6 md:p-8 flex flex-col items-center gap-4">
@@ -575,7 +577,7 @@ export default function RecordPage() {
         )}
 
         {!playbackUrl && !isPreparing && (
-          <div className="bg-gray-900 rounded-lg p-8">
+          <div className="bg-gray-900 rounded-lg p-8 border-2 border-gray-700">
             {recordingMode === 'video' ? (
               <div className="flex flex-col md:flex-row gap-8 items-center md:items-start justify-center">
                 {/* Upload Section */}
