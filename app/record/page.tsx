@@ -522,51 +522,55 @@ export default function RecordPage() {
             </div>
           </div>
           {channelName && (
-            <div className="bg-white rounded-lg p-6 md:p-8 flex flex-col items-center gap-4">
-              <p className="text-gray-600 text-center text-base md:text-2xl">
-                A Fast Video is a quick video (or audio recording) you can record here, it's uploaded to the cloud and you get a link to share with others.
-              </p>
-              <p className="text-gray-600 text-center text-base md:text-2xl">
-                When it has been shared, at the end of the video, it will automatically take the viewer to this content:
-              </p>
-              <div className="text-center">
-                {destinationOption === 'other' && customDestination ? (
-                  <a
-                    href={customDestination}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-gray-600 hover:text-blue-600 underline text-base md:text-2xl"
-                  >
-                    {customDestination}
-                  </a>
-                ) : channelExternalLink && channelExternalLinkName ? (
-                  <a
-                    href={channelExternalLink}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-gray-600 hover:text-blue-600 underline text-base md:text-2xl"
-                  >
-                    {channelExternalLinkName}
-                  </a>
-                ) : (
-                  <a
-                    href={channelHandle ? `/${channelHandle}` : '/'}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-gray-600 hover:text-blue-600 underline text-base md:text-2xl"
-                  >
-                    Fast.Video Channel Page
-                  </a>
-                )}
-                {' '}
-                <button
-                  onClick={() => setShowDestinationModal(true)}
-                  className="text-blue-600 hover:text-blue-800 underline text-base md:text-2xl"
-                >
-                  (change)
-                </button>
+            <>
+              <div className="bg-white rounded-lg p-6 md:p-8 flex flex-col items-center gap-4 mb-4">
+                <p className="text-gray-600 text-center text-base md:text-2xl">
+                  A Fast Video is a quick video (or audio recording) you can record here, it's uploaded to the cloud and you get a link to share with others.
+                </p>
               </div>
-            </div>
+              <div className="bg-white rounded-lg p-6 md:p-8 flex flex-col items-center gap-4">
+                <p className="text-gray-600 text-center text-base md:text-2xl">
+                  When it has been shared, at the end of the video, it will automatically take the viewer to this content:
+                </p>
+                <div className="text-center">
+                  {destinationOption === 'other' && customDestination ? (
+                    <a
+                      href={customDestination}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-gray-600 hover:text-blue-600 underline text-base md:text-2xl"
+                    >
+                      {customDestination}
+                    </a>
+                  ) : channelExternalLink && channelExternalLinkName ? (
+                    <a
+                      href={channelExternalLink}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-gray-600 hover:text-blue-600 underline text-base md:text-2xl"
+                    >
+                      {channelExternalLinkName}
+                    </a>
+                  ) : (
+                    <a
+                      href={channelHandle ? `/${channelHandle}` : '/'}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-gray-600 hover:text-blue-600 underline text-base md:text-2xl"
+                    >
+                      Fast.Video Channel Page
+                    </a>
+                  )}
+                  {' '}
+                  <button
+                    onClick={() => setShowDestinationModal(true)}
+                    className="text-blue-600 hover:text-blue-800 underline text-base md:text-2xl"
+                  >
+                    (change)
+                  </button>
+                </div>
+              </div>
+            </>
           )}
         </div>
 
