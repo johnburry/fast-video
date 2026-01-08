@@ -75,7 +75,17 @@ export function middleware(request: NextRequest) {
 
   if (!subdomain && url.pathname === '/' && !hostname.includes('localhost')) {
     console.log('Middleware - bare domain root, redirecting to reorbit.com')
-    return NextResponse.redirect('https://reorbit.com')
+    console.log('Middleware - ABOUT TO REDIRECT - pathname was:', url.pathname)
+    console.log('Middleware - ABOUT TO REDIRECT - full URL was:', request.url)
+
+    // Add debugging: Instead of redirecting, temporarily show debug info
+    // return NextResponse.redirect('https://reorbit.com')
+
+    // Temporarily redirect to debug page to see what's happening
+    const debugUrl = new URL('/debug-url', request.url)
+    debugUrl.searchParams.set('original_url', request.url)
+    debugUrl.searchParams.set('pathname', url.pathname)
+    return NextResponse.redirect(debugUrl)
   }
 
   // If no subdomain, block access to /update (only accessible from subdomains)
