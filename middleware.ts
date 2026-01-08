@@ -23,7 +23,13 @@ export function middleware(request: NextRequest) {
   console.log('Middleware - includes http:/:', decodedPathname.includes('http:/'))
   console.log('Middleware - includes https:/:', decodedPathname.includes('https:/'))
 
-  if (decodedPathname.includes('http://') || decodedPathname.includes('https://') ||
+  // Check if pathname starts with a URL pattern (not just includes it)
+  // This catches /https://example.com or /http://example.com
+  const startsWithUrlPattern = decodedPathname.match(/^\/(https?:\/\/|https?:\/)/i)
+  console.log('Middleware - startsWithUrlPattern:', startsWithUrlPattern)
+
+  if (startsWithUrlPattern ||
+      decodedPathname.includes('http://') || decodedPathname.includes('https://') ||
       decodedPathname.includes('http:/') || decodedPathname.includes('https:/')) {
     console.log('Middleware - URL shortcut pattern detected, allowing through')
     return NextResponse.next()
@@ -52,6 +58,7 @@ export function middleware(request: NextRequest) {
   }
 
   // If no subdomain and we're on the root path (bare domain), redirect to reorbit.com
+  // BUT: don't redirect if this is a URL shortcut (already checked above and would have returned)
   if (!subdomain && url.pathname === '/' && !hostname.includes('localhost')) {
     console.log('Middleware - bare domain root, redirecting to reorbit.com')
     return NextResponse.redirect('https://reorbit.com')
