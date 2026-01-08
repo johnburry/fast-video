@@ -529,8 +529,8 @@ export default function RecordPage() {
                 </p>
               </div>
               <div className="bg-yellow-200 rounded-lg p-6 md:p-8 relative">
-                <div className="flex items-center gap-6">
-                  <div className="flex-1 flex flex-col items-center gap-4">
+                <div className="flex flex-col md:flex-row items-center gap-4 md:gap-6">
+                  <div className="flex-1 flex flex-col items-center gap-4 w-full">
                     <p className="text-gray-600 text-center text-base md:text-2xl">
                       When it has been shared, at the end of the video, it will automatically take the viewer to this content:
                     </p>
@@ -572,8 +572,8 @@ export default function RecordPage() {
                       </button>
                     </div>
                   </div>
-                  <div className="w-32 h-32 flex-shrink-0 opacity-30">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" fill="black" viewBox="0 0 16 16">
+                  <div className="w-24 h-24 md:w-32 md:h-32 flex-shrink-0 opacity-30">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="100%" height="100%" fill="black" viewBox="0 0 16 16">
                       <path fillRule="evenodd" d="M8.636 3.5a.5.5 0 0 0-.5-.5H1.5A1.5 1.5 0 0 0 0 4.5v10A1.5 1.5 0 0 0 1.5 16h10a1.5 1.5 0 0 0 1.5-1.5V7.864a.5.5 0 0 0-1 0V14.5a.5.5 0 0 1-.5.5h-10a.5.5 0 0 1-.5-.5v-10a.5.5 0 0 1 .5-.5h6.636a.5.5 0 0 0 .5-.5z"/>
                       <path fillRule="evenodd" d="M16 .5a.5.5 0 0 0-.5-.5h-5a.5.5 0 0 0 0 1h3.793L6.146 9.146a.5.5 0 1 0 .708.708L15 1.707V5.5a.5.5 0 0 0 1 0v-5z"/>
                     </svg>
