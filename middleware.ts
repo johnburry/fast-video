@@ -67,6 +67,12 @@ export function middleware(request: NextRequest) {
 
   // If no subdomain and we're on the root path (bare domain), redirect to reorbit.com
   // BUT: don't redirect if this is a URL shortcut (already checked above and would have returned)
+  console.log('Middleware - Checking redirect condition:')
+  console.log('  - subdomain:', subdomain)
+  console.log('  - url.pathname:', url.pathname)
+  console.log('  - hostname.includes(localhost):', hostname.includes('localhost'))
+  console.log('  - Will redirect?:', !subdomain && url.pathname === '/' && !hostname.includes('localhost'))
+
   if (!subdomain && url.pathname === '/' && !hostname.includes('localhost')) {
     console.log('Middleware - bare domain root, redirecting to reorbit.com')
     return NextResponse.redirect('https://reorbit.com')
