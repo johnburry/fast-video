@@ -15,16 +15,30 @@ export function middleware(request: NextRequest) {
 
   // Check if this is a URL shortcut pattern FIRST (before subdomain check)
   // This handles URLs like fast.video/https://example.com
-  // Note: browsers normalize https:// to https:/ in the pathname
+  // The pathname might be encoded, so check both encoded and decoded versions
+  const rawPathname = url.pathname
   const decodedPathname = decodeURIComponent(url.pathname)
-  console.log('Middleware - decodedPathname:', decodedPathname)
-  console.log('Middleware - includes http://:', decodedPathname.includes('http://'))
-  console.log('Middleware - includes https://:', decodedPathname.includes('https://'))
-  console.log('Middleware - includes http:/:', decodedPathname.includes('http:/'))
-  console.log('Middleware - includes https:/:', decodedPathname.includes('https:/'))
 
-  if (decodedPathname.includes('http://') || decodedPathname.includes('https://') ||
-      decodedPathname.includes('http:/') || decodedPathname.includes('https:/')) {
+  console.log('Middleware - rawPathname:', rawPathname)
+  console.log('Middleware - decodedPathname:', decodedPathname)
+  console.log('Middleware - raw includes http:', rawPathname.toLowerCase().includes('http'))
+  console.log('Middleware - decoded includes http:', decodedPathname.toLowerCase().includes('http'))
+
+  // Check both raw and decoded pathnames for URL patterns
+  // This catches: /https://example.com, /http://example.com, /https:/example.com, etc.
+  const hasUrlPattern =
+    rawPathname.toLowerCase().includes('http://') ||
+    rawPathname.toLowerCase().includes('https://') ||
+    rawPathname.toLowerCase().includes('http:/') ||
+    rawPathname.toLowerCase().includes('https:/') ||
+    decodedPathname.toLowerCase().includes('http://') ||
+    decodedPathname.toLowerCase().includes('https://') ||
+    decodedPathname.toLowerCase().includes('http:/') ||
+    decodedPathname.toLowerCase().includes('https:/')
+
+  console.log('Middleware - hasUrlPattern:', hasUrlPattern)
+
+  if (hasUrlPattern) {
     console.log('Middleware - URL shortcut pattern detected, allowing through')
     return NextResponse.next()
   }
@@ -52,6 +66,7 @@ export function middleware(request: NextRequest) {
   }
 
   // If no subdomain and we're on the root path (bare domain), redirect to reorbit.com
+  // BUT: don't redirect if this is a URL shortcut (already checked above and would have returned)
   if (!subdomain && url.pathname === '/' && !hostname.includes('localhost')) {
     console.log('Middleware - bare domain root, redirecting to reorbit.com')
     return NextResponse.redirect('https://reorbit.com')
