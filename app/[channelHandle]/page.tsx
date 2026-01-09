@@ -695,50 +695,52 @@ export default function ChannelPage({
       {/* Mux Video Modal (from ?v= parameter) */}
       {muxVideoId && (
         <div
-          className="fixed inset-0 bg-black bg-opacity-75 flex items-start justify-center z-50 p-4"
+          className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50"
           onClick={() => setMuxVideoId(null)}
         >
-          <div className="w-full flex flex-col" style={{ maxWidth: '90vw', height: '80vh' }} onClick={(e) => e.stopPropagation()}>
-            <div className="bg-white rounded-lg overflow-hidden flex-1" style={{ backgroundColor: '#000' }}>
-              <MuxPlayer
-                playbackId={muxVideoId}
-                streamType="on-demand"
-                poster={`https://image.mux.com/${muxVideoId}/thumbnail.jpg?width=1200&height=675&fit_mode=smartcrop`}
-                preload="metadata"
-                onEnded={() => {
-                  setHasWatchedVideo(true);
-                  setWatchedVideoId(muxVideoId);
-                  setMuxVideoId(null);
-                }}
-                onTimeUpdate={(e) => {
-                  const video = e.target as HTMLVideoElement;
-                  const remaining = Math.ceil(video.duration - video.currentTime);
-                  setVideoTimeRemaining(remaining > 0 ? remaining : null);
-                }}
-                style={{ width: '100%', height: '100%', '--poster': 'auto' }}
-              />
-            </div>
-            <div className="flex justify-between items-center mt-2">
-              <div className="flex items-center gap-2">
-                <span className="text-white">Up Next:</span>
-                {channelData?.channel.thumbnail && (
-                  <img
-                    src={getThumbnailUrl(channelData.channel.thumbnail)}
-                    alt={channelData.channel.name}
-                    className="w-8 h-8 rounded-full"
-                  />
-                )}
-                <span className="text-gray-400">{channelData?.channel.name}</span>
+          <div className="w-full h-full flex flex-col items-center justify-center p-4" onClick={(e) => e.stopPropagation()}>
+            <div className="w-full max-w-7xl flex flex-col" style={{ maxHeight: 'calc(100vh - 100px)' }}>
+              <div className="bg-black rounded-lg overflow-hidden" style={{ position: 'relative', width: '100%', paddingTop: '56.25%' }}>
+                <MuxPlayer
+                  playbackId={muxVideoId}
+                  streamType="on-demand"
+                  poster={`https://image.mux.com/${muxVideoId}/thumbnail.jpg?width=1200&height=675&fit_mode=smartcrop`}
+                  preload="metadata"
+                  onEnded={() => {
+                    setHasWatchedVideo(true);
+                    setWatchedVideoId(muxVideoId);
+                    setMuxVideoId(null);
+                  }}
+                  onTimeUpdate={(e) => {
+                    const video = e.target as HTMLVideoElement;
+                    const remaining = Math.ceil(video.duration - video.currentTime);
+                    setVideoTimeRemaining(remaining > 0 ? remaining : null);
+                  }}
+                  style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%' }}
+                />
               </div>
-              <button
-                onClick={() => setMuxVideoId(null)}
-                className="px-6 py-2 text-white rounded-lg hover:opacity-80 transition-opacity"
-                style={{ backgroundColor: '#165DFC' }}
-              >
-                {videoTimeRemaining !== null && videoTimeRemaining > 0
-                  ? `Continue (${videoTimeRemaining}s) →`
-                  : 'Continue →'}
-              </button>
+              <div className="flex justify-between items-center mt-4 gap-4 flex-wrap">
+                <div className="flex items-center gap-2">
+                  <span className="text-white">Up Next:</span>
+                  {channelData?.channel.thumbnail && (
+                    <img
+                      src={getThumbnailUrl(channelData.channel.thumbnail)}
+                      alt={channelData.channel.name}
+                      className="w-8 h-8 rounded-full"
+                    />
+                  )}
+                  <span className="text-gray-400">{channelData?.channel.name}</span>
+                </div>
+                <button
+                  onClick={() => setMuxVideoId(null)}
+                  className="px-6 py-2 text-white rounded-lg hover:opacity-80 transition-opacity"
+                  style={{ backgroundColor: '#165DFC' }}
+                >
+                  {videoTimeRemaining !== null && videoTimeRemaining > 0
+                    ? `Continue (${videoTimeRemaining}s) →`
+                    : 'Continue →'}
+                </button>
+              </div>
             </div>
           </div>
         </div>
