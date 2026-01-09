@@ -190,12 +190,6 @@ export default function PricingPage() {
                 <svg className="w-6 h-6 text-green-500 flex-shrink-0 mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                 </svg>
-                <span>Full video transcription search, allowing you and your customers to pinpoint and share exactly when something was said across all videos in your channel (not possible on YouTube!)</span>
-              </li>
-              <li className="flex items-start gap-3 text-gray-300">
-                <svg className="w-6 h-6 text-green-500 flex-shrink-0 mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                </svg>
                 <span>Create up to <strong className="text-white">100 Fast.Videos</strong> a month</span>
               </li>
               <li className="flex items-start gap-3 text-gray-300">
