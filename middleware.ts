@@ -109,6 +109,25 @@ export function middleware(request: NextRequest) {
       return NextResponse.next()
     }
 
+    // Track visitor for this subdomain (async, don't wait for response)
+    const ipAddress = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ||
+                      request.headers.get('x-real-ip') ||
+                      'unknown'
+    const userAgent = request.headers.get('user-agent') || null
+
+    // Log visitor asynchronously without blocking the request
+    fetch(new URL('/api/visitors/log', request.url), {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        channelHandle: subdomain,
+        ipAddress,
+        userAgent,
+      }),
+    }).catch(err => console.error('Failed to log visitor:', err))
+
     // If we're on the root path, rewrite to /{subdomain}
     if (url.pathname === '/') {
       url.pathname = `/${subdomain}`

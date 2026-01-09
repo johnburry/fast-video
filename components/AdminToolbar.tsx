@@ -33,6 +33,16 @@ export function AdminToolbar() {
             >
               Manage Channels
             </Link>
+            <Link
+              href="/admin/visitors"
+              className={`text-sm font-medium transition-colors ${
+                pathname === '/admin/visitors'
+                  ? 'text-white'
+                  : 'text-gray-400 hover:text-white'
+              }`}
+            >
+              Channel Visitors
+            </Link>
           </div>
           <button
             onClick={signOut}

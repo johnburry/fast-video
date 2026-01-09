@@ -132,6 +132,29 @@ export interface Database {
           created_at?: string
         }
       }
+      channel_visitors: {
+        Row: {
+          id: string
+          channel_id: string
+          ip_address: string
+          user_agent: string | null
+          visited_at: string
+        }
+        Insert: {
+          id?: string
+          channel_id: string
+          ip_address: string
+          user_agent?: string | null
+          visited_at?: string
+        }
+        Update: {
+          id?: string
+          channel_id?: string
+          ip_address?: string
+          user_agent?: string | null
+          visited_at?: string
+        }
+      }
     }
     Views: {
       search_results: {
