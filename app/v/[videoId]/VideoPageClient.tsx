@@ -166,7 +166,7 @@ export default function VideoPageClient({ videoId }: { videoId: string }) {
           )}
         </div>
       )}
-      <div className="w-full max-w-4xl">
+      <div className="w-full max-w-4xl" style={{ aspectRatio: '16/9' }}>
         {metadata.overrideVideoThumbnail && !showingIntro ? (
           /* Audio Player for Audio-Only Mode */
           showAudioPlayer && (
@@ -190,7 +190,7 @@ export default function VideoPageClient({ videoId }: { videoId: string }) {
             autoPlay
             poster={posterUrl}
             onEnded={handleVideoEnd}
-            style={{ width: '100%', maxHeight: '80vh' }}
+            style={{ width: '100%', height: '100%', aspectRatio: '16/9' }}
           />
         )}
       </div>
