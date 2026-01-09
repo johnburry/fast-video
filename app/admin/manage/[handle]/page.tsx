@@ -259,12 +259,18 @@ export default function ManageChannelPage({
     console.log('Intro upload started');
     setIsUploadingIntro(true);
     setIntroVideoError('');
+    // Start preparing/polling immediately when upload starts
+    // MuxUploader will handle the actual upload progress
+    setTimeout(() => {
+      console.log('Transitioning to preparing state');
+      setIsPreparingIntro(true);
+      setIsUploadingIntro(false);
+    }, 2000); // Give 2 seconds for upload to actually start
   };
 
   const handleIntroSuccess = () => {
-    console.log('Intro upload success - starting preparation');
-    setIsPreparingIntro(true);
-    setIsUploadingIntro(false);
+    console.log('Intro upload success event received');
+    // This event may or may not fire reliably, so we start polling on upload start
   };
 
   const handleIntroUploadError = (event: any) => {
