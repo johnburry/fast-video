@@ -239,11 +239,13 @@ export default function ManageChannelPage({
   // Intro video upload functions
   const createIntroUpload = async () => {
     try {
+      console.log('Creating intro video upload...');
       const res = await fetch('/api/mux/upload', { method: 'POST' });
       if (!res.ok) {
         throw new Error('Failed to create upload');
       }
       const { id, url } = await res.json();
+      console.log('Upload created:', { id, url });
       setIntroUploadId(id);
       return url;
     } catch (e) {
@@ -254,18 +256,26 @@ export default function ManageChannelPage({
   };
 
   const handleIntroUploadStart = () => {
+    console.log('Intro upload started');
     setIsUploadingIntro(true);
     setIntroVideoError('');
   };
 
   const handleIntroSuccess = () => {
+    console.log('Intro upload success - starting preparation');
     setIsPreparingIntro(true);
     setIsUploadingIntro(false);
   };
 
-  const handleIntroError = (event: any) => {
+  const handleIntroUploadError = (event: any) => {
+    console.error('Intro upload error:', event);
     setIsUploadingIntro(false);
+    setIsPreparingIntro(false);
     setIntroVideoError(event.detail?.message || 'Upload failed');
+  };
+
+  const handleIntroProgress = (event: any) => {
+    console.log('Intro upload progress:', event.detail);
   };
 
   const handleRemoveIntroVideo = async () => {
@@ -633,7 +643,8 @@ export default function ManageChannelPage({
                       endpoint={createIntroUpload}
                       onUploadStart={handleIntroUploadStart}
                       onSuccess={handleIntroSuccess}
-                      onError={handleIntroError}
+                      onUploadError={handleIntroUploadError}
+                      onProgress={handleIntroProgress}
                     />
                   )}
 
