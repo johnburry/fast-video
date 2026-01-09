@@ -1,9 +1,11 @@
 'use client';
 
-import { use, useState, useEffect } from 'react';
+import { use, useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/hooks/useAuth';
 import { AdminToolbar } from '@/components/AdminToolbar';
+import MuxUploader from '@mux/mux-uploader-react';
+import MuxPlayer from '@mux/mux-player-react';
 
 interface Channel {
   id: string;
@@ -20,6 +22,7 @@ interface Channel {
   subscriptionType: string | null;
   subscriptionStartDate: string | null;
   channelHistory: string | null;
+  introVideoPlaybackId: string | null;
 }
 
 export default function ManageChannelPage({
@@ -50,6 +53,13 @@ export default function ManageChannelPage({
   const [channelHistory, setChannelHistory] = useState('');
   const [thumbnailFile, setThumbnailFile] = useState<File | null>(null);
   const [uploadingThumbnail, setUploadingThumbnail] = useState(false);
+
+  // Intro video upload state
+  const [introUploadId, setIntroUploadId] = useState<string>('');
+  const [isUploadingIntro, setIsUploadingIntro] = useState(false);
+  const [isPreparingIntro, setIsPreparingIntro] = useState(false);
+  const [introVideoError, setIntroVideoError] = useState<string>('');
+  const [showIntroUploader, setShowIntroUploader] = useState(false);
 
   // Track previous values for change detection
   const [prevSubscriptionType, setPrevSubscriptionType] = useState('');
@@ -225,6 +235,109 @@ export default function ManageChannelPage({
       setDeleting(false);
     }
   };
+
+  // Intro video upload functions
+  const createIntroUpload = async () => {
+    try {
+      const res = await fetch('/api/mux/upload', { method: 'POST' });
+      if (!res.ok) {
+        throw new Error('Failed to create upload');
+      }
+      const { id, url } = await res.json();
+      setIntroUploadId(id);
+      return url;
+    } catch (e) {
+      console.error('Error in createIntroUpload', e);
+      setIntroVideoError('Error creating upload. Please check your Mux credentials.');
+      return null;
+    }
+  };
+
+  const handleIntroUploadStart = () => {
+    setIsUploadingIntro(true);
+    setIntroVideoError('');
+  };
+
+  const handleIntroSuccess = () => {
+    setIsPreparingIntro(true);
+    setIsUploadingIntro(false);
+  };
+
+  const handleIntroError = (event: any) => {
+    setIsUploadingIntro(false);
+    setIntroVideoError(event.detail?.message || 'Upload failed');
+  };
+
+  const handleRemoveIntroVideo = async () => {
+    if (!channel) return;
+
+    const confirmRemove = window.confirm(
+      'Are you sure you want to remove the intro video? This will stop the intro video from playing before channel videos.'
+    );
+
+    if (!confirmRemove) return;
+
+    try {
+      const response = await fetch(`/api/admin/channels/${channel.id}/intro-video`, {
+        method: 'DELETE',
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to remove intro video');
+      }
+
+      setSuccess('Intro video removed successfully!');
+      fetchChannel();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to remove intro video');
+    }
+  };
+
+  // Poll for intro video upload status
+  useEffect(() => {
+    if (!isPreparingIntro || !introUploadId || !channel) return;
+
+    const pollInterval = setInterval(async () => {
+      try {
+        const res = await fetch(`/api/mux/upload/${introUploadId}`);
+        const data = await res.json();
+
+        if (data.playbackUrl) {
+          setIsPreparingIntro(false);
+          clearInterval(pollInterval);
+
+          // Save intro video playback ID to channel
+          const playbackId = data.playbackUrl.split('/').pop()?.replace('.m3u8', '') || '';
+
+          try {
+            const saveRes = await fetch(`/api/admin/channels/${channel.id}/intro-video`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ playbackId }),
+            });
+
+            if (!saveRes.ok) {
+              const errorText = await saveRes.text();
+              console.error('Failed to save intro video:', errorText);
+              setIntroVideoError(`Failed to save intro video: ${errorText}`);
+            } else {
+              setSuccess('Intro video uploaded successfully!');
+              setShowIntroUploader(false);
+              setIntroUploadId('');
+              fetchChannel();
+            }
+          } catch (saveError) {
+            console.error('Error saving intro video:', saveError);
+            setIntroVideoError('Error saving intro video');
+          }
+        }
+      } catch (e) {
+        console.error('Error polling intro upload status:', e);
+      }
+    }, 3000);
+
+    return () => clearInterval(pollInterval);
+  }, [isPreparingIntro, introUploadId, channel]);
 
   if (authLoading || loading) {
     return (
@@ -441,6 +554,104 @@ export default function ManageChannelPage({
                 placeholder="https://example.com"
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               />
+            </div>
+
+            <div className="pt-6 border-t border-gray-200">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">Intro Video</h3>
+              <p className="text-sm text-gray-600 mb-4">
+                Upload an intro video that will play before each video on this channel. The intro video will automatically transition to the main video when it ends.
+              </p>
+
+              {channel.introVideoPlaybackId && (
+                <div className="mb-4">
+                  <div className="bg-gray-100 rounded-lg p-4">
+                    <div className="flex items-center justify-between mb-3">
+                      <p className="text-sm font-medium text-gray-700">Current Intro Video</p>
+                      <button
+                        type="button"
+                        onClick={handleRemoveIntroVideo}
+                        className="px-3 py-1 bg-red-600 text-white text-sm rounded-lg font-medium hover:bg-red-700 transition-colors"
+                      >
+                        Remove
+                      </button>
+                    </div>
+                    <MuxPlayer
+                      playbackId={channel.introVideoPlaybackId}
+                      streamType="on-demand"
+                      style={{ width: '100%', maxHeight: '300px' }}
+                    />
+                  </div>
+                </div>
+              )}
+
+              {!showIntroUploader && !channel.introVideoPlaybackId && (
+                <button
+                  type="button"
+                  onClick={() => setShowIntroUploader(true)}
+                  className="px-6 py-2 bg-purple-600 text-white rounded-lg font-medium hover:bg-purple-700 transition-colors"
+                >
+                  Upload Intro Video
+                </button>
+              )}
+
+              {!showIntroUploader && channel.introVideoPlaybackId && (
+                <button
+                  type="button"
+                  onClick={() => setShowIntroUploader(true)}
+                  className="px-6 py-2 bg-purple-600 text-white rounded-lg font-medium hover:bg-purple-700 transition-colors"
+                >
+                  Replace Intro Video
+                </button>
+              )}
+
+              {showIntroUploader && (
+                <div className="mt-4 p-4 bg-gray-50 rounded-lg border border-gray-200">
+                  <div className="flex items-center justify-between mb-3">
+                    <h4 className="font-medium text-gray-900">Upload New Intro Video</h4>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setShowIntroUploader(false);
+                        setIntroVideoError('');
+                        setIsUploadingIntro(false);
+                        setIsPreparingIntro(false);
+                      }}
+                      className="text-sm text-gray-600 hover:text-gray-800"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+
+                  {introVideoError && (
+                    <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+                      <p className="text-red-800 text-sm">{introVideoError}</p>
+                    </div>
+                  )}
+
+                  {!isUploadingIntro && !isPreparingIntro && (
+                    <MuxUploader
+                      endpoint={createIntroUpload}
+                      onUploadStart={handleIntroUploadStart}
+                      onSuccess={handleIntroSuccess}
+                      onError={handleIntroError}
+                    />
+                  )}
+
+                  {isUploadingIntro && (
+                    <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                      <p className="text-blue-800 font-medium">Uploading intro video...</p>
+                      <p className="text-blue-600 text-sm mt-1">Please wait while your video uploads to Mux.</p>
+                    </div>
+                  )}
+
+                  {isPreparingIntro && (
+                    <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+                      <p className="text-yellow-800 font-medium">Processing intro video...</p>
+                      <p className="text-yellow-600 text-sm mt-1">Your video is being encoded. This may take a few moments.</p>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
 
             <div className="pt-6 border-t border-gray-200">

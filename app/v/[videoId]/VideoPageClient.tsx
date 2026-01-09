@@ -11,12 +11,15 @@ interface VideoMetadata {
   altDestination: string | null;
   overrideVideoThumbnail: boolean;
   channelThumbnail: string | null;
+  introVideoPlaybackId: string | null;
 }
 
 export default function VideoPageClient({ videoId }: { videoId: string }) {
   const [metadata, setMetadata] = useState<VideoMetadata | null>(null);
   const [redirecting, setRedirecting] = useState(false);
   const [showAudioPlayer, setShowAudioPlayer] = useState(false);
+  const [showingIntro, setShowingIntro] = useState(false);
+  const [currentPlaybackId, setCurrentPlaybackId] = useState<string>(videoId);
   const audioPlayerRef = useRef<any>(null);
 
   useEffect(() => {
@@ -29,8 +32,17 @@ export default function VideoPageClient({ videoId }: { videoId: string }) {
             overrideVideoThumbnail: data.overrideVideoThumbnail,
             channelThumbnail: data.channelThumbnail,
             altDestination: data.altDestination,
+            introVideoPlaybackId: data.introVideoPlaybackId,
           });
           setMetadata(data);
+
+          // If there's an intro video, show it first
+          if (data.introVideoPlaybackId) {
+            setShowingIntro(true);
+            setCurrentPlaybackId(data.introVideoPlaybackId);
+          } else {
+            setCurrentPlaybackId(videoId);
+          }
 
           // If there's NO alt_destination (regular Fast Video), redirect immediately to channel page
           if (!data.altDestination && data.channelHandle) {
@@ -59,6 +71,14 @@ export default function VideoPageClient({ videoId }: { videoId: string }) {
   }, [videoId]);
 
   const handleVideoEnd = () => {
+    // If we're showing the intro video, transition to the main video
+    if (showingIntro) {
+      setShowingIntro(false);
+      setCurrentPlaybackId(videoId);
+      return;
+    }
+
+    // Otherwise, handle the main video end
     setRedirecting(true);
 
     if (metadata?.altDestination) {
@@ -107,13 +127,15 @@ export default function VideoPageClient({ videoId }: { videoId: string }) {
   // Determine which poster image to use
   const posterUrl = metadata.overrideVideoThumbnail && metadata.channelThumbnail
     ? metadata.channelThumbnail
-    : `https://image.mux.com/${videoId}/thumbnail.jpg?width=1200&height=675&fit_mode=smartcrop`;
+    : `https://image.mux.com/${currentPlaybackId}/thumbnail.jpg?width=1200&height=675&fit_mode=smartcrop`;
 
   console.log('VideoPageClient - rendering with:', {
     overrideVideoThumbnail: metadata.overrideVideoThumbnail,
     channelThumbnail: metadata.channelThumbnail,
     willShowAudioPlayer: metadata.overrideVideoThumbnail,
     willShowChannelThumbnail: metadata.overrideVideoThumbnail && metadata.channelThumbnail,
+    showingIntro,
+    currentPlaybackId,
   });
 
   return (
@@ -145,13 +167,13 @@ export default function VideoPageClient({ videoId }: { videoId: string }) {
         </div>
       )}
       <div className="w-full max-w-4xl">
-        {metadata.overrideVideoThumbnail ? (
+        {metadata.overrideVideoThumbnail && !showingIntro ? (
           /* Audio Player for Audio-Only Mode */
           showAudioPlayer && (
             <div className="bg-gray-900 rounded-lg p-8 flex justify-center">
               <MuxPlayer
                 ref={audioPlayerRef}
-                playbackId={videoId}
+                playbackId={currentPlaybackId}
                 streamType="on-demand"
                 audio
                 onEnded={handleVideoEnd}
@@ -160,9 +182,10 @@ export default function VideoPageClient({ videoId }: { videoId: string }) {
             </div>
           )
         ) : (
-          /* Video Player for Video Mode */
+          /* Video Player for Video Mode (or Intro Video) */
           <MuxPlayer
-            playbackId={videoId}
+            key={currentPlaybackId}
+            playbackId={currentPlaybackId}
             streamType="on-demand"
             autoPlay
             poster={posterUrl}

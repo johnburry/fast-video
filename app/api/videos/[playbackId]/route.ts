@@ -15,7 +15,7 @@ export async function GET(
 
     const { data: video, error: videoError } = await supabase
       .from('mux_videos')
-      .select('*, channels(channel_name, channel_handle, thumbnail_url, external_link, external_link_name)')
+      .select('*, channels(channel_name, channel_handle, thumbnail_url, external_link, external_link_name, intro_video_playback_id)')
       .eq('mux_playback_id', playbackId)
       .maybeSingle();
 
@@ -45,6 +45,7 @@ export async function GET(
       channelThumbnail: video.channels?.thumbnail_url || null,
       externalLink: video.channels?.external_link || null,
       externalLinkName: video.channels?.external_link_name || null,
+      introVideoPlaybackId: video.channels?.intro_video_playback_id || null,
       createdAt: video.created_at,
     };
 

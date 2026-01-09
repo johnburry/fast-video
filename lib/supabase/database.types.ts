@@ -23,6 +23,7 @@ export interface Database {
           updated_at: string
           last_synced_at: string | null
           is_active: boolean
+          intro_video_playback_id: string | null
         }
         Insert: {
           id?: string
@@ -37,6 +38,7 @@ export interface Database {
           updated_at?: string
           last_synced_at?: string | null
           is_active?: boolean
+          intro_video_playback_id?: string | null
         }
         Update: {
           id?: string
@@ -51,6 +53,7 @@ export interface Database {
           updated_at?: string
           last_synced_at?: string | null
           is_active?: boolean
+          intro_video_playback_id?: string | null
         }
       }
       videos: {
