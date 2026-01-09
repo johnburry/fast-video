@@ -61,6 +61,7 @@ export async function GET(
         subscriptionType: channel.subscription_type,
         subscriptionStartDate: channel.subscription_start_date,
         channelHistory: channel.channel_history,
+        introVideoPlaybackId: channel.intro_video_playback_id,
       },
       recentVideos: videos || [],
     });
