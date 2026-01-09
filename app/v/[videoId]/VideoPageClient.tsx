@@ -166,7 +166,7 @@ export default function VideoPageClient({ videoId }: { videoId: string }) {
           )}
         </div>
       )}
-      <div className="w-full max-w-4xl" style={{ aspectRatio: '16/9' }}>
+      <div className="w-full max-w-7xl">
         {metadata.overrideVideoThumbnail && !showingIntro ? (
           /* Audio Player for Audio-Only Mode */
           showAudioPlayer && (
@@ -183,15 +183,17 @@ export default function VideoPageClient({ videoId }: { videoId: string }) {
           )
         ) : (
           /* Video Player for Video Mode (or Intro Video) */
-          <MuxPlayer
-            key={currentPlaybackId}
-            playbackId={currentPlaybackId}
-            streamType="on-demand"
-            autoPlay
-            poster={posterUrl}
-            onEnded={handleVideoEnd}
-            style={{ width: '100%', height: '100%', aspectRatio: '16/9' }}
-          />
+          <div style={{ position: 'relative', width: '100%', paddingTop: '56.25%' }}>
+            <MuxPlayer
+              key={currentPlaybackId}
+              playbackId={currentPlaybackId}
+              streamType="on-demand"
+              autoPlay
+              poster={posterUrl}
+              onEnded={handleVideoEnd}
+              style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%' }}
+            />
+          </div>
         )}
       </div>
     </div>
