@@ -305,21 +305,31 @@ export default function ManageChannelPage({
 
   // Poll for intro video upload status
   useEffect(() => {
-    if (!isPreparingIntro || !introUploadId || !channel) return;
+    if (!isPreparingIntro || !introUploadId || !channel) {
+      console.log('Polling skipped:', { isPreparingIntro, introUploadId: !!introUploadId, channel: !!channel });
+      return;
+    }
+
+    console.log('Starting polling for intro upload:', introUploadId);
 
     const pollInterval = setInterval(async () => {
       try {
+        console.log('Polling intro upload status...');
         const res = await fetch(`/api/mux/upload/${introUploadId}`);
         const data = await res.json();
+        console.log('Poll response:', data);
 
         if (data.playbackUrl) {
+          console.log('Playback URL ready:', data.playbackUrl);
           setIsPreparingIntro(false);
           clearInterval(pollInterval);
 
           // Save intro video playback ID to channel
           const playbackId = data.playbackUrl.split('/').pop()?.replace('.m3u8', '') || '';
+          console.log('Extracted playback ID:', playbackId);
 
           try {
+            console.log('Saving intro video to channel...');
             const saveRes = await fetch(`/api/admin/channels/${channel.id}/intro-video`, {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
@@ -331,6 +341,7 @@ export default function ManageChannelPage({
               console.error('Failed to save intro video:', errorText);
               setIntroVideoError(`Failed to save intro video: ${errorText}`);
             } else {
+              console.log('Intro video saved successfully!');
               setSuccess('Intro video uploaded successfully!');
               setShowIntroUploader(false);
               setIntroUploadId('');
@@ -346,7 +357,10 @@ export default function ManageChannelPage({
       }
     }, 3000);
 
-    return () => clearInterval(pollInterval);
+    return () => {
+      console.log('Cleaning up polling interval');
+      clearInterval(pollInterval);
+    };
   }, [isPreparingIntro, introUploadId, channel]);
 
   if (authLoading || loading) {
