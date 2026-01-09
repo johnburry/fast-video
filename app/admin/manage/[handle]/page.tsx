@@ -116,7 +116,7 @@ export default function ManageChannelPage({
       const now = new Date().toISOString().replace('T', ' ').substring(0, 19);
       let historyUpdates: string[] = [];
 
-      if (subscriptionType !== prevSubscriptionType) {
+      if (subscriptionType.toLowerCase() !== prevSubscriptionType.toLowerCase()) {
         historyUpdates.push(`${now} subscription_type: ${subscriptionType}`);
       }
 
