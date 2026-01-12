@@ -248,7 +248,7 @@ export async function POST(request: NextRequest) {
 
         sendProgress({
           type: 'status',
-          message: `Found ${liveVideos.length} live videos, ${newVideos.length} new videos and ${videosWithoutTranscripts.length} videos needing transcripts. Starting import...`
+          message: `Found ${liveVideos.length} live videos, ${newVideos.length} new videos and ${videosWithoutTranscripts.length} videos needing transcripts. Processing ${videosToProcess.length} videos (${liveVideosToProcess.length} live). Starting import...`
         });
 
     // Update channel video count with actual total
@@ -264,11 +264,12 @@ export async function POST(request: NextRequest) {
         // Process each video
         for (const video of videosToProcess) {
           try {
+            const isLiveVideo = liveVideoIdsSet.has(video.videoId);
             sendProgress({
               type: 'progress',
               current: processedCount + 1,
               total: videosToProcess.length,
-              videoTitle: video.title,
+              videoTitle: `${video.title}${isLiveVideo ? ' [LIVE]' : ''}`,
             });
 
             // Upload thumbnail to R2
@@ -351,6 +352,10 @@ export async function POST(request: NextRequest) {
 
         if (!transcript || transcript.length === 0) {
           console.error(`[IMPORT] Failed to get transcript for ${video.videoId} ${isLiveVideo ? '[LIVE VIDEO]' : ''} - transcript API returned null or empty`);
+          sendProgress({
+            type: 'status',
+            message: `⚠️ Failed to get transcript for: ${video.title}${isLiveVideo ? ' [LIVE VIDEO]' : ''}`
+          });
         }
 
         if (transcript && transcript.length > 0) {
