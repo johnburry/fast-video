@@ -348,6 +348,12 @@ export async function POST(request: NextRequest) {
         // Fetch and save transcript
         const isLiveVideo = liveVideoIdsSet.has(video.videoId);
         console.log(`[IMPORT] Fetching transcript for ${video.videoId} (${video.title})... ${isLiveVideo ? '[LIVE VIDEO]' : ''}`);
+        if (isLiveVideo) {
+          sendProgress({
+            type: 'status',
+            message: `Processing live video transcript (may take a few minutes): ${video.title}`
+          });
+        }
         const transcript = await getVideoTranscript(video.videoId);
 
         if (!transcript || transcript.length === 0) {

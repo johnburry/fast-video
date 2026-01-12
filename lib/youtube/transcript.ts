@@ -19,6 +19,14 @@ interface SupadataTranscriptResponse {
   text?: string;
   language?: string;
   error?: string;
+  jobId?: string;
+}
+
+interface SupadataJobStatusResponse {
+  status: 'pending' | 'processing' | 'completed' | 'failed';
+  content?: SupadataTranscriptSegment[];
+  segments?: SupadataTranscriptSegment[];
+  error?: string;
 }
 
 export async function getVideoTranscript(videoId: string): Promise<TranscriptSegment[] | null> {
@@ -68,6 +76,72 @@ export async function getVideoTranscript(videoId: string): Promise<TranscriptSeg
     // Check for error in response
     if (data.error) {
       console.error(`[TRANSCRIPT] API returned error: ${data.error}`);
+      return null;
+    }
+
+    // Check if this is an async job response
+    if (data.jobId && !data.content && !data.segments) {
+      console.log(`[TRANSCRIPT] Received async job ID: ${data.jobId}, polling for completion...`);
+
+      // Poll the job status endpoint
+      const maxAttempts = 30; // Poll for up to 5 minutes (30 attempts * 10 seconds)
+      const pollInterval = 10000; // 10 seconds
+
+      for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+        console.log(`[TRANSCRIPT] Polling job ${data.jobId} (attempt ${attempt}/${maxAttempts})...`);
+
+        // Wait before polling
+        await new Promise(resolve => setTimeout(resolve, pollInterval));
+
+        const jobUrl = `https://api.supadata.ai/v1/transcript/job/${data.jobId}`;
+        const jobResponse = await fetch(jobUrl, {
+          method: 'GET',
+          headers: {
+            'x-api-key': apiKey,
+            'Content-Type': 'application/json',
+          },
+        });
+
+        if (!jobResponse.ok) {
+          console.error(`[TRANSCRIPT] Job status request failed: ${jobResponse.status} ${jobResponse.statusText}`);
+          continue;
+        }
+
+        const jobData: SupadataJobStatusResponse = await jobResponse.json();
+        console.log(`[TRANSCRIPT] Job status: ${jobData.status}`);
+
+        if (jobData.status === 'completed') {
+          const jobSegments = jobData.content || jobData.segments;
+          if (jobSegments && jobSegments.length > 0) {
+            console.log(`[TRANSCRIPT] Job completed! Got ${jobSegments.length} segments`);
+            // Process segments using the same logic below
+            const result: TranscriptSegment[] = jobSegments
+              .filter((segment) => {
+                const text = segment.text?.trim();
+                const offset = segment.offset;
+                const duration = segment.duration;
+                return text && text.length > 0 && !isNaN(offset) && !isNaN(duration);
+              })
+              .map((segment) => ({
+                text: segment.text.trim(),
+                startTime: segment.offset / 1000,
+                duration: segment.duration / 1000,
+              }));
+
+            console.log(`[TRANSCRIPT] Successfully processed ${result.length} segments from async job`);
+            return result;
+          } else {
+            console.log(`[TRANSCRIPT] Job completed but no segments returned`);
+            return null;
+          }
+        } else if (jobData.status === 'failed') {
+          console.error(`[TRANSCRIPT] Job failed: ${jobData.error || 'Unknown error'}`);
+          return null;
+        }
+        // Continue polling if status is 'pending' or 'processing'
+      }
+
+      console.error(`[TRANSCRIPT] Job polling timed out after ${maxAttempts} attempts`);
       return null;
     }
 
