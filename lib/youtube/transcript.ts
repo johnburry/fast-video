@@ -77,6 +77,60 @@ export async function getVideoTranscript(videoId: string, preferNative: boolean 
 
     // Check for error in response
     if (data.error) {
+      // If native mode failed with transcript-unavailable, try auto mode for live videos
+      if (data.error === 'transcript-unavailable' && preferNative) {
+        console.log(`[TRANSCRIPT] Native captions not available, trying auto mode to generate transcript...`);
+
+        // Retry with auto mode
+        const autoUrl = new URL('https://api.supadata.ai/v1/transcript');
+        autoUrl.searchParams.append('url', videoUrl);
+        autoUrl.searchParams.append('mode', 'auto');
+
+        const autoResponse = await fetch(autoUrl.toString(), {
+          method: 'GET',
+          headers: {
+            'x-api-key': apiKey,
+            'Content-Type': 'application/json',
+          },
+        });
+
+        console.log(`[TRANSCRIPT] Auto mode response status: ${autoResponse.status}`);
+
+        if (!autoResponse.ok) {
+          console.error(`[TRANSCRIPT] Auto mode request failed: ${autoResponse.status}`);
+          return null;
+        }
+
+        const autoData: SupadataTranscriptResponse = await autoResponse.json();
+        console.log(`[TRANSCRIPT] Auto mode response keys:`, Object.keys(autoData));
+
+        // Check if this is an async job
+        if (autoData.jobId && !autoData.content && !autoData.segments) {
+          console.log(`[TRANSCRIPT] Auto mode returned job ID: ${autoData.jobId} - this will require async processing`);
+          // For now, skip async jobs to avoid blocking
+          return null;
+        }
+
+        // If we got segments directly, process them
+        const autoSegments = autoData.content || autoData.segments;
+        if (autoSegments && autoSegments.length > 0) {
+          console.log(`[TRANSCRIPT] Auto mode succeeded! Got ${autoSegments.length} segments`);
+          const result: TranscriptSegment[] = autoSegments
+            .filter((segment) => {
+              const text = segment.text?.trim();
+              const offset = segment.offset;
+              const duration = segment.duration;
+              return text && text.length > 0 && !isNaN(offset) && !isNaN(duration);
+            })
+            .map((segment) => ({
+              text: segment.text.trim(),
+              startTime: segment.offset / 1000,
+              duration: segment.duration / 1000,
+            }));
+          return result;
+        }
+      }
+
       console.error(`[TRANSCRIPT] API returned error: ${data.error}`);
       return null;
     }
