@@ -350,10 +350,11 @@ export async function POST(request: NextRequest) {
         if (isLiveVideo) {
           sendProgress({
             type: 'status',
-            message: `Processing live video transcript (may take a few minutes): ${video.title}`
+            message: `Fetching native captions for live video: ${video.title}`
           });
         }
-        const transcript = await getVideoTranscript(video.videoId);
+        // For live videos, prefer native captions to avoid async job delays
+        const transcript = await getVideoTranscript(video.videoId, isLiveVideo);
 
         if (!transcript || transcript.length === 0) {
           console.error(`[IMPORT] Failed to get transcript for ${video.videoId} ${isLiveVideo ? '[LIVE VIDEO]' : ''} - transcript API returned null or empty`);

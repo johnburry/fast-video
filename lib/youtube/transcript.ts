@@ -29,7 +29,7 @@ interface SupadataJobStatusResponse {
   error?: string;
 }
 
-export async function getVideoTranscript(videoId: string): Promise<TranscriptSegment[] | null> {
+export async function getVideoTranscript(videoId: string, preferNative: boolean = false): Promise<TranscriptSegment[] | null> {
   try {
     console.log(`[TRANSCRIPT] Fetching transcript for video ${videoId}...`);
 
@@ -46,9 +46,11 @@ export async function getVideoTranscript(videoId: string): Promise<TranscriptSeg
     // Use supadata.ai API
     const url = new URL('https://api.supadata.ai/v1/transcript');
     url.searchParams.append('url', videoUrl);
-    url.searchParams.append('mode', 'auto'); // Try native first, then generate if needed
+    // For live videos, use 'native' mode to get existing captions only (faster, synchronous)
+    // For regular videos, use 'auto' mode (tries native first, then generates)
+    url.searchParams.append('mode', preferNative ? 'native' : 'auto');
 
-    console.log(`[TRANSCRIPT] Full API URL: ${url.toString()}`);
+    console.log(`[TRANSCRIPT] Full API URL: ${url.toString()} (mode: ${preferNative ? 'native' : 'auto'})`);
 
     const response = await fetch(url.toString(), {
       method: 'GET',
@@ -81,79 +83,13 @@ export async function getVideoTranscript(videoId: string): Promise<TranscriptSeg
 
     // Check if this is an async job response
     if (data.jobId && !data.content && !data.segments) {
-      console.log(`[TRANSCRIPT] Received async job ID: ${data.jobId} - live videos require async processing`);
+      console.log(`[TRANSCRIPT] Received async job ID: ${data.jobId}`);
+      console.log(`[TRANSCRIPT] Live video transcripts require async processing - skipping for now`);
+      console.log(`[TRANSCRIPT] Job ID can be used to retrieve transcript later: ${data.jobId}`);
 
-      // For live videos, poll more aggressively
-      const maxAttempts = 24; // Poll for up to 2 minutes (24 attempts * 5 seconds)
-      const pollInterval = 5000; // 5 seconds
+      // TODO: Implement background job processing for live video transcripts
+      // For now, we skip these videos to avoid blocking the import process
 
-      for (let attempt = 1; attempt <= maxAttempts; attempt++) {
-        console.log(`[TRANSCRIPT] Polling job ${data.jobId} (attempt ${attempt}/${maxAttempts})...`);
-
-        // Wait before polling
-        await new Promise(resolve => setTimeout(resolve, pollInterval));
-
-        // Try different possible job status endpoint formats
-        const jobUrl = `https://api.supadata.ai/v1/transcript?jobId=${data.jobId}`;
-
-        const jobResponse = await fetch(jobUrl, {
-          method: 'GET',
-          headers: {
-            'x-api-key': apiKey,
-            'Content-Type': 'application/json',
-          },
-        });
-
-        console.log(`[TRANSCRIPT] Job poll response status: ${jobResponse.status}`);
-
-        if (!jobResponse.ok) {
-          const errorText = await jobResponse.text();
-          console.error(`[TRANSCRIPT] Job status request failed: ${jobResponse.status}`);
-          console.error(`[TRANSCRIPT] Error: ${errorText.substring(0, 200)}`);
-
-          // If endpoint doesn't exist, API might not support job polling
-          if (jobResponse.status === 404) {
-            console.error(`[TRANSCRIPT] Job polling endpoint not found - live video transcripts may not be supported`);
-            return null;
-          }
-          continue;
-        }
-
-        const jobData: SupadataJobStatusResponse = await jobResponse.json();
-        console.log(`[TRANSCRIPT] Job status: ${jobData.status}`);
-
-        if (jobData.status === 'completed') {
-          const jobSegments = jobData.content || jobData.segments;
-          if (jobSegments && jobSegments.length > 0) {
-            console.log(`[TRANSCRIPT] Job completed! Got ${jobSegments.length} segments`);
-            const result: TranscriptSegment[] = jobSegments
-              .filter((segment) => {
-                const text = segment.text?.trim();
-                const offset = segment.offset;
-                const duration = segment.duration;
-                return text && text.length > 0 && !isNaN(offset) && !isNaN(duration);
-              })
-              .map((segment) => ({
-                text: segment.text.trim(),
-                startTime: segment.offset / 1000,
-                duration: segment.duration / 1000,
-              }));
-
-            console.log(`[TRANSCRIPT] Successfully processed ${result.length} segments from async job`);
-            return result;
-          } else {
-            console.log(`[TRANSCRIPT] Job completed but no segments returned`);
-            return null;
-          }
-        } else if (jobData.status === 'failed') {
-          console.error(`[TRANSCRIPT] Job failed: ${jobData.error || 'Unknown error'}`);
-          return null;
-        }
-        // Continue polling if status is 'pending' or 'processing'
-      }
-
-      console.log(`[TRANSCRIPT] Job still processing after ${maxAttempts} attempts - live video transcripts may take longer`);
-      console.log(`[TRANSCRIPT] Job ID ${data.jobId} can be checked later for completion`);
       return null;
     }
 
