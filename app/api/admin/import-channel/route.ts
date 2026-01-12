@@ -345,8 +345,13 @@ export async function POST(request: NextRequest) {
         }
 
         // Fetch and save transcript
-        console.log(`[IMPORT] Fetching transcript for ${video.videoId} (${video.title})...`);
+        const isLiveVideo = liveVideoIdsSet.has(video.videoId);
+        console.log(`[IMPORT] Fetching transcript for ${video.videoId} (${video.title})... ${isLiveVideo ? '[LIVE VIDEO]' : ''}`);
         const transcript = await getVideoTranscript(video.videoId);
+
+        if (!transcript || transcript.length === 0) {
+          console.error(`[IMPORT] Failed to get transcript for ${video.videoId} ${isLiveVideo ? '[LIVE VIDEO]' : ''} - transcript API returned null or empty`);
+        }
 
         if (transcript && transcript.length > 0) {
           console.log(`[IMPORT] Saving ${transcript.length} transcript segments for ${video.videoId}...`);

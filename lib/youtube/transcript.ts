@@ -33,11 +33,14 @@ export async function getVideoTranscript(videoId: string): Promise<TranscriptSeg
 
     // Construct YouTube URL
     const videoUrl = `https://www.youtube.com/watch?v=${videoId}`;
+    console.log(`[TRANSCRIPT] Requesting transcript from Supadata API for URL: ${videoUrl}`);
 
     // Use supadata.ai API
     const url = new URL('https://api.supadata.ai/v1/transcript');
     url.searchParams.append('url', videoUrl);
     url.searchParams.append('mode', 'auto'); // Try native first, then generate if needed
+
+    console.log(`[TRANSCRIPT] Full API URL: ${url.toString()}`);
 
     const response = await fetch(url.toString(), {
       method: 'GET',
@@ -46,6 +49,8 @@ export async function getVideoTranscript(videoId: string): Promise<TranscriptSeg
         'Content-Type': 'application/json',
       },
     });
+
+    console.log(`[TRANSCRIPT] API response status: ${response.status} ${response.statusText}`);
 
     if (!response.ok) {
       console.error(`[TRANSCRIPT] API request failed with status ${response.status}: ${response.statusText}`);
