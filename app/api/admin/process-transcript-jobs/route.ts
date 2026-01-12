@@ -61,8 +61,30 @@ export async function POST(request: NextRequest) {
       try {
         console.log(`[JOBS] Processing job ${job.job_id} for video ${job.video_id}`);
 
+        // Get the YouTube video ID from the database
+        const { data: videoData } = await supabaseAdmin
+          .from('videos')
+          .select('youtube_video_id')
+          .eq('id', job.video_id)
+          .single();
+
+        if (!videoData) {
+          console.error(`[JOBS] Video ${job.video_id} not found in database`);
+          await supabaseAdmin
+            .from('transcript_jobs')
+            .update({
+              status: 'failed',
+              error_message: 'Video not found in database',
+            })
+            .eq('id', job.id);
+          failedCount++;
+          continue;
+        }
+
         // Check job status with Supadata API
-        const jobUrl = `https://api.supadata.ai/v1/transcript?jobId=${job.job_id}`;
+        // The API requires both url and jobId parameters
+        const videoUrl = `https://www.youtube.com/watch?v=${videoData.youtube_video_id}`;
+        const jobUrl = `https://api.supadata.ai/v1/transcript?url=${encodeURIComponent(videoUrl)}&jobId=${job.job_id}`;
         const jobResponse = await fetch(jobUrl, {
           method: 'GET',
           headers: {
