@@ -113,6 +113,8 @@ export async function POST(request: NextRequest) {
         }
 
         const jobData: SupadataJobStatusResponse = await jobResponse.json();
+        console.log(`[JOBS] Job ${job.job_id} full response:`, JSON.stringify(jobData).substring(0, 500));
+        console.log(`[JOBS] Job ${job.job_id} response keys:`, Object.keys(jobData));
         console.log(`[JOBS] Job ${job.job_id} status: ${jobData.status}`);
 
         if (jobData.status === 'completed') {
