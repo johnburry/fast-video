@@ -72,15 +72,17 @@ export async function POST(request: NextRequest) {
         });
 
         if (!jobResponse.ok) {
+          const errorText = await jobResponse.text();
           console.error(`[JOBS] Job ${job.job_id} status check failed: ${jobResponse.status}`);
+          console.error(`[JOBS] Error response: ${errorText.substring(0, 500)}`);
 
-          // Mark as failed if it's a 404 or other client error
-          if (jobResponse.status === 404 || jobResponse.status >= 400) {
+          // Mark as failed if it's a 404 or 400 error (bad request/not found)
+          if (jobResponse.status === 404 || jobResponse.status === 400) {
             await supabaseAdmin
               .from('transcript_jobs')
               .update({
                 status: 'failed',
-                error_message: `API returned ${jobResponse.status}`,
+                error_message: `API returned ${jobResponse.status}: ${errorText.substring(0, 200)}`,
               })
               .eq('id', job.id);
             failedCount++;
