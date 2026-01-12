@@ -145,6 +145,72 @@ export async function getChannelVideos(channelId: string, limit: number = 50): P
   }
 }
 
+export async function getChannelLiveVideos(channelId: string, limit: number = 5): Promise<YouTubeVideoInfo[]> {
+  try {
+    const youtube = await getYouTubeClient();
+    const channel = await youtube.getChannel(channelId);
+
+    const videos: YouTubeVideoInfo[] = [];
+
+    // Get live videos from the channel's live tab
+    let liveVideos: any;
+    try {
+      liveVideos = await channel.getLiveStreams();
+    } catch (error) {
+      console.log(`[YOUTUBE] No live streams tab found for channel ${channelId}, trying search...`);
+      // If the channel doesn't have a live tab, try searching for live videos
+      try {
+        const search = await youtube.search(`site:youtube.com/watch`, {
+          type: 'video',
+        });
+
+        // Filter to only this channel's videos
+        const channelLiveVideos = search.videos.filter((v: any) => {
+          const author = v.author;
+          return author?.id === channelId;
+        });
+
+        liveVideos = { videos: channelLiveVideos, has_continuation: false };
+      } catch (searchError) {
+        console.error('Error searching for live videos:', searchError);
+        return [];
+      }
+    }
+
+    if (!liveVideos || !liveVideos.videos) {
+      console.log(`[YOUTUBE] No live videos found for channel ${channelId}`);
+      return [];
+    }
+
+    // Process live videos
+    for (const video of liveVideos.videos) {
+      const v = video as any;
+      if (!v.id) continue;
+
+      videos.push({
+        videoId: v.id,
+        title: v.title?.text || '',
+        description: v.description || '',
+        thumbnailUrl: v.best_thumbnail?.url || '',
+        durationSeconds: v.duration?.seconds || 0,
+        publishedAt: v.published?.text || '',
+        viewCount: v.view_count?.value || 0,
+        likeCount: 0,
+        commentCount: 0,
+      });
+
+      // Stop if we've reached the limit
+      if (videos.length >= limit) break;
+    }
+
+    console.log(`[YOUTUBE] Fetched ${videos.length} live videos for channel ${channelId}`);
+    return videos;
+  } catch (error) {
+    console.error('Error fetching live videos:', error);
+    return [];
+  }
+}
+
 export async function getVideoDetails(videoId: string): Promise<YouTubeVideoInfo | null> {
   try {
     const youtube = await getYouTubeClient();

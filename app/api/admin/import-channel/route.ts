@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase/server';
-import { getChannelByHandle, getChannelVideos } from '@/lib/youtube/client';
+import { getChannelByHandle, getChannelVideos, getChannelLiveVideos } from '@/lib/youtube/client';
 import { getVideoTranscript } from '@/lib/youtube/transcript';
 import { uploadThumbnailToR2, uploadChannelThumbnailToR2, uploadChannelBannerToR2 } from '@/lib/r2';
 import type { Database } from '@/lib/supabase/database.types';
@@ -196,6 +196,20 @@ export async function POST(request: NextRequest) {
         console.log(`Fetching videos for @${channelInfo.handle}...`);
         const allVideos = await getChannelVideos(channelInfo.channelId);
 
+        // Fetch live videos from YouTube
+        sendProgress({ type: 'status', message: 'Fetching live videos from YouTube...' });
+        console.log(`Fetching live videos for @${channelInfo.handle}...`);
+        const liveVideos = await getChannelLiveVideos(channelInfo.channelId, 5);
+
+        // Combine regular videos and live videos, removing duplicates
+        const liveVideoIds = new Set(liveVideos.map(v => v.videoId));
+        const combinedVideos = [
+          ...liveVideos,
+          ...allVideos.filter(v => !liveVideoIds.has(v.videoId))
+        ];
+
+        console.log(`[IMPORT] Found ${allVideos.length} regular videos and ${liveVideos.length} live videos (${combinedVideos.length} total after deduplication)`);
+
         // Fetch all existing video IDs for this channel to avoid re-importing
         sendProgress({ type: 'status', message: 'Checking for existing videos...' });
         const { data: existingVideos } = await supabaseAdmin
@@ -210,26 +224,26 @@ export async function POST(request: NextRequest) {
         console.log(`Found ${existingVideoMap.size} existing videos in database`);
 
         // Filter out videos that already exist with transcripts
-        const newVideos = allVideos.filter(v => !existingVideoMap.has(v.videoId));
-        const videosWithoutTranscripts = allVideos.filter(v =>
+        const newVideos = combinedVideos.filter(v => !existingVideoMap.has(v.videoId));
+        const videosWithoutTranscripts = combinedVideos.filter(v =>
           existingVideoMap.has(v.videoId) && !existingVideoMap.get(v.videoId)
         );
 
         // Combine new videos and videos needing transcripts, up to the limit
         const videosToProcess = [...newVideos, ...videosWithoutTranscripts].slice(0, videoLimit);
 
-        console.log(`Found ${allVideos.length} total videos, ${newVideos.length} new, ${videosWithoutTranscripts.length} need transcripts`);
+        console.log(`Found ${combinedVideos.length} total videos (${liveVideos.length} live), ${newVideos.length} new, ${videosWithoutTranscripts.length} need transcripts`);
         console.log(`Processing ${videosToProcess.length} videos (limit: ${videoLimit})`);
 
         sendProgress({
           type: 'status',
-          message: `Found ${newVideos.length} new videos and ${videosWithoutTranscripts.length} videos needing transcripts. Starting import...`
+          message: `Found ${liveVideos.length} live videos, ${newVideos.length} new videos and ${videosWithoutTranscripts.length} videos needing transcripts. Starting import...`
         });
 
     // Update channel video count with actual total
     await supabaseAdmin
       .from('channels')
-      .update({ video_count: allVideos.length })
+      .update({ video_count: combinedVideos.length })
       .eq('id', channelId);
 
     let processedCount = 0;
