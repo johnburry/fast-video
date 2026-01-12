@@ -93,7 +93,8 @@ export async function getVideoTranscript(videoId: string): Promise<TranscriptSeg
         // Wait before polling
         await new Promise(resolve => setTimeout(resolve, pollInterval));
 
-        const jobUrl = `https://api.supadata.ai/v1/transcript/job/${data.jobId}`;
+        // Try different possible job status endpoint formats
+        const jobUrl = `https://api.supadata.ai/v1/transcript?jobId=${data.jobId}`;
 
         const jobResponse = await fetch(jobUrl, {
           method: 'GET',
