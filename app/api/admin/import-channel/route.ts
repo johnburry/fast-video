@@ -354,7 +354,8 @@ export async function POST(request: NextRequest) {
           });
         }
         // For live videos, prefer native captions to avoid async job delays
-        const transcript = await getVideoTranscript(video.videoId, isLiveVideo);
+        // Pass videoId so job IDs can be saved to database for background processing
+        const transcript = await getVideoTranscript(video.videoId, isLiveVideo, videoId);
 
         if (!transcript || transcript.length === 0) {
           console.error(`[IMPORT] Failed to get transcript for ${video.videoId} ${isLiveVideo ? '[LIVE VIDEO]' : ''} - transcript API returned null or empty`);

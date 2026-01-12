@@ -1,3 +1,5 @@
+import { supabaseAdmin } from '@/lib/supabase/server';
+
 export interface TranscriptSegment {
   text: string;
   startTime: number;
@@ -29,7 +31,11 @@ interface SupadataJobStatusResponse {
   error?: string;
 }
 
-export async function getVideoTranscript(videoId: string, preferNative: boolean = false): Promise<TranscriptSegment[] | null> {
+export async function getVideoTranscript(
+  videoId: string,
+  preferNative: boolean = false,
+  dbVideoId?: string
+): Promise<TranscriptSegment[] | null> {
   try {
     console.log(`[TRANSCRIPT] Fetching transcript for video ${videoId}...`);
 
@@ -107,7 +113,12 @@ export async function getVideoTranscript(videoId: string, preferNative: boolean 
         // Check if this is an async job
         if (autoData.jobId && !autoData.content && !autoData.segments) {
           console.log(`[TRANSCRIPT] Auto mode returned job ID: ${autoData.jobId} - this will require async processing`);
-          // For now, skip async jobs to avoid blocking
+
+          // Save job to database for background processing
+          if (dbVideoId) {
+            await saveTranscriptJob(dbVideoId, autoData.jobId);
+          }
+
           return null;
         }
 
@@ -138,11 +149,13 @@ export async function getVideoTranscript(videoId: string, preferNative: boolean 
     // Check if this is an async job response
     if (data.jobId && !data.content && !data.segments) {
       console.log(`[TRANSCRIPT] Received async job ID: ${data.jobId}`);
-      console.log(`[TRANSCRIPT] Live video transcripts require async processing - skipping for now`);
-      console.log(`[TRANSCRIPT] Job ID can be used to retrieve transcript later: ${data.jobId}`);
+      console.log(`[TRANSCRIPT] Live video transcripts require async processing`);
 
-      // TODO: Implement background job processing for live video transcripts
-      // For now, we skip these videos to avoid blocking the import process
+      // Save job to database for background processing
+      if (dbVideoId) {
+        await saveTranscriptJob(dbVideoId, data.jobId);
+        console.log(`[TRANSCRIPT] Saved job ${data.jobId} to database for background processing`);
+      }
 
       return null;
     }
@@ -205,4 +218,28 @@ export function parseTimestamp(timestamp: string): number {
   }
 
   return 0;
+}
+
+// Helper function to save transcript job to database
+async function saveTranscriptJob(videoId: string, jobId: string): Promise<void> {
+  try {
+    const { error } = await supabaseAdmin
+      .from('transcript_jobs')
+      .insert({
+        video_id: videoId,
+        job_id: jobId,
+        status: 'pending',
+      });
+
+    if (error) {
+      // If unique constraint violation, job already exists - that's fine
+      if (error.code !== '23505') {
+        console.error(`[TRANSCRIPT] Error saving job to database:`, error);
+      }
+    } else {
+      console.log(`[TRANSCRIPT] Successfully saved job ${jobId} for video ${videoId}`);
+    }
+  } catch (error) {
+    console.error(`[TRANSCRIPT] Exception saving job to database:`, error);
+  }
 }
