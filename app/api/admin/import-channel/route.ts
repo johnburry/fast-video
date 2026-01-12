@@ -223,17 +223,28 @@ export async function POST(request: NextRequest) {
 
         console.log(`Found ${existingVideoMap.size} existing videos in database`);
 
+        // Separate live videos for priority processing
+        const liveVideoIdsSet = new Set(liveVideos.map(v => v.videoId));
+
         // Filter out videos that already exist with transcripts
         const newVideos = combinedVideos.filter(v => !existingVideoMap.has(v.videoId));
         const videosWithoutTranscripts = combinedVideos.filter(v =>
           existingVideoMap.has(v.videoId) && !existingVideoMap.get(v.videoId)
         );
 
-        // Combine new videos and videos needing transcripts, up to the limit
-        const videosToProcess = [...newVideos, ...videosWithoutTranscripts].slice(0, videoLimit);
+        // Prioritize live videos: process live videos first, then other videos
+        const liveVideosToProcess = [...newVideos, ...videosWithoutTranscripts].filter(v => liveVideoIdsSet.has(v.videoId));
+        const regularVideosToProcess = [...newVideos, ...videosWithoutTranscripts].filter(v => !liveVideoIdsSet.has(v.videoId));
+
+        // Combine with live videos first, up to the limit
+        const videosToProcess = [...liveVideosToProcess, ...regularVideosToProcess].slice(0, videoLimit);
 
         console.log(`Found ${combinedVideos.length} total videos (${liveVideos.length} live), ${newVideos.length} new, ${videosWithoutTranscripts.length} need transcripts`);
+        console.log(`Live videos to process: ${liveVideosToProcess.length}, Regular videos to process: ${regularVideosToProcess.length}`);
         console.log(`Processing ${videosToProcess.length} videos (limit: ${videoLimit})`);
+        if (liveVideosToProcess.length > 0) {
+          console.log(`Live videos being processed: ${liveVideosToProcess.map(v => `${v.title} (${v.videoId})`).join(', ')}`);
+        }
 
         sendProgress({
           type: 'status',
