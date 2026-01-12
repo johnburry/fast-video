@@ -83,9 +83,9 @@ export async function getVideoTranscript(videoId: string): Promise<TranscriptSeg
     if (data.jobId && !data.content && !data.segments) {
       console.log(`[TRANSCRIPT] Received async job ID: ${data.jobId} - live videos require async processing`);
 
-      // For live videos, try polling a few times with shorter intervals
-      const maxAttempts = 6; // Poll for up to 1 minute (6 attempts * 10 seconds)
-      const pollInterval = 10000; // 10 seconds
+      // For live videos, poll more aggressively
+      const maxAttempts = 24; // Poll for up to 2 minutes (24 attempts * 5 seconds)
+      const pollInterval = 5000; // 5 seconds
 
       for (let attempt = 1; attempt <= maxAttempts; attempt++) {
         console.log(`[TRANSCRIPT] Polling job ${data.jobId} (attempt ${attempt}/${maxAttempts})...`);
