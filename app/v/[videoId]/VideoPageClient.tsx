@@ -26,9 +26,10 @@ export default function VideoPageClient({ videoId }: { videoId: string }) {
 
   useEffect(() => {
     // Check if user came from the /record page (test in new tab)
-    if (typeof window !== 'undefined' && document.referrer) {
-      const referrerUrl = new URL(document.referrer);
-      if (referrerUrl.pathname === '/record') {
+    if (typeof window !== 'undefined') {
+      const urlParams = new URLSearchParams(window.location.search);
+      const fromParam = urlParams.get('from');
+      if (fromParam === 'record') {
         setShowBackButton(true);
       }
     }

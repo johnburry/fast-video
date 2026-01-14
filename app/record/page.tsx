@@ -822,7 +822,7 @@ export default function RecordPage() {
               <button
                 onClick={() => {
                   const shareUrl = getShareableUrl();
-                  window.open(shareUrl, '_blank');
+                  window.open(`${shareUrl}?from=record`, '_blank');
                 }}
                 className="px-8 py-3 bg-green-600 hover:bg-green-700 rounded-lg font-medium transition-colors text-lg"
               >
