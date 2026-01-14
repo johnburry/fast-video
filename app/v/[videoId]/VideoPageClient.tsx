@@ -139,10 +139,10 @@ export default function VideoPageClient({ videoId }: { videoId: string }) {
   });
 
   return (
-    <div className="min-h-screen bg-black flex flex-col items-center justify-center p-4">
+    <div className="min-h-screen bg-black flex flex-col items-center justify-center">
       {/* Channel Thumbnail for Audio-Only (when override is true) */}
       {metadata.overrideVideoThumbnail && metadata.channelThumbnail && (
-        <div className="mb-6 max-w-2xl w-full flex flex-col items-center">
+        <div className="mb-6 max-w-2xl w-full flex flex-col items-center px-4">
           <img
             src={metadata.channelThumbnail}
             alt={metadata.channelName || 'Channel'}
@@ -166,11 +166,11 @@ export default function VideoPageClient({ videoId }: { videoId: string }) {
           )}
         </div>
       )}
-      <div className="w-full max-w-7xl">
+      <div className="w-full h-full flex items-center justify-center" style={{ maxHeight: '100vh', maxWidth: '100vw' }}>
         {metadata.overrideVideoThumbnail && !showingIntro ? (
           /* Audio Player for Audio-Only Mode */
           showAudioPlayer && (
-            <div className="bg-gray-900 rounded-lg p-8 flex justify-center">
+            <div className="bg-gray-900 rounded-lg p-8 flex justify-center mx-4">
               <MuxPlayer
                 ref={audioPlayerRef}
                 playbackId={currentPlaybackId}
@@ -183,7 +183,16 @@ export default function VideoPageClient({ videoId }: { videoId: string }) {
           )
         ) : (
           /* Video Player for Video Mode (or Intro Video) */
-          <div style={{ position: 'relative', width: '100%', paddingTop: '56.25%' }}>
+          <div style={{
+            width: '100%',
+            height: '100%',
+            maxWidth: '100vw',
+            maxHeight: '100vh',
+            aspectRatio: '16 / 9',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center'
+          }}>
             <MuxPlayer
               key={currentPlaybackId}
               playbackId={currentPlaybackId}
@@ -191,7 +200,7 @@ export default function VideoPageClient({ videoId }: { videoId: string }) {
               autoPlay
               poster={posterUrl}
               onEnded={handleVideoEnd}
-              style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%' }}
+              style={{ width: '100%', height: '100%', maxWidth: '100%', maxHeight: '100%' }}
             />
           </div>
         )}
