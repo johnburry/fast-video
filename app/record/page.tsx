@@ -803,7 +803,7 @@ export default function RecordPage() {
               </div>
             )}
 
-            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+            <div className="flex flex-col sm:flex-row gap-4 justify-center items-stretch">
               {/* Temporarily hidden - uncomment to enable Toggle Video Thumbnail button */}
               {/* {recordingMode === 'video' && (
                 <button
@@ -815,16 +815,16 @@ export default function RecordPage() {
               )} */}
               <button
                 onClick={copyShareLink}
-                className="px-8 py-3 bg-blue-600 hover:bg-blue-700 rounded-lg font-medium transition-colors text-lg"
+                className="flex-1 px-8 py-3 bg-blue-600 hover:bg-blue-700 rounded-lg font-medium transition-colors text-lg"
               >
-                {recordingMode === 'video' ? 'Copy Video Link for Sharing' : 'Copy Link for Sharing'}
+                {recordingMode === 'video' ? 'Copy video link for sharing' : 'Copy link for sharing'}
               </button>
               <button
                 onClick={() => {
                   const shareUrl = getShareableUrl();
                   window.open(`${shareUrl}?from=record`, '_blank');
                 }}
-                className="px-8 py-3 bg-green-600 hover:bg-green-700 rounded-lg font-medium transition-colors text-lg"
+                className="flex-1 px-8 py-3 bg-green-600 hover:bg-green-700 rounded-lg font-medium transition-colors text-lg"
               >
                 Test in new tab
               </button>
