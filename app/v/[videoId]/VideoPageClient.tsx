@@ -220,44 +220,47 @@ export default function VideoPageClient({ videoId }: { videoId: string }) {
             width: '100vw',
             height: '100vh',
             display: 'flex',
-            flexDirection: 'column',
             alignItems: 'center',
-            justifyContent: 'space-between',
+            justifyContent: 'center',
             backgroundColor: '#000000'
           }}>
-            <div style={{ flex: 1, width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: 0 }}>
-              <MuxPlayer
-                key={currentPlaybackId}
-                playbackId={currentPlaybackId}
-                streamType="on-demand"
-                autoPlay
-                poster={posterUrl}
-                onEnded={handleVideoEnd}
-                style={{
-                  width: '100vw',
-                  height: '100%',
-                  maxWidth: '100vw',
-                  objectFit: 'contain'
-                }}
-              />
-            </div>
-            {destinationTitle && !showingIntro && (
-              <div style={{
-                padding: '20px 16px',
-                textAlign: 'center',
-                color: 'white',
-                fontSize: '18px',
-                width: '100%',
-                backgroundColor: 'rgba(0, 0, 0, 0.8)',
-                flexShrink: 0
-              }}>
-                <div style={{ maxWidth: '90vw', margin: '0 auto' }}>
-                  <span style={{ fontWeight: 'bold' }}>Up next: </span>
-                  <span>{destinationTitle}</span>
-                </div>
-              </div>
-            )}
+            <MuxPlayer
+              key={currentPlaybackId}
+              playbackId={currentPlaybackId}
+              streamType="on-demand"
+              autoPlay
+              poster={posterUrl}
+              onEnded={handleVideoEnd}
+              style={{
+                width: '100vw',
+                height: '100vh',
+                maxWidth: '100vw',
+                maxHeight: '100vh',
+                objectFit: 'contain'
+              }}
+            />
           </div>
+          {destinationTitle && !showingIntro && (
+            <div style={{
+              position: 'fixed',
+              bottom: 0,
+              left: 0,
+              right: 0,
+              padding: '20px 16px',
+              paddingBottom: 'max(20px, env(safe-area-inset-bottom))',
+              textAlign: 'center',
+              color: 'white',
+              fontSize: '18px',
+              backgroundColor: 'rgba(0, 0, 0, 0.95)',
+              zIndex: 1000,
+              pointerEvents: 'none'
+            }}>
+              <div style={{ maxWidth: '90vw', margin: '0 auto' }}>
+                <span style={{ fontWeight: 'bold' }}>Up next: </span>
+                <span>{destinationTitle}</span>
+              </div>
+            </div>
+          )}
         </>
       )}
     </div>
