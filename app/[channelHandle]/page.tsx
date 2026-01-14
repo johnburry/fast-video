@@ -606,7 +606,9 @@ export default function ChannelPage({
                     )}
                   </button>
                   <a
-                    href="/record"
+                    href={`/record?dest=${encodeURIComponent(
+                      `https://www.youtube.com/watch?v=${selectedVideo.youtubeVideoId}&t=${selectedVideo.startTime ? Math.floor(selectedVideo.startTime) : 0}s`
+                    )}`}
                     className="mt-3 w-full bg-red-600 hover:bg-red-700 text-white font-medium py-2 px-4 rounded-lg transition-colors flex items-center justify-center gap-2"
                   >
                     <svg className="w-4 h-4" viewBox="0 0 530 510" fill="none" xmlns="http://www.w3.org/2000/svg">
