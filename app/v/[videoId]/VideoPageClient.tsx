@@ -183,28 +183,31 @@ export default function VideoPageClient({ videoId }: { videoId: string }) {
       ) : (
         /* Video Player for Video Mode (or Intro Video) */
         <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
           width: '100vw',
           height: '100vh',
           display: 'flex',
           alignItems: 'center',
-          justifyContent: 'center'
+          justifyContent: 'center',
+          backgroundColor: '#000000'
         }}>
-          <div style={{
-            width: '100%',
-            height: '100%',
-            maxWidth: 'min(100vw, calc(100vh * 16 / 9))',
-            maxHeight: 'min(100vh, calc(100vw * 9 / 16))'
-          }}>
-            <MuxPlayer
-              key={currentPlaybackId}
-              playbackId={currentPlaybackId}
-              streamType="on-demand"
-              autoPlay
-              poster={posterUrl}
-              onEnded={handleVideoEnd}
-              style={{ width: '100%', height: '100%' }}
-            />
-          </div>
+          <MuxPlayer
+            key={currentPlaybackId}
+            playbackId={currentPlaybackId}
+            streamType="on-demand"
+            autoPlay
+            poster={posterUrl}
+            onEnded={handleVideoEnd}
+            style={{
+              width: '100vw',
+              height: '100vh',
+              maxWidth: '100vw',
+              maxHeight: '100vh',
+              objectFit: 'contain'
+            }}
+          />
         </div>
       )}
     </div>
