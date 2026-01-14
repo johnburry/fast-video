@@ -163,6 +163,9 @@ export default function VideoPageClient({ videoId }: { videoId: string }) {
     willShowChannelThumbnail: metadata.overrideVideoThumbnail && metadata.channelThumbnail,
     showingIntro,
     currentPlaybackId,
+    destinationTitle,
+    altDestination: metadata.altDestination,
+    channelName: metadata.channelName,
   });
 
   return (
@@ -219,10 +222,10 @@ export default function VideoPageClient({ videoId }: { videoId: string }) {
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'center',
-            justifyContent: 'center',
+            justifyContent: 'space-between',
             backgroundColor: '#000000'
           }}>
-            <div style={{ flex: 1, width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <div style={{ flex: 1, width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: 0 }}>
               <MuxPlayer
                 key={currentPlaybackId}
                 playbackId={currentPlaybackId}
@@ -240,14 +243,18 @@ export default function VideoPageClient({ videoId }: { videoId: string }) {
             </div>
             {destinationTitle && !showingIntro && (
               <div style={{
-                padding: '16px',
+                padding: '20px 16px',
                 textAlign: 'center',
                 color: 'white',
                 fontSize: '18px',
-                maxWidth: '90vw'
+                width: '100%',
+                backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                flexShrink: 0
               }}>
-                <span style={{ fontWeight: 'bold' }}>Up next: </span>
-                <span>{destinationTitle}</span>
+                <div style={{ maxWidth: '90vw', margin: '0 auto' }}>
+                  <span style={{ fontWeight: 'bold' }}>Up next: </span>
+                  <span>{destinationTitle}</span>
+                </div>
               </div>
             )}
           </div>
