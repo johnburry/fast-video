@@ -228,7 +228,7 @@ export default function VideoPageClient({ videoId }: { videoId: string }) {
           {/* Back Button */}
           {showBackButton && (
             <button
-              onClick={() => window.history.back()}
+              onClick={() => window.close()}
               style={{
                 position: 'fixed',
                 top: 'max(16px, env(safe-area-inset-top))',
