@@ -803,7 +803,7 @@ export default function RecordPage() {
               </div>
             )}
 
-            <div className="flex flex-col sm:flex-row gap-4 justify-center items-stretch">
+            <div className="flex flex-col gap-4 justify-center items-center">
               {/* Temporarily hidden - uncomment to enable Toggle Video Thumbnail button */}
               {/* {recordingMode === 'video' && (
                 <button
@@ -815,19 +815,23 @@ export default function RecordPage() {
               )} */}
               <button
                 onClick={copyShareLink}
-                className="flex-1 px-8 py-3 bg-blue-600 hover:bg-blue-700 rounded-lg font-medium transition-colors text-lg"
+                className="px-8 py-3 bg-blue-600 hover:bg-blue-700 rounded-lg font-medium transition-colors text-lg"
               >
                 {recordingMode === 'video' ? 'Copy video link for sharing' : 'Copy link for sharing'}
               </button>
-              <button
+              {/* Temporarily hidden - uncomment to enable Test in new tab button */}
+              {/* <button
                 onClick={() => {
                   const shareUrl = getShareableUrl();
                   window.open(`${shareUrl}?from=record`, '_blank');
                 }}
-                className="flex-1 px-8 py-3 bg-green-600 hover:bg-green-700 rounded-lg font-medium transition-colors text-lg"
+                className="px-8 py-3 bg-green-600 hover:bg-green-700 rounded-lg font-medium transition-colors text-lg"
               >
                 Test in new tab
-              </button>
+              </button> */}
+              <p className="text-gray-400 text-center text-sm max-w-md">
+                To test the content destination at the end of this video, copy the link and send yourself a text message of it.
+              </p>
             </div>
             </div>
           </div>
