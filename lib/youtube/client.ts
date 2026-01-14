@@ -113,6 +113,19 @@ export async function getChannelVideos(channelId: string, limit: number = 50): P
         const v = video as any;
         if (!v.id) continue;
 
+        // Filter out upcoming/scheduled videos (premieres or scheduled live streams)
+        // Check for "upcoming" badge or if the video has no duration (indicates not yet available)
+        const isUpcoming = v.upcoming !== undefined && v.upcoming !== null;
+        const hasUpcomingBadge = v.badges?.some((badge: any) =>
+          badge?.label?.toLowerCase().includes('upcoming') ||
+          badge?.label?.toLowerCase().includes('premiere')
+        );
+
+        if (isUpcoming || hasUpcomingBadge) {
+          console.log(`[YOUTUBE] Skipping upcoming video: ${v.title?.text} (${v.id})`);
+          continue;
+        }
+
         videos.push({
           videoId: v.id,
           title: v.title?.text || '',
@@ -205,6 +218,18 @@ export async function getChannelLiveVideos(channelId: string, limit: number = 5)
     for (const video of liveVideos.videos) {
       const v = video as any;
       if (!v.id) continue;
+
+      // Filter out upcoming/scheduled live streams
+      const isUpcoming = v.upcoming !== undefined && v.upcoming !== null;
+      const hasUpcomingBadge = v.badges?.some((badge: any) =>
+        badge?.label?.toLowerCase().includes('upcoming') ||
+        badge?.label?.toLowerCase().includes('premiere')
+      );
+
+      if (isUpcoming || hasUpcomingBadge) {
+        console.log(`[YOUTUBE] Skipping upcoming live stream: ${v.title?.text} (${v.id})`);
+        continue;
+      }
 
       const videoInfo = {
         videoId: v.id,
