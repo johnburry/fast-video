@@ -139,7 +139,7 @@ export default function VideoPageClient({ videoId }: { videoId: string }) {
   });
 
   return (
-    <div className="min-h-screen bg-black flex flex-col items-center justify-center">
+    <div style={{ width: '100vw', height: '100vh', backgroundColor: '#000000', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
       {/* Channel Thumbnail for Audio-Only (when override is true) */}
       {metadata.overrideVideoThumbnail && metadata.channelThumbnail && (
         <div className="mb-6 max-w-2xl w-full flex flex-col items-center px-4">
@@ -166,32 +166,34 @@ export default function VideoPageClient({ videoId }: { videoId: string }) {
           )}
         </div>
       )}
-      <div className="w-full h-full flex items-center justify-center" style={{ maxHeight: '100vh', maxWidth: '100vw' }}>
-        {metadata.overrideVideoThumbnail && !showingIntro ? (
-          /* Audio Player for Audio-Only Mode */
-          showAudioPlayer && (
-            <div className="bg-gray-900 rounded-lg p-8 flex justify-center mx-4">
-              <MuxPlayer
-                ref={audioPlayerRef}
-                playbackId={currentPlaybackId}
-                streamType="on-demand"
-                audio
-                onEnded={handleVideoEnd}
-                style={{ width: '100%', maxWidth: '700px' }}
-              />
-            </div>
-          )
-        ) : (
-          /* Video Player for Video Mode (or Intro Video) */
+      {metadata.overrideVideoThumbnail && !showingIntro ? (
+        /* Audio Player for Audio-Only Mode */
+        showAudioPlayer && (
+          <div className="bg-gray-900 rounded-lg p-8 flex justify-center mx-4">
+            <MuxPlayer
+              ref={audioPlayerRef}
+              playbackId={currentPlaybackId}
+              streamType="on-demand"
+              audio
+              onEnded={handleVideoEnd}
+              style={{ width: '100%', maxWidth: '700px' }}
+            />
+          </div>
+        )
+      ) : (
+        /* Video Player for Video Mode (or Intro Video) */
+        <div style={{
+          width: '100vw',
+          height: '100vh',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center'
+        }}>
           <div style={{
             width: '100%',
             height: '100%',
-            maxWidth: '100vw',
-            maxHeight: '100vh',
-            aspectRatio: '16 / 9',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center'
+            maxWidth: 'min(100vw, calc(100vh * 16 / 9))',
+            maxHeight: 'min(100vh, calc(100vw * 9 / 16))'
           }}>
             <MuxPlayer
               key={currentPlaybackId}
@@ -200,11 +202,11 @@ export default function VideoPageClient({ videoId }: { videoId: string }) {
               autoPlay
               poster={posterUrl}
               onEnded={handleVideoEnd}
-              style={{ width: '100%', height: '100%', maxWidth: '100%', maxHeight: '100%' }}
+              style={{ width: '100%', height: '100%' }}
             />
           </div>
-        )}
-      </div>
+        </div>
+      )}
     </div>
   );
 }
