@@ -21,7 +21,18 @@ export default function VideoPageClient({ videoId }: { videoId: string }) {
   const [showingIntro, setShowingIntro] = useState(false);
   const [currentPlaybackId, setCurrentPlaybackId] = useState<string>(videoId);
   const [destinationTitle, setDestinationTitle] = useState<string>('');
+  const [showBackButton, setShowBackButton] = useState(false);
   const audioPlayerRef = useRef<any>(null);
+
+  useEffect(() => {
+    // Check if user came from the /record page (test in new tab)
+    if (typeof window !== 'undefined' && document.referrer) {
+      const referrerUrl = new URL(document.referrer);
+      if (referrerUrl.pathname === '/record') {
+        setShowBackButton(true);
+      }
+    }
+  }, []);
 
   useEffect(() => {
     const fetchMetadata = async () => {
@@ -213,6 +224,37 @@ export default function VideoPageClient({ videoId }: { videoId: string }) {
       ) : (
         /* Video Player for Video Mode (or Intro Video) */
         <>
+          {/* Back Button */}
+          {showBackButton && (
+            <button
+              onClick={() => window.history.back()}
+              style={{
+                position: 'fixed',
+                top: 'max(16px, env(safe-area-inset-top))',
+                left: '16px',
+                zIndex: 1001,
+                padding: '10px 20px',
+                backgroundColor: '#165DFC',
+                color: 'white',
+                border: 'none',
+                borderRadius: '8px',
+                fontSize: '16px',
+                fontWeight: '600',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                transition: 'opacity 0.2s'
+              }}
+              onMouseEnter={(e) => e.currentTarget.style.opacity = '0.8'}
+              onMouseLeave={(e) => e.currentTarget.style.opacity = '1'}
+            >
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M19 12H5M12 19l-7-7 7-7"/>
+              </svg>
+              Back
+            </button>
+          )}
           <div style={{
             position: 'fixed',
             top: 0,
