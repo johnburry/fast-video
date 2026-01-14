@@ -523,16 +523,11 @@ export default function RecordPage() {
           </div>
           {channelName && (
             <>
-              <div className="bg-white rounded-lg p-6 md:p-8 flex flex-col items-center gap-4 mb-4">
-                <p className="text-gray-600 text-center text-base md:text-2xl">
-                  A Fast Video is a quick video (or audio recording) you can record here, it's uploaded to the cloud and you get a link to share with others.
-                </p>
-              </div>
               <div className="bg-yellow-200 rounded-lg p-6 md:p-8 relative">
                 <div className="flex flex-col md:flex-row items-center gap-4 md:gap-6">
                   <div className="flex-1 flex flex-col items-center gap-4 w-full">
                     <p className="text-gray-600 text-center text-base md:text-2xl">
-                      When it has been shared, at the end of the video, it will automatically take the viewer to this content:
+                      Record a Fast Video message with your phone. When it is shared, at the end of the video, it will automatically take the viewer to this content:
                     </p>
                     <div className="text-center">
                       {destinationOption === 'other' && customDestination ? (
