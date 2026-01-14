@@ -20,6 +20,7 @@ export default function VideoPageClient({ videoId }: { videoId: string }) {
   const [showAudioPlayer, setShowAudioPlayer] = useState(false);
   const [showingIntro, setShowingIntro] = useState(false);
   const [currentPlaybackId, setCurrentPlaybackId] = useState<string>(videoId);
+  const [destinationTitle, setDestinationTitle] = useState<string>('');
   const audioPlayerRef = useRef<any>(null);
 
   useEffect(() => {
@@ -69,6 +70,32 @@ export default function VideoPageClient({ videoId }: { videoId: string }) {
 
     fetchMetadata();
   }, [videoId]);
+
+  // Fetch link preview title for the destination
+  useEffect(() => {
+    const fetchDestinationTitle = async () => {
+      if (metadata?.altDestination) {
+        try {
+          // Try to fetch Open Graph title from the destination URL
+          const response = await fetch(`/api/opengraph?url=${encodeURIComponent(metadata.altDestination)}`);
+          if (response.ok) {
+            const data = await response.json();
+            setDestinationTitle(data.title || metadata.altDestination);
+          } else {
+            // Fallback to just showing the URL
+            setDestinationTitle(metadata.altDestination);
+          }
+        } catch (error) {
+          console.error('Error fetching destination title:', error);
+          setDestinationTitle(metadata.altDestination);
+        }
+      } else if (metadata?.channelName) {
+        setDestinationTitle(metadata.channelName);
+      }
+    };
+
+    fetchDestinationTitle();
+  }, [metadata?.altDestination, metadata?.channelName]);
 
   const handleVideoEnd = () => {
     // If we're showing the intro video, transition to the main video
@@ -182,33 +209,49 @@ export default function VideoPageClient({ videoId }: { videoId: string }) {
         )
       ) : (
         /* Video Player for Video Mode (or Intro Video) */
-        <div style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          width: '100vw',
-          height: '100vh',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          backgroundColor: '#000000'
-        }}>
-          <MuxPlayer
-            key={currentPlaybackId}
-            playbackId={currentPlaybackId}
-            streamType="on-demand"
-            autoPlay
-            poster={posterUrl}
-            onEnded={handleVideoEnd}
-            style={{
-              width: '100vw',
-              height: '100vh',
-              maxWidth: '100vw',
-              maxHeight: '100vh',
-              objectFit: 'contain'
-            }}
-          />
-        </div>
+        <>
+          <div style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            width: '100vw',
+            height: '100vh',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            backgroundColor: '#000000'
+          }}>
+            <div style={{ flex: 1, width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <MuxPlayer
+                key={currentPlaybackId}
+                playbackId={currentPlaybackId}
+                streamType="on-demand"
+                autoPlay
+                poster={posterUrl}
+                onEnded={handleVideoEnd}
+                style={{
+                  width: '100vw',
+                  height: '100%',
+                  maxWidth: '100vw',
+                  objectFit: 'contain'
+                }}
+              />
+            </div>
+            {destinationTitle && !showingIntro && (
+              <div style={{
+                padding: '16px',
+                textAlign: 'center',
+                color: 'white',
+                fontSize: '18px',
+                maxWidth: '90vw'
+              }}>
+                <span style={{ fontWeight: 'bold' }}>Up next: </span>
+                <span>{destinationTitle}</span>
+              </div>
+            )}
+          </div>
+        </>
       )}
     </div>
   );
