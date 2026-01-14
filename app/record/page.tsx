@@ -809,14 +809,15 @@ export default function RecordPage() {
             )}
 
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-              {recordingMode === 'video' && (
+              {/* Temporarily hidden - uncomment to enable Toggle Video Thumbnail button */}
+              {/* {recordingMode === 'video' && (
                 <button
                   onClick={toggleVideoThumbnail}
                   className="px-8 py-3 bg-purple-600 hover:bg-purple-700 rounded-lg font-medium transition-colors text-lg"
                 >
                   Toggle Video Thumbnail
                 </button>
-              )}
+              )} */}
               <button
                 onClick={copyShareLink}
                 className="px-8 py-3 bg-blue-600 hover:bg-blue-700 rounded-lg font-medium transition-colors text-lg"
