@@ -1,4 +1,7 @@
-import { supabaseAdmin } from '@/lib/supabase/server';
+'use client';
+
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 
 const FEATURED_CHANNEL_IDS = [
   'a5c701d0-fd07-44ff-b547-44dc61ac9cc9',
@@ -6,12 +9,29 @@ const FEATURED_CHANNEL_IDS = [
   '51066ca5-daa2-4056-a88d-210140957793'
 ];
 
-export default async function Home() {
-  // Fetch featured channels
-  const { data: channels } = await supabaseAdmin
-    .from('channels')
-    .select('id, channel_handle, channel_name, thumbnail_url, channel_description')
-    .in('id', FEATURED_CHANNEL_IDS);
+export default function Home() {
+  const [searchQuery, setSearchQuery] = useState('');
+  const [channels, setChannels] = useState<any[]>([]);
+  const router = useRouter();
+
+  useEffect(() => {
+    // Fetch featured channels
+    const fetchChannels = async () => {
+      const response = await fetch('/api/channels/featured');
+      if (response.ok) {
+        const data = await response.json();
+        setChannels(data.channels || []);
+      }
+    };
+    fetchChannels();
+  }, []);
+
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (searchQuery.trim()) {
+      router.push(`/search?q=${encodeURIComponent(searchQuery)}`);
+    }
+  };
 
   return (
     <div className="min-h-screen" style={{ backgroundColor: '#FFF' }}>
@@ -25,6 +45,26 @@ export default async function Home() {
                 alt="PlaySermons"
                 className="h-[200px] w-auto"
               />
+            </div>
+            {/* Search Box */}
+            <div className="mb-8">
+              <form onSubmit={handleSearch} className="max-w-3xl mx-auto">
+                <div className="flex gap-4">
+                  <input
+                    type="text"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    placeholder="Search across all church sermons"
+                    className="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-lg bg-white placeholder-gray-500"
+                  />
+                  <button
+                    type="submit"
+                    className="bg-blue-600 text-white px-8 py-3 rounded-lg font-medium hover:bg-blue-700 transition-colors"
+                  >
+                    Search
+                  </button>
+                </div>
+              </form>
             </div>
           </div>
         </div>
@@ -138,7 +178,7 @@ export default async function Home() {
         {/* Try it Out! */}
         <div className="mb-16">
           <h2 className="text-3xl font-bold text-center text-gray-900 mb-12">
-            Try out these Church's PlaySermon Search!
+            Try out these Church's AI-Powered Search!
           </h2>
 
           <div className="grid md:grid-cols-3 gap-8">
