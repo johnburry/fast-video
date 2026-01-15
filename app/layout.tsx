@@ -13,12 +13,32 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "PlaySermons.com",
-  description: "Search video transcripts across channels",
+  title: "PlaySermons: AI Search for Your Sermon Videos",
+  description: "Unlock your church's sermon library with AI-powered search. Make every sermon instantly searchable across your entire YouTube video library.",
   icons: {
     icon: '/icon',
     shortcut: '/favicon.ico',
     apple: '/apple-icon',
+  },
+  openGraph: {
+    title: "PlaySermons: AI Search for Your Sermon Videos",
+    description: "Unlock your church's sermon library with AI-powered search. Make every sermon instantly searchable across your entire YouTube video library.",
+    images: [
+      {
+        url: '/playsermons-logo.svg',
+        width: 586,
+        height: 419,
+        alt: 'PlaySermons Logo',
+      },
+    ],
+    type: 'website',
+    siteName: 'PlaySermons',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: "PlaySermons: AI Search for Your Sermon Videos",
+    description: "Unlock your church's sermon library with AI-powered search. Make every sermon instantly searchable across your entire YouTube video library.",
+    images: ['/playsermons-logo.svg'],
   },
 };
 
