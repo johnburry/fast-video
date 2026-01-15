@@ -41,7 +41,7 @@ export default function LoginPage() {
       <div className="max-w-md w-full">
         <div className="bg-white rounded-lg shadow-lg p-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-2 text-center">
-            Fast.Video Login
+            PlaySermons Login
           </h1>
           <p className="text-gray-600 mb-8 text-center">
             Sign in to access admin panel
