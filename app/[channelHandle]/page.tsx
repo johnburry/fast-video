@@ -294,7 +294,7 @@ export default function ChannelPage({
         <div style={{ backgroundColor: '#ffffff', paddingTop: hasWatchedVideo && !muxVideoId && watchedVideoId ? '4.5rem' : '0.5rem' }}>
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-8">
             {/* Mobile: Stack vertically, Desktop: Two columns */}
-            <div className="flex flex-col md:flex-row md:justify-between md:items-start gap-4">
+            <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4">
               {/* Left: Thumbnail and Channel Title */}
               <div className="flex items-center space-x-4">
                 {channelData?.channel.thumbnail && (
