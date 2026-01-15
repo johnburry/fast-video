@@ -19,7 +19,7 @@ export default async function Home() {
       <div style={{ backgroundColor: '#FDFDFD' }}>
         <div className="max-w-6xl mx-auto px-4 pt-12 sm:px-6 lg:px-8">
           <div className="text-center">
-            <div className="flex items-center justify-center">
+            <div className="flex items-center justify-center pb-[15px]">
               <img
                 src="/playsermons-logo.svg"
                 alt="PlaySermons"
