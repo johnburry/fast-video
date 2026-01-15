@@ -194,7 +194,7 @@ export async function POST(request: NextRequest) {
         // Fetch videos from YouTube
         sendProgress({ type: 'status', message: 'Fetching videos from YouTube...' });
         console.log(`Fetching videos for @${channelInfo.handle}...`);
-        const allVideos = await getChannelVideos(channelInfo.channelId);
+        const allVideos = await getChannelVideos(channelInfo.channelId, videoLimit);
 
         // Fetch live videos from YouTube
         sendProgress({ type: 'status', message: 'Fetching live videos from YouTube...' });
