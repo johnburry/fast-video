@@ -31,7 +31,7 @@ export default async function Home() {
       </div>
 
       {/* Gradient section - starts right below logo */}
-      <div className="bg-gradient-to-br from-purple-50 via-white to-blue-50">
+      <div className="bg-gradient-to-br from-white via-purple-200 to-blue-300">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Taglines */}
         <div className="text-center pt-8 pb-5">
