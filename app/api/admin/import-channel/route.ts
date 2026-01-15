@@ -345,7 +345,7 @@ export async function POST(request: NextRequest) {
           continue;
         }
 
-        // Fetch and save transcript
+        // Fetch and save transcript with retry logic
         console.log(`[IMPORT] Fetching transcript for ${video.videoId} (${video.title})... ${isLiveVideo ? '[LIVE VIDEO]' : ''}`);
         if (isLiveVideo) {
           sendProgress({
@@ -355,13 +355,28 @@ export async function POST(request: NextRequest) {
         }
         // For live videos, prefer native captions to avoid async job delays
         // Pass videoId so job IDs can be saved to database for background processing
-        const transcript = await getVideoTranscript(video.videoId, isLiveVideo, videoId);
+        let transcript = await getVideoTranscript(video.videoId, isLiveVideo, videoId);
 
+        // Retry once after 3 seconds if transcript fetch failed
         if (!transcript || transcript.length === 0) {
-          console.error(`[IMPORT] Failed to get transcript for ${video.videoId} ${isLiveVideo ? '[LIVE VIDEO]' : ''} - transcript API returned null or empty`);
+          console.log(`[IMPORT] First attempt failed for ${video.videoId}, waiting 3 seconds before retry...`);
           sendProgress({
             type: 'status',
-            message: `⚠️ Failed to get transcript for: ${video.title}${isLiveVideo ? ' [LIVE VIDEO]' : ''}`
+            message: `Retrying transcript fetch for: ${video.title} (waiting 3 seconds)...`
+          });
+
+          // Wait 3 seconds
+          await new Promise(resolve => setTimeout(resolve, 3000));
+
+          console.log(`[IMPORT] Retrying transcript fetch for ${video.videoId}...`);
+          transcript = await getVideoTranscript(video.videoId, isLiveVideo, videoId);
+        }
+
+        if (!transcript || transcript.length === 0) {
+          console.error(`[IMPORT] Failed to get transcript for ${video.videoId} ${isLiveVideo ? '[LIVE VIDEO]' : ''} after retry - transcript API returned null or empty`);
+          sendProgress({
+            type: 'status',
+            message: `⚠️ Failed to get transcript for: ${video.title}${isLiveVideo ? ' [LIVE VIDEO]' : ''} (after retry)`
           });
         }
 
