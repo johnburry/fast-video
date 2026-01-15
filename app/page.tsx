@@ -21,9 +21,9 @@ export default async function Home() {
           <div className="text-center">
             <div className="flex items-center justify-center pb-[15px]">
               <img
-                src="/playsermons-logo.svg"
+                src="/playsermons-logo-2.png"
                 alt="PlaySermons"
-                className="h-32 w-auto"
+                className="h-[200px] w-auto"
               />
             </div>
           </div>
