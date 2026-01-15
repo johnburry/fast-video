@@ -280,7 +280,7 @@ export default function Home() {
             href="mailto:team@playsermons.com"
             className="inline-block bg-white text-purple-600 px-10 py-4 rounded-lg font-bold text-lg hover:bg-purple-50 transition-all transform hover:scale-105 shadow-lg"
           >
-            Contact Us for a Demo
+            Contact Us to See your Church Search Portal
           </a>
         </div>
 
