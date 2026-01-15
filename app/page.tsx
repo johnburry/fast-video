@@ -20,6 +20,7 @@ export default function Home() {
             Make every sermon instantly searchable. Help your congregation find the exact moment when a topic, Bible verse, or teaching was discussed.
           </p>
         </div>
+        </div>
       </div>
 
       {/* Gradient section */}
