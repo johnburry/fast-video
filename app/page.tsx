@@ -14,9 +14,9 @@ export default async function Home() {
     .in('id', FEATURED_CHANNEL_IDS);
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen" style={{ backgroundColor: '#FDFDFD' }}>
       {/* White top section - Logo only */}
-      <div className="bg-white">
+      <div style={{ backgroundColor: '#FDFDFD' }}>
         <div className="max-w-6xl mx-auto px-4 pt-12 sm:px-6 lg:px-8">
           <div className="text-center">
             <div className="flex items-center justify-center">
