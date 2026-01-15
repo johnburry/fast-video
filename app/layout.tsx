@@ -25,9 +25,9 @@ export const metadata: Metadata = {
     description: "Unlock your church's sermon library with AI-powered search. Make every sermon instantly searchable across your entire YouTube video library.",
     images: [
       {
-        url: '/playsermons-logo.svg',
-        width: 586,
-        height: 419,
+        url: 'https://playsermons.com/playsermons-logo.png',
+        width: 1200,
+        height: 630,
         alt: 'PlaySermons Logo',
       },
     ],
@@ -38,7 +38,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: "PlaySermons: AI Search for Your Sermon Videos",
     description: "Unlock your church's sermon library with AI-powered search. Make every sermon instantly searchable across your entire YouTube video library.",
-    images: ['/playsermons-logo.svg'],
+    images: ['https://playsermons.com/playsermons-logo.png'],
   },
 };
 
