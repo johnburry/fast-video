@@ -5,16 +5,12 @@ export default function Home() {
       <div className="max-w-6xl mx-auto px-4 py-12 sm:px-6 lg:px-8">
         {/* Logo and Tagline */}
         <div className="text-center mb-16">
-          <div className="flex items-center justify-center gap-3 mb-4">
-            <svg className="w-16 h-16 text-purple-600" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M9 18V5l12-2v13" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-              <circle cx="6" cy="18" r="3" stroke="currentColor" strokeWidth="2"/>
-              <circle cx="18" cy="16" r="3" stroke="currentColor" strokeWidth="2"/>
-              <path d="M12 8.5l6-1" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-            </svg>
-            <h1 className="text-6xl font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">
-              PlaySermons
-            </h1>
+          <div className="flex items-center justify-center mb-4">
+            <img
+              src="/playsermons-logo.svg"
+              alt="PlaySermons"
+              className="h-32 w-auto"
+            />
           </div>
           <p className="text-2xl text-gray-700 font-medium">
             Unlock Your Church's Sermon Library with AI-Powered Search
