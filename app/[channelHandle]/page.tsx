@@ -361,7 +361,8 @@ export default function ChannelPage({
                       </a>
                     </div>
                   )}
-                  <a
+                  {/* Hidden: Record a Fast Video button - uncomment to restore */}
+                  {/* <a
                     href="/record"
                     className="flex items-center gap-2 md:gap-3 px-4 py-2 md:px-6 md:py-3 bg-white border-2 rounded-lg hover:bg-gray-50 transition-colors"
                     style={{ borderColor: '#FF0000' }}
@@ -374,7 +375,7 @@ export default function ChannelPage({
                     <span className="font-bold text-sm md:text-2xl" style={{ color: '#FF0000' }}>
                       Record a Fast Video
                     </span>
-                  </a>
+                  </a> */}
                 </div>
               </div>
             </div>
