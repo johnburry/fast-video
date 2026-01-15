@@ -1,8 +1,9 @@
 export default function Home() {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-blue-50">
-      {/* Hero Section */}
-      <div className="max-w-6xl mx-auto px-4 py-12 sm:px-6 lg:px-8">
+    <div className="min-h-screen">
+      {/* White top section */}
+      <div className="bg-white pb-16">
+        <div className="max-w-6xl mx-auto px-4 py-12 sm:px-6 lg:px-8">
         {/* Logo and Tagline */}
         <div className="text-center mb-16">
           <div className="flex items-center justify-center mb-4">
@@ -19,7 +20,11 @@ export default function Home() {
             Make every sermon instantly searchable. Help your congregation find the exact moment when a topic, Bible verse, or teaching was discussed.
           </p>
         </div>
+      </div>
 
+      {/* Gradient section */}
+      <div className="bg-gradient-to-br from-purple-50 via-white to-blue-50">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Problem Statement */}
         <div className="bg-white rounded-2xl shadow-xl p-8 mb-12 border-2 border-purple-100">
           <div className="flex items-start gap-4">
@@ -171,21 +176,19 @@ export default function Home() {
             Join churches who are making their teaching more discoverable and impactful.
           </p>
           <a
-            href="/admin"
+            href="mailto:team@playsermons.com"
             className="inline-block bg-white text-purple-600 px-10 py-4 rounded-lg font-bold text-lg hover:bg-purple-50 transition-all transform hover:scale-105 shadow-lg"
           >
-            Get Started Free
+            Contact Us for a Demo
           </a>
-          <p className="mt-6 text-sm text-purple-200">
-            Import your YouTube channel in minutes. No credit card required.
-          </p>
         </div>
 
         {/* Footer */}
-        <div className="mt-16 text-center text-gray-600">
+        <div className="mt-16 pb-16 text-center text-gray-600">
           <p className="text-sm">
             Powered by AI-driven search technology • Trusted by churches worldwide
           </p>
+        </div>
         </div>
       </div>
     </div>
