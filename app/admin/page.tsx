@@ -7,7 +7,7 @@ import { AdminToolbar } from '@/components/AdminToolbar';
 export default function AdminPage() {
   const { user, loading: authLoading, signOut } = useAuth();
   const [channelHandle, setChannelHandle] = useState('');
-  const [importLimit, setImportLimit] = useState<number>(50);
+  const [importLimit, setImportLimit] = useState<number>(1000);
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<any>(null);
   const [error, setError] = useState<string | null>(null);
@@ -175,7 +175,7 @@ export default function AdminPage() {
                 type="number"
                 id="importLimit"
                 value={importLimit}
-                onChange={(e) => setImportLimit(parseInt(e.target.value) || 50)}
+                onChange={(e) => setImportLimit(parseInt(e.target.value) || 1000)}
                 min="1"
                 max="1000"
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
@@ -183,7 +183,7 @@ export default function AdminPage() {
                 disabled={loading}
               />
               <p className="mt-2 text-sm text-gray-500">
-                Maximum number of videos to import (default: 50)
+                Maximum number of videos to import (default: 1000, max: 1000)
               </p>
             </div>
 
