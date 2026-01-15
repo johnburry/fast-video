@@ -187,7 +187,7 @@ export default function Home() {
         {/* Footer */}
         <div className="mt-16 pb-8 text-center text-gray-600">
           <p className="text-sm mb-4">
-            Powered by AI-driven search technology • Trusted by churches worldwide
+            Powered by AI-driven search technology
           </p>
           <p className="text-sm text-gray-500">
             Copyright © 2026, PlaySermons LLC, all rights reserved
