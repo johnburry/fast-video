@@ -138,7 +138,7 @@ export default async function Home() {
         {/* Try it Out! */}
         <div className="mb-16">
           <h2 className="text-3xl font-bold text-center text-gray-900 mb-12">
-            Try it Out!
+            Try out these Church's PlaySermon Search!
           </h2>
 
           <div className="grid md:grid-cols-3 gap-8">
