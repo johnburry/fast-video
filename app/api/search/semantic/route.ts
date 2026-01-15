@@ -57,7 +57,7 @@ export async function GET(request: NextRequest) {
 
     // Fetch previous segments for each match to get better start times
     const matchesWithPrevious = await Promise.all(
-      (results || []).map(async (result) => {
+      (results || []).map(async (result: any) => {
         // Get previous segments that contain spoken text (not music)
         const { data: prevSegments } = await supabaseAdmin
           .from('transcripts')
