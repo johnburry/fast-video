@@ -33,10 +33,10 @@ export default function Home() {
                 The Challenge YouTube Can't Solve
               </h2>
               <p className="text-gray-700 mb-3 leading-relaxed">
-                Your church has invested years creating rich, valuable sermon content on YouTube. But there's a problem: <strong>YouTube doesn't let viewers search within sermon transcripts.</strong>
+                Your church has invested years creating rich, valuable sermon content on YouTube. But there's a problem: <strong>YouTube doesn't allow you to search for words in transcripts across your entire video library.</strong>
               </p>
               <p className="text-gray-700 leading-relaxed">
-                When your congregation searches for "grace" or "Romans 8:28" on YouTube, they might find a video titled with those words—but they can't pinpoint <em>when</em> in the sermon those topics were discussed. That means hours of powerful teaching remain hidden and underutilized.
+                When your congregation wants to find every time you taught about "grace" or "Romans 8:28," they're stuck manually scrolling through video titles and descriptions. YouTube only searches titles and descriptions—not what was actually said in the sermons. That means hours of powerful teaching remain hidden and impossible to discover.
               </p>
             </div>
           </div>
