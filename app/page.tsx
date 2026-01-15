@@ -3,7 +3,7 @@ import { supabaseAdmin } from '@/lib/supabase/server';
 const FEATURED_CHANNEL_IDS = [
   'a5c701d0-fd07-44ff-b547-44dc61ac9cc9',
   '5213fa50-0dc8-4bb1-8b2b-0d393bdd51ab',
-  'fe74faf6-a18c-4a5c-8280-aeedf57574c6'
+  '51066ca5-daa2-4056-a88d-210140957793'
 ];
 
 export default async function Home() {

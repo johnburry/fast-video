@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase/server';
-import { getChannelByHandle, getChannelVideos, getChannelLiveVideos } from '@/lib/youtube/client';
+import { getChannelByHandle, getChannelVideos } from '@/lib/youtube/client';
 import { getVideoTranscript } from '@/lib/youtube/transcript';
 import { uploadThumbnailToR2, uploadChannelThumbnailToR2, uploadChannelBannerToR2 } from '@/lib/r2';
 import type { Database } from '@/lib/supabase/database.types';
@@ -196,19 +196,7 @@ export async function POST(request: NextRequest) {
         console.log(`Fetching videos for @${channelInfo.handle}...`);
         const allVideos = await getChannelVideos(channelInfo.channelId, videoLimit);
 
-        // Fetch live videos from YouTube
-        sendProgress({ type: 'status', message: 'Fetching live videos from YouTube...' });
-        console.log(`Fetching live videos for @${channelInfo.handle}...`);
-        const liveVideos = await getChannelLiveVideos(channelInfo.channelId, 5);
-
-        // Combine regular videos and live videos, removing duplicates
-        const liveVideoIds = new Set(liveVideos.map(v => v.videoId));
-        const combinedVideos = [
-          ...liveVideos,
-          ...allVideos.filter(v => !liveVideoIds.has(v.videoId))
-        ];
-
-        console.log(`[IMPORT] Found ${allVideos.length} regular videos and ${liveVideos.length} live videos (${combinedVideos.length} total after deduplication)`);
+        console.log(`[IMPORT] Found ${allVideos.length} videos`);
 
         // Fetch all existing video IDs for this channel to avoid re-importing
         sendProgress({ type: 'status', message: 'Checking for existing videos...' });
@@ -223,38 +211,27 @@ export async function POST(request: NextRequest) {
 
         console.log(`Found ${existingVideoMap.size} existing videos in database`);
 
-        // Separate live videos for priority processing
-        const liveVideoIdsSet = new Set(liveVideos.map(v => v.videoId));
-
         // Filter out videos that already exist with transcripts
-        const newVideos = combinedVideos.filter(v => !existingVideoMap.has(v.videoId));
-        const videosWithoutTranscripts = combinedVideos.filter(v =>
+        const newVideos = allVideos.filter(v => !existingVideoMap.has(v.videoId));
+        const videosWithoutTranscripts = allVideos.filter(v =>
           existingVideoMap.has(v.videoId) && !existingVideoMap.get(v.videoId)
         );
 
-        // Prioritize live videos: process live videos first, then other videos
-        const liveVideosToProcess = [...newVideos, ...videosWithoutTranscripts].filter(v => liveVideoIdsSet.has(v.videoId));
-        const regularVideosToProcess = [...newVideos, ...videosWithoutTranscripts].filter(v => !liveVideoIdsSet.has(v.videoId));
+        // Process all videos up to the limit
+        const videosToProcess = [...newVideos, ...videosWithoutTranscripts].slice(0, videoLimit);
 
-        // Combine with live videos first, up to the limit
-        const videosToProcess = [...liveVideosToProcess, ...regularVideosToProcess].slice(0, videoLimit);
-
-        console.log(`Found ${combinedVideos.length} total videos (${liveVideos.length} live), ${newVideos.length} new, ${videosWithoutTranscripts.length} need transcripts`);
-        console.log(`Live videos to process: ${liveVideosToProcess.length}, Regular videos to process: ${regularVideosToProcess.length}`);
+        console.log(`Found ${allVideos.length} total videos, ${newVideos.length} new, ${videosWithoutTranscripts.length} need transcripts`);
         console.log(`Processing ${videosToProcess.length} videos (limit: ${videoLimit})`);
-        if (liveVideosToProcess.length > 0) {
-          console.log(`Live videos being processed: ${liveVideosToProcess.map(v => `${v.title} (${v.videoId})`).join(', ')}`);
-        }
 
         sendProgress({
           type: 'status',
-          message: `Found ${liveVideos.length} live videos, ${newVideos.length} new videos and ${videosWithoutTranscripts.length} videos needing transcripts. Processing ${videosToProcess.length} videos (${liveVideosToProcess.length} live). Starting import...`
+          message: `Found ${newVideos.length} new videos and ${videosWithoutTranscripts.length} videos needing transcripts. Processing ${videosToProcess.length} videos. Starting import...`
         });
 
     // Update channel video count with actual total
     await supabaseAdmin
       .from('channels')
-      .update({ video_count: combinedVideos.length })
+      .update({ video_count: allVideos.length })
       .eq('id', channelId);
 
     let processedCount = 0;
@@ -264,12 +241,11 @@ export async function POST(request: NextRequest) {
         // Process each video
         for (const video of videosToProcess) {
           try {
-            const isLiveVideo = liveVideoIdsSet.has(video.videoId);
             sendProgress({
               type: 'progress',
               current: processedCount + 1,
               total: videosToProcess.length,
-              videoTitle: `${video.title}${isLiveVideo ? ' [LIVE]' : ''}`,
+              videoTitle: video.title,
             });
 
             // Upload thumbnail to R2
@@ -346,16 +322,9 @@ export async function POST(request: NextRequest) {
         }
 
         // Fetch and save transcript with retry logic
-        console.log(`[IMPORT] Fetching transcript for ${video.videoId} (${video.title})... ${isLiveVideo ? '[LIVE VIDEO]' : ''}`);
-        if (isLiveVideo) {
-          sendProgress({
-            type: 'status',
-            message: `Fetching native captions for live video: ${video.title}`
-          });
-        }
-        // For live videos, prefer native captions to avoid async job delays
+        console.log(`[IMPORT] Fetching transcript for ${video.videoId} (${video.title})...`);
         // Pass videoId so job IDs can be saved to database for background processing
-        let transcript = await getVideoTranscript(video.videoId, isLiveVideo, videoId);
+        let transcript = await getVideoTranscript(video.videoId, false, videoId);
 
         // Retry once after 3 seconds if transcript fetch failed
         if (!transcript || transcript.length === 0) {
@@ -369,14 +338,14 @@ export async function POST(request: NextRequest) {
           await new Promise(resolve => setTimeout(resolve, 3000));
 
           console.log(`[IMPORT] Retrying transcript fetch for ${video.videoId}...`);
-          transcript = await getVideoTranscript(video.videoId, isLiveVideo, videoId);
+          transcript = await getVideoTranscript(video.videoId, false, videoId);
         }
 
         if (!transcript || transcript.length === 0) {
-          console.error(`[IMPORT] Failed to get transcript for ${video.videoId} ${isLiveVideo ? '[LIVE VIDEO]' : ''} after retry - transcript API returned null or empty`);
+          console.error(`[IMPORT] Failed to get transcript for ${video.videoId} after retry - transcript API returned null or empty`);
           sendProgress({
             type: 'status',
-            message: `⚠️ Failed to get transcript for: ${video.title}${isLiveVideo ? ' [LIVE VIDEO]' : ''} (after retry)`
+            message: `⚠️ Failed to get transcript for: ${video.title} (after retry)`
           });
         }
 
