@@ -1,4 +1,18 @@
-export default function Home() {
+import { supabaseAdmin } from '@/lib/supabase/server';
+
+const FEATURED_CHANNEL_IDS = [
+  'a5c701d0-fd07-44ff-b547-44dc61ac9cc9',
+  '5213fa50-0dc8-4bb1-8b2b-0d393bdd51ab',
+  'fe74faf6-a18c-4a5c-8280-aeedf57574c6'
+];
+
+export default async function Home() {
+  // Fetch featured channels
+  const { data: channels } = await supabaseAdmin
+    .from('channels')
+    .select('id, channel_handle, channel_name, thumbnail_url, channel_description')
+    .in('id', FEATURED_CHANNEL_IDS);
+
   return (
     <div className="min-h-screen">
       {/* White top section */}
@@ -116,6 +130,50 @@ export default function Home() {
                 </div>
               </div>
             </div>
+          </div>
+        </div>
+
+        {/* Try it Out! */}
+        <div className="mb-16">
+          <h2 className="text-3xl font-bold text-center text-gray-900 mb-12">
+            Try it Out!
+          </h2>
+
+          <div className="grid md:grid-cols-3 gap-8">
+            {channels && channels.map((channel) => (
+              <a
+                key={channel.id}
+                href={`https://${channel.channel_handle}.playsermons.com`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="bg-white rounded-xl shadow-lg hover:shadow-xl transition-shadow overflow-hidden border-2 border-purple-100 hover:border-purple-300 cursor-pointer group"
+              >
+                <div className="p-6">
+                  <div className="flex items-center space-x-4 mb-4">
+                    {channel.thumbnail_url && (
+                      <img
+                        src={channel.thumbnail_url}
+                        alt={channel.channel_name}
+                        className="w-20 h-20 rounded-full object-cover"
+                      />
+                    )}
+                    <div className="flex-1">
+                      <h3 className="text-xl font-bold text-gray-900 group-hover:text-purple-600 transition-colors">
+                        {channel.channel_name}
+                      </h3>
+                    </div>
+                  </div>
+                  {channel.channel_description && (
+                    <p className="text-gray-600 text-sm line-clamp-3">
+                      {channel.channel_description}
+                    </p>
+                  )}
+                  <div className="mt-4 flex items-center text-purple-600 font-medium text-sm group-hover:translate-x-1 transition-transform">
+                    Try it out →
+                  </div>
+                </div>
+              </a>
+            ))}
           </div>
         </div>
 
