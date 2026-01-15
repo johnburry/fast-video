@@ -142,9 +142,19 @@ export default function ChannelPage({
     setHasSearched(true);
 
     try {
-      const response = await fetch(
-        `/api/search?q=${encodeURIComponent(searchQuery)}&channel=${channelHandle}`
+      // Try hybrid search first (combines keyword + semantic AI search)
+      // Falls back to keyword-only search if hybrid fails
+      let response = await fetch(
+        `/api/search/hybrid?q=${encodeURIComponent(searchQuery)}&channel=${channelHandle}`
       );
+
+      // Fallback to keyword search if hybrid search fails
+      if (!response.ok) {
+        console.log('Hybrid search failed, falling back to keyword search');
+        response = await fetch(
+          `/api/search?q=${encodeURIComponent(searchQuery)}&channel=${channelHandle}`
+        );
+      }
 
       if (!response.ok) {
         throw new Error('Search failed');

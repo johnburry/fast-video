@@ -34,6 +34,16 @@ export function AdminToolbar() {
               Manage Channels
             </Link>
             <Link
+              href="/admin/embeddings"
+              className={`text-sm font-medium transition-colors ${
+                pathname === '/admin/embeddings'
+                  ? 'text-white'
+                  : 'text-gray-400 hover:text-white'
+              }`}
+            >
+              AI Embeddings
+            </Link>
+            <Link
               href="/admin/visitors"
               className={`text-sm font-medium transition-colors ${
                 pathname === '/admin/visitors'

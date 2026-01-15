@@ -464,6 +464,52 @@ export async function POST(request: NextRequest) {
           }
         }
 
+        // Generate embeddings for all videos with transcripts (if OpenAI API key is available)
+        if (process.env.OPENAI_API_KEY && channelVideos && channelVideos.length > 0) {
+          sendProgress({ type: 'status', message: 'Generating AI embeddings for semantic search...' });
+          console.log(`[EMBEDDINGS] Starting embedding generation for ${channelVideos.length} videos`);
+
+          let embeddingsGenerated = 0;
+          for (const channelVideo of channelVideos) {
+            try {
+              // Generate embeddings for this video
+              const response = await fetch(new URL('/api/embeddings/generate', request.url), {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                  videoId: channelVideo.id,
+                  batchSize: 100,
+                }),
+              });
+
+              if (response.ok) {
+                const result = await response.json();
+                if (result.processed > 0) {
+                  embeddingsGenerated += result.processed;
+                  console.log(`[EMBEDDINGS] Generated ${result.processed} embeddings for video ${channelVideo.id}`);
+                  sendProgress({
+                    type: 'status',
+                    message: `Generated embeddings for ${embeddingsGenerated} transcript segments...`
+                  });
+                }
+              }
+            } catch (error) {
+              console.error(`[EMBEDDINGS] Error generating embeddings for video ${channelVideo.id}:`, error);
+              // Continue with other videos even if one fails
+            }
+          }
+
+          console.log(`[EMBEDDINGS] Completed embedding generation: ${embeddingsGenerated} total embeddings`);
+          sendProgress({
+            type: 'status',
+            message: `✓ Generated ${embeddingsGenerated} AI embeddings for semantic search`
+          });
+        } else if (!process.env.OPENAI_API_KEY) {
+          console.log('[EMBEDDINGS] Skipping embedding generation - OPENAI_API_KEY not configured');
+        }
+
         // Fetch the database channel info to get the channel_handle
         const { data: dbChannel } = await supabaseAdmin
           .from('channels')
