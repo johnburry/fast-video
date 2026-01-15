@@ -15,18 +15,26 @@ export default async function Home() {
 
   return (
     <div className="min-h-screen">
-      {/* White top section */}
-      <div className="bg-white pb-[5px]">
-        <div className="max-w-6xl mx-auto px-4 py-12 sm:px-6 lg:px-8">
-        {/* Logo and Tagline */}
-        <div className="text-center">
-          <div className="flex items-center justify-center mb-4">
-            <img
-              src="/playsermons-logo.svg"
-              alt="PlaySermons"
-              className="h-32 w-auto"
-            />
+      {/* White top section - Logo only */}
+      <div className="bg-white">
+        <div className="max-w-6xl mx-auto px-4 pt-12 sm:px-6 lg:px-8">
+          <div className="text-center">
+            <div className="flex items-center justify-center">
+              <img
+                src="/playsermons-logo.svg"
+                alt="PlaySermons"
+                className="h-32 w-auto"
+              />
+            </div>
           </div>
+        </div>
+      </div>
+
+      {/* Gradient section - starts right below logo */}
+      <div className="bg-gradient-to-br from-purple-50 via-white to-blue-50">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+        {/* Taglines */}
+        <div className="text-center pt-8 pb-5">
           <p className="text-2xl text-gray-700 font-medium">
             Unlock Your Church's Sermon Library with AI-Powered Search
           </p>
@@ -34,12 +42,6 @@ export default async function Home() {
             Make every sermon instantly searchable. Help your congregation find the exact moment when a topic, Bible verse, or teaching was discussed.
           </p>
         </div>
-        </div>
-      </div>
-
-      {/* Gradient section */}
-      <div className="bg-gradient-to-br from-purple-50 via-white to-blue-50">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Problem Statement */}
         <div className="bg-white rounded-2xl shadow-xl p-8 mb-12 border-2 border-purple-100">
           <div className="flex items-start gap-4">
