@@ -2,10 +2,10 @@ export default function Home() {
   return (
     <div className="min-h-screen">
       {/* White top section */}
-      <div className="bg-white pb-16">
+      <div className="bg-white pb-5">
         <div className="max-w-6xl mx-auto px-4 py-12 sm:px-6 lg:px-8">
         {/* Logo and Tagline */}
-        <div className="text-center mb-16">
+        <div className="text-center">
           <div className="flex items-center justify-center mb-4">
             <img
               src="/playsermons-logo.svg"
