@@ -555,7 +555,7 @@ export default function RecordPage() {
                           rel="noopener noreferrer"
                           className="text-gray-600 hover:text-blue-600 underline text-base md:text-2xl"
                         >
-                          Fast.Video Channel Page
+                          PlaySermons.com Channel Page
                         </a>
                       )}
                       {' '}

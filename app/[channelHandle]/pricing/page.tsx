@@ -91,8 +91,8 @@ export default function PricingPage() {
     <div className="min-h-screen bg-black">
       <HeadLinks
         title="Pricing Page"
-        description="Fast.Video subscription and one-time pricing plans"
-        image="https://reorbit.com/fast.video.png"
+        description="PlaySermons.com subscription and one-time pricing plans"
+        image="https://reorbit.com/playsermons.png"
       />
 
       {/* Header with Channel Branding */}
@@ -100,8 +100,8 @@ export default function PricingPage() {
         <div className="max-w-6xl mx-auto text-center">
           <div className="flex justify-center mb-4">
             <img
-              src="https://reorbit.com/fast.video.png"
-              alt="Fast.Video"
+              src="https://reorbit.com/playsermons.png"
+              alt="PlaySermons.com"
               className="h-48 md:h-64"
             />
           </div>
@@ -146,7 +146,7 @@ export default function PricingPage() {
       <div className="max-w-7xl mx-auto px-4 pb-8" style={{ paddingTop: '0.2rem' }}>
         <div className="flex justify-center">
           <a
-            href={`https://${channelData.handle}.fast.video`}
+            href={`https://${channelData.handle}.playsermons.com`}
             className="bg-white rounded-lg p-6 flex flex-row items-center gap-6 mb-6 hover:shadow-lg transition-shadow cursor-pointer"
           >
           <img
@@ -159,7 +159,7 @@ export default function PricingPage() {
             <br />
             {channelData.shortName || channelData.name}
             <br />
-            <span className="text-red-600">YouTube Transcription Search and Fast.Video Service</span>
+            <span className="text-red-600">YouTube Transcription Search and PlaySermons.com Service</span>
           </h2>
           </a>
         </div>

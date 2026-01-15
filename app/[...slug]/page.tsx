@@ -191,7 +191,7 @@ export default function CatchAllPage() {
 
         <div className="mt-6 pt-6 border-t border-gray-200">
           <p className="text-sm text-gray-600">
-            <strong>Tip:</strong> Prepend <code className="bg-gray-100 px-1 py-0.5 rounded">fast.video/</code> to any URL in your browser to quickly create a Fast Video for that destination.
+            <strong>Tip:</strong> Prepend <code className="bg-gray-100 px-1 py-0.5 rounded">playsermons.com/</code> to any URL in your browser to quickly create a Fast Video for that destination.
           </p>
         </div>
       </div>

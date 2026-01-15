@@ -160,7 +160,7 @@ export default function ChannelVisitorsPage() {
                       <tr key={stat.channelId} className="hover:bg-gray-50">
                         <td className="px-6 py-4 whitespace-nowrap">
                           <Link
-                            href={`https://${stat.channelHandle}.fast.video`}
+                            href={`https://${stat.channelHandle}.playsermons.com`}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="text-blue-600 hover:text-blue-800 font-medium hover:underline"

@@ -1,6 +1,6 @@
-# Fast.Video Setup Guide
+# PlaySermons.com Setup Guide
 
-Complete guide to get Fast.Video up and running.
+Complete guide to get PlaySermons.com up and running.
 
 ## Prerequisites
 
@@ -61,7 +61,7 @@ Open [http://localhost:3000](http://localhost:3000) in your browser.
 2. Enter a YouTube channel handle (e.g., `@mkbhd`, `@veritasium`)
 3. Click "Import Channel"
 4. Wait for the import to complete (this may take 5-15 minutes depending on channel size)
-5. Once complete, click the link to view the channel's Fast.Video page
+5. Once complete, click the link to view the channel's PlaySermons.com page
 
 ## Step 7: Search and Test
 

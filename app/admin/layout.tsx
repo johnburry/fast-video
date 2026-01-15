@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Fast.Video Admin",
-  description: "Admin panel for Fast.Video - Import YouTube channels and transcripts",
+  title: "PlaySermons.com Admin",
+  description: "Admin panel for PlaySermons.com - Import YouTube channels and transcripts",
 };
 
 export default function AdminLayout({

@@ -13,7 +13,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Fast.Video",
+  title: "PlaySermons.com",
   description: "Search video transcripts across channels",
   icons: {
     icon: '/icon',

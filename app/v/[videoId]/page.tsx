@@ -92,7 +92,7 @@ export async function generateMetadata({
 
   // Ensure absolute URL for OpenGraph
   if (!thumbnailUrl.startsWith('http://') && !thumbnailUrl.startsWith('https://')) {
-    thumbnailUrl = `https://fast.video${thumbnailUrl.startsWith('/') ? '' : '/'}${thumbnailUrl}`;
+    thumbnailUrl = `https://playsermons.com${thumbnailUrl.startsWith('/') ? '' : '/'}${thumbnailUrl}`;
   }
 
   console.log('generateMetadata - thumbnailUrl for OpenGraph:', thumbnailUrl);

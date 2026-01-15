@@ -108,7 +108,7 @@ export default function ChannelPage({
 
   useEffect(() => {
     if (channelData?.channel.handle) {
-      document.title = `@${channelData.channel.handle} Fast.Video`;
+      document.title = `@${channelData.channel.handle} PlaySermons.com`;
     }
   }, [channelData]);
 
@@ -241,9 +241,9 @@ export default function ChannelPage({
 
   return (
     <div className="min-h-screen bg-black relative">
-      {/* Invisible navigation button to all.fast.video */}
+      {/* Invisible navigation button to all.playsermons.com */}
       <a
-        href="https://all.fast.video"
+        href="https://all.playsermons.com"
         className="fixed top-0 left-0 w-5 h-5 z-[100] opacity-0 hover:opacity-0"
         aria-label="View all channels"
       />

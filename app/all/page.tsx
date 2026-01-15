@@ -96,7 +96,7 @@ export default function AllChannelsPage() {
                 {channels.map((channel) => (
                   <Link
                     key={channel.id}
-                    href={`https://${channel.handle}.fast.video`}
+                    href={`https://${channel.handle}.playsermons.com`}
                     className="bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-shadow cursor-pointer flex flex-col"
                   >
                     <div className="p-6 flex flex-col flex-1">

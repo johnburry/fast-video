@@ -1,4 +1,4 @@
--- Fast.Video Database Schema
+-- PlaySermons.com Database Schema
 
 -- Enable necessary extensions
 create extension if not exists "uuid-ossp";
