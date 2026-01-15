@@ -36,7 +36,7 @@ export default async function Home() {
         {/* Taglines */}
         <div className="text-center pt-8 pb-5">
           <p className="text-2xl text-gray-700 font-medium">
-            Unlock Your Church's Sermon Library with AI-Powered Search
+            Unlock Your Church's Sermon Video Library with AI-Powered Search
           </p>
           <p className="text-lg text-gray-600 mt-3 max-w-3xl mx-auto">
             Make every sermon instantly searchable. Help your congregation find the exact moment when a topic, Bible verse, or teaching was discussed.
