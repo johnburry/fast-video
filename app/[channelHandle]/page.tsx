@@ -314,7 +314,8 @@ export default function ChannelPage({
                   >
                     {channelData?.channel.name && formatChannelName(channelData.channel.name)}
                   </h1>
-                  {(!channelData?.channel.subscriptionType || channelData.channel.subscriptionType === 'trial') && (
+                  {/* Hidden: View Pricing Plans button - uncomment to restore */}
+                  {/* {(!channelData?.channel.subscriptionType || channelData.channel.subscriptionType === 'trial') && (
                     <div className="mt-2">
                       <a
                         href={`/${channelHandle}/pricing`}
@@ -326,7 +327,7 @@ export default function ChannelPage({
                         This button is removed with a subscription
                       </p>
                     </div>
-                  )}
+                  )} */}
                 </div>
               </div>
 
