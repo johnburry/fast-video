@@ -54,41 +54,57 @@ async function getTranscriptFromYouTubeTranscriptAPI(videoId: string): Promise<T
     const url = `https://youtube-tanscript.vercel.app/transcripts/${videoId}/first`;
     console.log(`[TRANSCRIPT] Fetching from YouTubeTranscript API: ${url}`);
 
-    const response = await fetch(url, {
-      method: 'GET',
-      headers: {
-        'X-API-Key': apiKey,
-      },
-    });
+    // Add 30 second timeout to prevent hanging
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
 
-    console.log(`[TRANSCRIPT] YouTubeTranscript API response status: ${response.status}`);
+    try {
+      const response = await fetch(url, {
+        method: 'GET',
+        headers: {
+          'X-API-Key': apiKey,
+        },
+        signal: controller.signal,
+      });
 
-    if (!response.ok) {
-      console.error(`[TRANSCRIPT] YouTubeTranscript API request failed: ${response.status}`);
-      const errorText = await response.text();
-      console.error(`[TRANSCRIPT] Error response: ${errorText}`);
+      clearTimeout(timeoutId);
+      console.log(`[TRANSCRIPT] YouTubeTranscript API response status: ${response.status}`);
+
+      if (!response.ok) {
+        console.error(`[TRANSCRIPT] YouTubeTranscript API request failed: ${response.status}`);
+        const errorText = await response.text();
+        console.error(`[TRANSCRIPT] Error response: ${errorText}`);
+        return null;
+      }
+
+      const data: YouTubeTranscriptAPIResponse = await response.json();
+
+      if (!data.snippets || data.snippets.length === 0) {
+        console.log(`[TRANSCRIPT] No transcript snippets found for ${videoId}`);
+        return null;
+      }
+
+      console.log(`[TRANSCRIPT] Successfully fetched ${data.snippets.length} snippets from YouTubeTranscript API`);
+
+      // Map to our format
+      const result: TranscriptSegment[] = data.snippets
+        .filter(snippet => snippet.text && snippet.text.trim().length > 0)
+        .map(snippet => ({
+          text: snippet.text.trim(),
+          startTime: snippet.start,
+          duration: snippet.duration,
+        }));
+
+      return result;
+    } catch (fetchError: any) {
+      clearTimeout(timeoutId);
+      if (fetchError.name === 'AbortError') {
+        console.error(`[TRANSCRIPT] YouTubeTranscript API timed out after 30 seconds for ${videoId}`);
+      } else {
+        console.error(`[TRANSCRIPT] Fetch error from YouTubeTranscript API:`, fetchError);
+      }
       return null;
     }
-
-    const data: YouTubeTranscriptAPIResponse = await response.json();
-
-    if (!data.snippets || data.snippets.length === 0) {
-      console.log(`[TRANSCRIPT] No transcript snippets found for ${videoId}`);
-      return null;
-    }
-
-    console.log(`[TRANSCRIPT] Successfully fetched ${data.snippets.length} snippets from YouTubeTranscript API`);
-
-    // Map to our format
-    const result: TranscriptSegment[] = data.snippets
-      .filter(snippet => snippet.text && snippet.text.trim().length > 0)
-      .map(snippet => ({
-        text: snippet.text.trim(),
-        startTime: snippet.start,
-        duration: snippet.duration,
-      }));
-
-    return result;
   } catch (error) {
     console.error(`[TRANSCRIPT] Error fetching from YouTubeTranscript API:`, error);
     return null;
@@ -150,15 +166,22 @@ async function getTranscriptFromSupadata(videoId: string): Promise<TranscriptSeg
     url.searchParams.append('url', videoUrl);
     url.searchParams.append('mode', 'auto');
 
-    const response = await fetch(url.toString(), {
-      method: 'GET',
-      headers: {
-        'x-api-key': apiKey,
-        'Content-Type': 'application/json',
-      },
-    });
+    // Add 60 second timeout for Supadata (they may take longer to generate transcripts)
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 60000); // 60 second timeout
 
-    console.log(`[TRANSCRIPT] API response status: ${response.status} ${response.statusText}`);
+    try {
+      const response = await fetch(url.toString(), {
+        method: 'GET',
+        headers: {
+          'x-api-key': apiKey,
+          'Content-Type': 'application/json',
+        },
+        signal: controller.signal,
+      });
+
+      clearTimeout(timeoutId);
+      console.log(`[TRANSCRIPT] API response status: ${response.status} ${response.statusText}`);
 
     if (!response.ok) {
       console.error(`[TRANSCRIPT] API request failed with status ${response.status}: ${response.statusText}`);
@@ -215,8 +238,17 @@ async function getTranscriptFromSupadata(videoId: string): Promise<TranscriptSeg
         duration: segment.duration / 1000, // Convert milliseconds to seconds
       }));
 
-    console.log(`[TRANSCRIPT] Successfully processed ${result.length} segments for video ${videoId} (filtered from ${segments.length})`);
-    return result;
+      console.log(`[TRANSCRIPT] Successfully processed ${result.length} segments for video ${videoId} (filtered from ${segments.length})`);
+      return result;
+    } catch (fetchError: any) {
+      clearTimeout(timeoutId);
+      if (fetchError.name === 'AbortError') {
+        console.error(`[TRANSCRIPT] Supadata API timed out after 60 seconds for ${videoId}`);
+      } else {
+        console.error(`[TRANSCRIPT] Fetch error from Supadata API:`, fetchError);
+      }
+      return null;
+    }
   } catch (error: any) {
     console.error(`[TRANSCRIPT] Error fetching transcript for video ${videoId}:`, error);
     return null;
