@@ -4,6 +4,17 @@ export interface TranscriptSegment {
   duration: number;
 }
 
+interface YouTubeTranscriptAPIResponse {
+  video_id: string;
+  language: string;
+  language_code: string;
+  snippets: Array<{
+    text: string;
+    start: number;
+    duration: number;
+  }>;
+}
+
 interface SupadataTranscriptSegment {
   text: string;
   offset: number;
@@ -29,30 +40,115 @@ interface SupadataJobStatusResponse {
   error?: string;
 }
 
+/**
+ * Fetch transcript using youtubetranscripts.org API
+ */
+async function getTranscriptFromYouTubeTranscriptAPI(videoId: string): Promise<TranscriptSegment[] | null> {
+  try {
+    const apiKey = process.env.YOUTUBE_TRANSCRIPT_API_KEY;
+    if (!apiKey) {
+      console.error('[TRANSCRIPT] YOUTUBE_TRANSCRIPT_API_KEY not set in environment');
+      return null;
+    }
+
+    const url = `https://youtube-tanscript.vercel.app/transcripts/${videoId}/first`;
+    console.log(`[TRANSCRIPT] Fetching from YouTubeTranscript API: ${url}`);
+
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: {
+        'X-API-Key': apiKey,
+      },
+    });
+
+    console.log(`[TRANSCRIPT] YouTubeTranscript API response status: ${response.status}`);
+
+    if (!response.ok) {
+      console.error(`[TRANSCRIPT] YouTubeTranscript API request failed: ${response.status}`);
+      const errorText = await response.text();
+      console.error(`[TRANSCRIPT] Error response: ${errorText}`);
+      return null;
+    }
+
+    const data: YouTubeTranscriptAPIResponse = await response.json();
+
+    if (!data.snippets || data.snippets.length === 0) {
+      console.log(`[TRANSCRIPT] No transcript snippets found for ${videoId}`);
+      return null;
+    }
+
+    console.log(`[TRANSCRIPT] Successfully fetched ${data.snippets.length} snippets from YouTubeTranscript API`);
+
+    // Map to our format
+    const result: TranscriptSegment[] = data.snippets
+      .filter(snippet => snippet.text && snippet.text.trim().length > 0)
+      .map(snippet => ({
+        text: snippet.text.trim(),
+        startTime: snippet.start,
+        duration: snippet.duration,
+      }));
+
+    return result;
+  } catch (error) {
+    console.error(`[TRANSCRIPT] Error fetching from YouTubeTranscript API:`, error);
+    return null;
+  }
+}
+
+/**
+ * Main transcript fetching function
+ * Tries YouTubeTranscript API first (faster), falls back to Supadata
+ */
 export async function getVideoTranscript(
   videoId: string,
   preferNative: boolean = false,
   dbVideoId?: string
 ): Promise<TranscriptSegment[] | null> {
-  try {
-    console.log(`[TRANSCRIPT] Fetching transcript for video ${videoId} (synchronous mode)...`);
+  console.log(`[TRANSCRIPT] Fetching transcript for video ${videoId}...`);
 
+  // Try YouTubeTranscript API first if API key is available
+  if (process.env.YOUTUBE_TRANSCRIPT_API_KEY) {
+    console.log(`[TRANSCRIPT] Trying YouTubeTranscript API first...`);
+    const result = await getTranscriptFromYouTubeTranscriptAPI(videoId);
+    if (result && result.length > 0) {
+      console.log(`[TRANSCRIPT] ✓ Successfully fetched transcript from YouTubeTranscript API`);
+      return result;
+    }
+    console.log(`[TRANSCRIPT] YouTubeTranscript API returned no results, falling back to Supadata...`);
+  }
+
+  // Fall back to Supadata API
+  if (process.env.SUPADATA_API_KEY) {
+    console.log(`[TRANSCRIPT] Trying Supadata API...`);
+    const result = await getTranscriptFromSupadata(videoId);
+    if (result && result.length > 0) {
+      console.log(`[TRANSCRIPT] ✓ Successfully fetched transcript from Supadata API`);
+      return result;
+    }
+  }
+
+  console.log(`[TRANSCRIPT] No transcript available from any API for video ${videoId}`);
+  return null;
+}
+
+/**
+ * Fetch transcript using Supadata API (fallback)
+ */
+async function getTranscriptFromSupadata(videoId: string): Promise<TranscriptSegment[] | null> {
+  try {
     const apiKey = process.env.SUPADATA_API_KEY;
     if (!apiKey) {
       console.error('[TRANSCRIPT] SUPADATA_API_KEY not set in environment');
       return null;
     }
 
-    // Construct YouTube URL
     const videoUrl = `https://www.youtube.com/watch?v=${videoId}`;
-    console.log(`[TRANSCRIPT] Requesting transcript from Supadata API for URL: ${videoUrl}`);
+    console.log(`[TRANSCRIPT] Fetching from Supadata API for URL: ${videoUrl}`);
 
     // Always use 'auto' mode - waits for transcript to be ready (synchronous)
     const url = new URL('https://api.supadata.ai/v1/transcript');
     url.searchParams.append('url', videoUrl);
     url.searchParams.append('mode', 'auto');
-
-    console.log(`[TRANSCRIPT] Full API URL: ${url.toString()} (mode: auto - synchronous)`);
 
     const response = await fetch(url.toString(), {
       method: 'GET',
