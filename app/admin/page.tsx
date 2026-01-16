@@ -8,6 +8,7 @@ export default function AdminPage() {
   const { user, loading: authLoading, signOut } = useAuth();
   const [channelHandle, setChannelHandle] = useState('');
   const [importLimit, setImportLimit] = useState<number>(1000);
+  const [includeLiveVideos, setIncludeLiveVideos] = useState(false);
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<any>(null);
   const [error, setError] = useState<string | null>(null);
@@ -65,7 +66,7 @@ export default function AdminPage() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ channelHandle, limit: importLimit }),
+        body: JSON.stringify({ channelHandle, limit: importLimit, includeLiveVideos }),
       });
 
       if (!response.body) {
@@ -185,6 +186,27 @@ export default function AdminPage() {
               <p className="mt-2 text-sm text-gray-500">
                 Maximum number of videos to import (default: 1000, max: 1000)
               </p>
+            </div>
+
+            <div className="flex items-start">
+              <div className="flex items-center h-5">
+                <input
+                  id="includeLiveVideos"
+                  type="checkbox"
+                  checked={includeLiveVideos}
+                  onChange={(e) => setIncludeLiveVideos(e.target.checked)}
+                  disabled={loading}
+                  className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
+                />
+              </div>
+              <div className="ml-3">
+                <label htmlFor="includeLiveVideos" className="text-sm font-medium text-gray-700">
+                  Include Live Videos
+                </label>
+                <p className="text-sm text-gray-500">
+                  Import YouTube live videos in addition to standard videos (prioritizes live videos first)
+                </p>
+              </div>
             </div>
 
             <button
