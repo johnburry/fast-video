@@ -53,22 +53,31 @@ async function getTranscriptFromYouTubeTranscriptAPI(videoId: string): Promise<T
 
     const url = `https://youtube-tanscript.vercel.app/transcripts/${videoId}/first`;
     console.log(`[TRANSCRIPT] Fetching from YouTubeTranscript API: ${url}`);
+    console.log(`[TRANSCRIPT] Using API key: ${apiKey.substring(0, 10)}...`);
 
     // Add 30 second timeout to prevent hanging
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
+    const timeoutId = setTimeout(() => {
+      console.error(`[TRANSCRIPT] YouTubeTranscript API taking too long, aborting after 30s`);
+      controller.abort();
+    }, 30000); // 30 second timeout
 
     try {
+      const fetchStartTime = Date.now();
+      console.log(`[TRANSCRIPT] Starting fetch at ${new Date().toISOString()}`);
+
       const response = await fetch(url, {
         method: 'GET',
         headers: {
           'X-API-Key': apiKey,
+          'Accept': 'application/json',
         },
         signal: controller.signal,
       });
 
       clearTimeout(timeoutId);
-      console.log(`[TRANSCRIPT] YouTubeTranscript API response status: ${response.status}`);
+      const fetchDuration = Date.now() - fetchStartTime;
+      console.log(`[TRANSCRIPT] YouTubeTranscript API responded in ${fetchDuration}ms with status: ${response.status}`);
 
       if (!response.ok) {
         console.error(`[TRANSCRIPT] YouTubeTranscript API request failed: ${response.status}`);
