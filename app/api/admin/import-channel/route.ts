@@ -282,6 +282,9 @@ export async function POST(request: NextRequest) {
         // Process each video
         for (const video of videosToProcess) {
           try {
+            const videoStartTime = Date.now();
+            console.log(`[TIMING] Starting video ${processedCount + 1}/${videosToProcess.length}: ${video.videoId}`);
+
             const isLiveVideo = shouldIncludeLiveVideos && liveVideos.some(lv => lv.videoId === video.videoId);
             sendProgress({
               type: 'progress',
@@ -291,10 +294,12 @@ export async function POST(request: NextRequest) {
             });
 
             // Upload thumbnail to R2
+            const r2Start = Date.now();
             const r2ThumbnailUrl = await uploadThumbnailToR2(
               video.videoId,
               video.thumbnailUrl
             );
+            console.log(`[TIMING] R2 upload took ${Date.now() - r2Start}ms`);
 
         let videoId: string;
         const videoExists = existingVideoMap.has(video.videoId);
@@ -373,7 +378,9 @@ export async function POST(request: NextRequest) {
         }
         // For live videos, prefer native captions to avoid async job delays
         // Pass videoId so job IDs can be saved to database for background processing
+        const transcriptStart = Date.now();
         let transcript = await getVideoTranscript(video.videoId, isLiveVideo, videoId);
+        console.log(`[TIMING] Transcript fetch took ${Date.now() - transcriptStart}ms`);
 
         // Retry once after 3 seconds if transcript fetch failed
         if (!transcript || transcript.length === 0) {
@@ -408,9 +415,11 @@ export async function POST(request: NextRequest) {
             duration: segment.duration,
           }));
 
+          const dbStart = Date.now();
           const { error: transcriptError } = await supabaseAdmin
             .from('transcripts')
             .insert(transcriptRecords);
+          console.log(`[TIMING] Database insert of ${transcript.length} segments took ${Date.now() - dbStart}ms`);
 
           if (transcriptError) {
             console.error(`[IMPORT] Error saving transcript for video ${video.videoId}:`, transcriptError);
@@ -442,6 +451,7 @@ export async function POST(request: NextRequest) {
         }
 
             processedCount++;
+            console.log(`[TIMING] Total time for video ${video.videoId}: ${Date.now() - videoStartTime}ms`);
             console.log(`Processed ${processedCount}/${videosToProcess.length} videos`);
           } catch (error) {
             console.error(`Error processing video ${video.videoId}:`, error);
@@ -484,12 +494,17 @@ export async function POST(request: NextRequest) {
 
         // Generate embeddings for all videos with transcripts (if OpenAI API key is available)
         if (process.env.OPENAI_API_KEY && channelVideos && channelVideos.length > 0) {
+          const embeddingsStartTime = Date.now();
           sendProgress({ type: 'status', message: 'Generating AI embeddings for semantic search...' });
           console.log(`[EMBEDDINGS] Starting embedding generation for ${channelVideos.length} videos`);
+          console.log(`[TIMING] ⚠️ WARNING: This will process ${channelVideos.length} videos sequentially!`);
 
           let embeddingsGenerated = 0;
           for (const channelVideo of channelVideos) {
             try {
+              const embeddingVideoStart = Date.now();
+              console.log(`[TIMING] Starting embeddings for video ${channelVideo.id}...`);
+
               // Generate embeddings for this video
               const response = await fetch(new URL('/api/embeddings/generate', request.url), {
                 method: 'POST',
@@ -501,6 +516,8 @@ export async function POST(request: NextRequest) {
                   batchSize: 100,
                 }),
               });
+
+              console.log(`[TIMING] Embedding API call for video ${channelVideo.id} took ${Date.now() - embeddingVideoStart}ms`);
 
               if (response.ok) {
                 const result = await response.json();
@@ -520,6 +537,7 @@ export async function POST(request: NextRequest) {
           }
 
           console.log(`[EMBEDDINGS] Completed embedding generation: ${embeddingsGenerated} total embeddings`);
+          console.log(`[TIMING] Total embeddings generation time: ${Date.now() - embeddingsStartTime}ms (${((Date.now() - embeddingsStartTime) / 1000 / 60).toFixed(2)} minutes)`);
           sendProgress({
             type: 'status',
             message: `✓ Generated ${embeddingsGenerated} AI embeddings for semantic search`
