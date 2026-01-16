@@ -368,18 +368,16 @@ export async function POST(request: NextRequest) {
           continue;
         }
 
-        // Fetch and save transcript with retry logic
+        // Fetch and save transcript (synchronous - waits for completion)
         console.log(`[IMPORT] Fetching transcript for ${video.videoId} (${video.title})...${isLiveVideo ? ' [LIVE VIDEO]' : ''}`);
-        if (isLiveVideo) {
-          sendProgress({
-            type: 'status',
-            message: `Fetching native captions for live video: ${video.title}`
-          });
-        }
-        // For live videos, prefer native captions to avoid async job delays
-        // Pass videoId so job IDs can be saved to database for background processing
+        sendProgress({
+          type: 'status',
+          message: `Fetching transcript for: ${video.title}${isLiveVideo ? ' [LIVE]' : ''} (this may take a minute)...`
+        });
+
+        // Always use auto mode (synchronous) - waits for transcript to be ready
         const transcriptStart = Date.now();
-        let transcript = await getVideoTranscript(video.videoId, isLiveVideo, videoId);
+        let transcript = await getVideoTranscript(video.videoId, false);
         console.log(`[TIMING] Transcript fetch took ${Date.now() - transcriptStart}ms`);
 
         // Don't retry - if it failed once, it will fail again (and Supadata is slow for unavailable transcripts)

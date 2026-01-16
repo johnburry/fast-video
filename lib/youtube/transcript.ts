@@ -1,5 +1,3 @@
-import { supabaseAdmin } from '@/lib/supabase/server';
-
 export interface TranscriptSegment {
   text: string;
   startTime: number;
@@ -37,7 +35,7 @@ export async function getVideoTranscript(
   dbVideoId?: string
 ): Promise<TranscriptSegment[] | null> {
   try {
-    console.log(`[TRANSCRIPT] Fetching transcript for video ${videoId}...`);
+    console.log(`[TRANSCRIPT] Fetching transcript for video ${videoId} (synchronous mode)...`);
 
     const apiKey = process.env.SUPADATA_API_KEY;
     if (!apiKey) {
@@ -49,14 +47,12 @@ export async function getVideoTranscript(
     const videoUrl = `https://www.youtube.com/watch?v=${videoId}`;
     console.log(`[TRANSCRIPT] Requesting transcript from Supadata API for URL: ${videoUrl}`);
 
-    // Use supadata.ai API
+    // Always use 'auto' mode - waits for transcript to be ready (synchronous)
     const url = new URL('https://api.supadata.ai/v1/transcript');
     url.searchParams.append('url', videoUrl);
-    // For live videos, use 'native' mode to get existing captions only (faster, synchronous)
-    // For regular videos, use 'auto' mode (tries native first, then generates)
-    url.searchParams.append('mode', preferNative ? 'native' : 'auto');
+    url.searchParams.append('mode', 'auto');
 
-    console.log(`[TRANSCRIPT] Full API URL: ${url.toString()} (mode: ${preferNative ? 'native' : 'auto'})`);
+    console.log(`[TRANSCRIPT] Full API URL: ${url.toString()} (mode: auto - synchronous)`);
 
     const response = await fetch(url.toString(), {
       method: 'GET',
@@ -83,27 +79,15 @@ export async function getVideoTranscript(
 
     // Check for error in response
     if (data.error) {
-      // If native mode failed with transcript-unavailable, skip auto mode and move on
-      if (data.error === 'transcript-unavailable' && preferNative) {
-        console.log(`[TRANSCRIPT] Native captions not available, skipping video (not trying auto mode)`);
-        return null;
-      }
-
-      console.error(`[TRANSCRIPT] API returned error: ${data.error}`);
+      console.log(`[TRANSCRIPT] Transcript not available for ${videoId}: ${data.error}`);
       return null;
     }
 
-    // Check if this is an async job response
+    // In auto mode, Supadata should wait and return the transcript synchronously
+    // If we get a jobId without content, something went wrong
     if (data.jobId && !data.content && !data.segments) {
-      console.log(`[TRANSCRIPT] Received async job ID: ${data.jobId}`);
-      console.log(`[TRANSCRIPT] Live video transcripts require async processing`);
-
-      // Save job to database for background processing
-      if (dbVideoId) {
-        await saveTranscriptJob(dbVideoId, data.jobId);
-        console.log(`[TRANSCRIPT] Saved job ${data.jobId} to database for background processing`);
-      }
-
+      console.warn(`[TRANSCRIPT] Unexpected: Received async job ID in auto mode: ${data.jobId}`);
+      console.warn(`[TRANSCRIPT] Auto mode should be synchronous. Skipping video.`);
       return null;
     }
 
@@ -167,26 +151,3 @@ export function parseTimestamp(timestamp: string): number {
   return 0;
 }
 
-// Helper function to save transcript job to database
-async function saveTranscriptJob(videoId: string, jobId: string): Promise<void> {
-  try {
-    const { error } = await supabaseAdmin
-      .from('transcript_jobs')
-      .insert({
-        video_id: videoId,
-        job_id: jobId,
-        status: 'pending',
-      });
-
-    if (error) {
-      // If unique constraint violation, job already exists - that's fine
-      if (error.code !== '23505') {
-        console.error(`[TRANSCRIPT] Error saving job to database:`, error);
-      }
-    } else {
-      console.log(`[TRANSCRIPT] Successfully saved job ${jobId} for video ${videoId}`);
-    }
-  } catch (error) {
-    console.error(`[TRANSCRIPT] Exception saving job to database:`, error);
-  }
-}
