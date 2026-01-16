@@ -382,26 +382,12 @@ export async function POST(request: NextRequest) {
         let transcript = await getVideoTranscript(video.videoId, isLiveVideo, videoId);
         console.log(`[TIMING] Transcript fetch took ${Date.now() - transcriptStart}ms`);
 
-        // Retry once after 3 seconds if transcript fetch failed
+        // Don't retry - if it failed once, it will fail again (and Supadata is slow for unavailable transcripts)
         if (!transcript || transcript.length === 0) {
-          console.log(`[IMPORT] First attempt failed for ${video.videoId}, waiting 3 seconds before retry...`);
+          console.log(`[IMPORT] No transcript available for ${video.videoId}${isLiveVideo ? ' [LIVE VIDEO]' : ''} - skipping (no retry)`);
           sendProgress({
             type: 'status',
-            message: `Retrying transcript fetch for: ${video.title} (waiting 3 seconds)...`
-          });
-
-          // Wait 3 seconds
-          await new Promise(resolve => setTimeout(resolve, 3000));
-
-          console.log(`[IMPORT] Retrying transcript fetch for ${video.videoId}...`);
-          transcript = await getVideoTranscript(video.videoId, isLiveVideo, videoId);
-        }
-
-        if (!transcript || transcript.length === 0) {
-          console.error(`[IMPORT] Failed to get transcript for ${video.videoId}${isLiveVideo ? ' [LIVE VIDEO]' : ''} after retry - transcript API returned null or empty`);
-          sendProgress({
-            type: 'status',
-            message: `⚠️ Failed to get transcript for: ${video.title}${isLiveVideo ? ' [LIVE VIDEO]' : ''} (after retry)`
+            message: `⚠️ No transcript available for: ${video.title}${isLiveVideo ? ' [LIVE VIDEO]' : ''}`
           });
         }
 
