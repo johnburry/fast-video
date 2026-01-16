@@ -204,7 +204,7 @@ export default function AdminPage() {
                   Include Live Videos
                 </label>
                 <p className="text-sm text-gray-500">
-                  Import YouTube live videos in addition to standard videos (prioritizes live videos first)
+                  Import ALL YouTube live videos in addition to standard videos (processes all live videos first, then regular videos)
                 </p>
               </div>
             </div>

@@ -202,11 +202,12 @@ export async function POST(request: NextRequest) {
         let combinedVideos = allVideos;
 
         if (shouldIncludeLiveVideos) {
-          sendProgress({ type: 'status', message: 'Fetching live videos from YouTube...' });
-          console.log(`Fetching live videos for @${channelInfo.handle}...`);
-          liveVideos = await getChannelLiveVideos(channelInfo.channelId, 5);
+          sendProgress({ type: 'status', message: 'Fetching ALL live videos from YouTube...' });
+          console.log(`Fetching all live videos for @${channelInfo.handle}...`);
+          // Fetch all live videos (no limit - pass a very high number)
+          liveVideos = await getChannelLiveVideos(channelInfo.channelId, 10000);
 
-          // Combine regular videos and live videos, removing duplicates
+          // Combine live videos first, then regular videos, removing duplicates
           const liveVideoIds = new Set(liveVideos.map(v => v.videoId));
           combinedVideos = [
             ...liveVideos,
