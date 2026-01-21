@@ -405,13 +405,13 @@ export default function ManageChannelPage({
               <h1 className="text-3xl font-bold text-gray-900 mb-2">
                 Manage Channel
               </h1>
-              <p className="text-gray-600 mb-2">@{channel.handle}</p>
-              <div className="flex items-center gap-4">
+              <p className="text-gray-600 mb-4">@{channel.handle}</p>
+              <div className="flex items-center gap-3">
                 <a
                   href={`https://${channel.handle}.playsermons.com`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-blue-600 hover:text-blue-800 underline text-sm"
+                  className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors text-sm"
                 >
                   View Channel →
                 </a>
@@ -419,7 +419,7 @@ export default function ManageChannelPage({
                   href={`https://playsermons.com/admin?channel=${channel.youtubeHandle || '@' + channel.handle}`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-green-600 hover:text-green-800 underline text-sm"
+                  className="inline-flex items-center px-4 py-2 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700 transition-colors text-sm"
                 >
                   Import Channel →
                 </a>
