@@ -9,6 +9,17 @@ export default function ManageChannelsPage() {
   const [channels, setChannels] = useState<any[]>([]);
   const [channelsLoading, setChannelsLoading] = useState(false);
   const [filterText, setFilterText] = useState('');
+  const [showAddForm, setShowAddForm] = useState(false);
+  const [formData, setFormData] = useState({
+    channelName: '',
+    channelHandle: '',
+    description: '',
+    thumbnailUrl: '',
+    bannerUrl: '',
+    subscriberCount: 0,
+  });
+  const [submitting, setSubmitting] = useState(false);
+  const [formError, setFormError] = useState<string | null>(null);
 
   useEffect(() => {
     // Set page title
@@ -32,6 +43,47 @@ export default function ManageChannelsPage() {
       console.error('Error fetching channels:', err);
     } finally {
       setChannelsLoading(false);
+    }
+  };
+
+  const handleAddChannel = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSubmitting(true);
+    setFormError(null);
+
+    try {
+      const response = await fetch('/api/channels', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Failed to create channel');
+      }
+
+      const data = await response.json();
+
+      // Refresh channels list
+      await fetchChannels();
+
+      // Reset form and close modal
+      setFormData({
+        channelName: '',
+        channelHandle: '',
+        description: '',
+        thumbnailUrl: '',
+        bannerUrl: '',
+        subscriberCount: 0,
+      });
+      setShowAddForm(false);
+    } catch (err) {
+      setFormError(err instanceof Error ? err.message : 'An error occurred');
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -59,9 +111,17 @@ export default function ManageChannelsPage() {
       <div className="py-12 px-4 sm:px-6 lg:px-8">
         <div className="max-w-3xl mx-auto">
           <div className="bg-white rounded-lg shadow-lg p-8">
-            <h1 className="text-3xl font-bold text-gray-900 mb-6">
-              Manage Channels
-            </h1>
+            <div className="flex justify-between items-center mb-6">
+              <h1 className="text-3xl font-bold text-gray-900">
+                Manage Channels
+              </h1>
+              <button
+                onClick={() => setShowAddForm(true)}
+                className="bg-blue-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-blue-700 transition-colors"
+              >
+                Add Channel
+              </button>
+            </div>
 
             {channelsLoading ? (
               <p className="text-gray-600">Loading channels...</p>
@@ -117,6 +177,154 @@ export default function ManageChannelsPage() {
           </div>
         </div>
       </div>
+
+      {/* Add Channel Modal */}
+      {showAddForm && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-6">
+              <div className="flex justify-between items-center mb-6">
+                <h2 className="text-2xl font-bold text-gray-900">Add New Channel</h2>
+                <button
+                  onClick={() => {
+                    setShowAddForm(false);
+                    setFormError(null);
+                  }}
+                  className="text-gray-400 hover:text-gray-600"
+                >
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+
+              <form onSubmit={handleAddChannel} className="space-y-4">
+                <div>
+                  <label htmlFor="channelName" className="block text-sm font-medium text-gray-700 mb-1">
+                    Channel Name <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    id="channelName"
+                    value={formData.channelName}
+                    onChange={(e) => setFormData({ ...formData, channelName: e.target.value })}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    required
+                    disabled={submitting}
+                    placeholder="My Awesome Channel"
+                  />
+                </div>
+
+                <div>
+                  <label htmlFor="channelHandle" className="block text-sm font-medium text-gray-700 mb-1">
+                    Channel Handle <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    id="channelHandle"
+                    value={formData.channelHandle}
+                    onChange={(e) => setFormData({ ...formData, channelHandle: e.target.value })}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    required
+                    disabled={submitting}
+                    placeholder="myawesomechannel"
+                  />
+                  <p className="mt-1 text-sm text-gray-500">
+                    Used as subdomain (will be sanitized to lowercase alphanumeric and hyphens)
+                  </p>
+                </div>
+
+                <div>
+                  <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-1">
+                    Description
+                  </label>
+                  <textarea
+                    id="description"
+                    value={formData.description}
+                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                    rows={3}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    disabled={submitting}
+                    placeholder="A brief description of the channel..."
+                  />
+                </div>
+
+                <div>
+                  <label htmlFor="thumbnailUrl" className="block text-sm font-medium text-gray-700 mb-1">
+                    Thumbnail URL
+                  </label>
+                  <input
+                    type="url"
+                    id="thumbnailUrl"
+                    value={formData.thumbnailUrl}
+                    onChange={(e) => setFormData({ ...formData, thumbnailUrl: e.target.value })}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    disabled={submitting}
+                    placeholder="https://example.com/thumbnail.jpg"
+                  />
+                </div>
+
+                <div>
+                  <label htmlFor="bannerUrl" className="block text-sm font-medium text-gray-700 mb-1">
+                    Banner URL
+                  </label>
+                  <input
+                    type="url"
+                    id="bannerUrl"
+                    value={formData.bannerUrl}
+                    onChange={(e) => setFormData({ ...formData, bannerUrl: e.target.value })}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    disabled={submitting}
+                    placeholder="https://example.com/banner.jpg"
+                  />
+                </div>
+
+                <div>
+                  <label htmlFor="subscriberCount" className="block text-sm font-medium text-gray-700 mb-1">
+                    Subscriber Count
+                  </label>
+                  <input
+                    type="number"
+                    id="subscriberCount"
+                    value={formData.subscriberCount}
+                    onChange={(e) => setFormData({ ...formData, subscriberCount: parseInt(e.target.value) || 0 })}
+                    min="0"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    disabled={submitting}
+                  />
+                </div>
+
+                {formError && (
+                  <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
+                    <p className="text-red-800 text-sm">{formError}</p>
+                  </div>
+                )}
+
+                <div className="flex gap-3 pt-4">
+                  <button
+                    type="submit"
+                    disabled={submitting}
+                    className="flex-1 bg-blue-600 text-white py-2 px-4 rounded-lg font-medium hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
+                  >
+                    {submitting ? 'Creating...' : 'Create Channel'}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowAddForm(false);
+                      setFormError(null);
+                    }}
+                    disabled={submitting}
+                    className="px-4 py-2 border border-gray-300 rounded-lg font-medium text-gray-700 hover:bg-gray-50 disabled:cursor-not-allowed transition-colors"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
