@@ -13,10 +13,13 @@ export default function ManageChannelsPage() {
   const [formData, setFormData] = useState({
     channelName: '',
     channelHandle: '',
+    youtubeChannelHandle: '',
     description: '',
     thumbnailUrl: '',
     bannerUrl: '',
     subscriberCount: 0,
+    externalLink: '',
+    externalLinkName: '',
   });
   const [submitting, setSubmitting] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
@@ -74,10 +77,13 @@ export default function ManageChannelsPage() {
       setFormData({
         channelName: '',
         channelHandle: '',
+        youtubeChannelHandle: '',
         description: '',
         thumbnailUrl: '',
         bannerUrl: '',
         subscriberCount: 0,
+        externalLink: '',
+        externalLinkName: '',
       });
       setShowAddForm(false);
     } catch (err) {
@@ -235,6 +241,24 @@ export default function ManageChannelsPage() {
                 </div>
 
                 <div>
+                  <label htmlFor="youtubeChannelHandle" className="block text-sm font-medium text-gray-700 mb-1">
+                    YouTube Channel Handle
+                  </label>
+                  <input
+                    type="text"
+                    id="youtubeChannelHandle"
+                    value={formData.youtubeChannelHandle}
+                    onChange={(e) => setFormData({ ...formData, youtubeChannelHandle: e.target.value })}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    disabled={submitting}
+                    placeholder="@channelhandle"
+                  />
+                  <p className="mt-1 text-sm text-gray-500">
+                    Optional: The original YouTube channel handle (e.g., @mkbhd)
+                  </p>
+                </div>
+
+                <div>
                   <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-1">
                     Description
                   </label>
@@ -292,6 +316,42 @@ export default function ManageChannelsPage() {
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     disabled={submitting}
                   />
+                </div>
+
+                <div>
+                  <label htmlFor="externalLink" className="block text-sm font-medium text-gray-700 mb-1">
+                    External Link
+                  </label>
+                  <input
+                    type="url"
+                    id="externalLink"
+                    value={formData.externalLink}
+                    onChange={(e) => setFormData({ ...formData, externalLink: e.target.value })}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    disabled={submitting}
+                    placeholder="https://example.com"
+                  />
+                  <p className="mt-1 text-sm text-gray-500">
+                    Optional: A link to an external website or resource
+                  </p>
+                </div>
+
+                <div>
+                  <label htmlFor="externalLinkName" className="block text-sm font-medium text-gray-700 mb-1">
+                    External Link Name
+                  </label>
+                  <input
+                    type="text"
+                    id="externalLinkName"
+                    value={formData.externalLinkName}
+                    onChange={(e) => setFormData({ ...formData, externalLinkName: e.target.value })}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    disabled={submitting}
+                    placeholder="Visit Our Website"
+                  />
+                  <p className="mt-1 text-sm text-gray-500">
+                    Optional: Display name for the external link
+                  </p>
                 </div>
 
                 {formError && (

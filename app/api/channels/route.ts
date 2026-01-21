@@ -52,7 +52,17 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { channelName, channelHandle, description, thumbnailUrl, bannerUrl, subscriberCount } = body;
+    const {
+      channelName,
+      channelHandle,
+      youtubeChannelHandle,
+      description,
+      thumbnailUrl,
+      bannerUrl,
+      subscriberCount,
+      externalLink,
+      externalLinkName
+    } = body;
 
     // Validate required fields
     if (!channelName || !channelHandle) {
@@ -84,12 +94,15 @@ export async function POST(request: NextRequest) {
       .from('channels')
       .insert({
         channel_handle: sanitizedHandle,
+        youtube_channel_handle: youtubeChannelHandle || null,
         channel_name: channelName,
         channel_description: description || null,
         thumbnail_url: thumbnailUrl || null,
         banner_url: bannerUrl || null,
         subscriber_count: subscriberCount || 0,
         video_count: 0,
+        external_link: externalLink || null,
+        external_link_name: externalLinkName || null,
         last_synced_at: new Date().toISOString(),
       })
       .select('id, channel_handle, channel_name, channel_description, thumbnail_url, subscriber_count, video_count')
