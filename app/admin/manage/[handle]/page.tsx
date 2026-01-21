@@ -413,7 +413,7 @@ export default function ManageChannelPage({
                   rel="noopener noreferrer"
                   className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors text-sm"
                 >
-                  View Channel →
+                  View Channel
                 </a>
                 <a
                   href={`https://playsermons.com/admin?channel=${channel.youtubeHandle || '@' + channel.handle}`}
@@ -421,7 +421,7 @@ export default function ManageChannelPage({
                   rel="noopener noreferrer"
                   className="inline-flex items-center px-4 py-2 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700 transition-colors text-sm"
                 >
-                  Import Channel →
+                  Import Channel
                 </a>
               </div>
             </div>
