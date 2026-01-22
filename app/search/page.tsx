@@ -83,22 +83,15 @@ function SearchContent() {
   };
 
   const playFromTimestamp = (startTime: number) => {
-    if (iframeRef && selectedVideo) {
-      // Use postMessage to control the YouTube iframe
-      const message = JSON.stringify({
-        event: 'command',
-        func: 'seekTo',
-        args: [startTime, true]
+    if (selectedVideo) {
+      // Update the video with autoplay to immediately start playing at the new timestamp
+      setSelectedVideo({
+        ...selectedVideo,
+        startTime: startTime
       });
-      iframeRef.contentWindow?.postMessage(message, '*');
 
-      // Also send play command
-      const playMessage = JSON.stringify({
-        event: 'command',
-        func: 'playVideo',
-        args: []
-      });
-      iframeRef.contentWindow?.postMessage(playMessage, '*');
+      // Reset iframe ref to force reload
+      setIframeRef(null);
     }
   };
 
@@ -317,8 +310,8 @@ function SearchContent() {
                     ref={(ref) => setIframeRef(ref)}
                     src={`https://www.youtube.com/embed/${selectedVideo.youtubeVideoId}${
                       selectedVideo.startTime
-                        ? `?start=${Math.floor(selectedVideo.startTime)}&enablejsapi=1`
-                        : '?enablejsapi=1'
+                        ? `?start=${Math.floor(selectedVideo.startTime)}&autoplay=1`
+                        : '?autoplay=0'
                     }`}
                     className="w-full h-full"
                     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
