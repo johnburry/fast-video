@@ -275,8 +275,8 @@ function SearchContent() {
               {/* Context sidebar - only show if we have match text */}
               {selectedVideo.matchText && (
                 <div className="w-full md:w-80 bg-white rounded-lg p-4 flex-shrink-0" style={{ border: '3px solid red' }}>
-                  <h3 className="font-semibold text-gray-900 mb-2 text-sm">
-                    Playing from: (SIDEBAR IS RENDERING - matchText: {selectedVideo.matchText ? 'YES' : 'NO'})
+                  <h3 className="font-semibold text-red-600 mb-2 text-2xl">
+                    🔴🔴🔴 TEST VERSION DEPLOYED - COMMIT a2aca01 🔴🔴🔴
                   </h3>
                   {selectedVideo.videoTitle && (
                     <p className="text-sm font-medium text-gray-700 mb-3">
