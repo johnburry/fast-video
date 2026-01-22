@@ -39,7 +39,6 @@ function SearchContent() {
     matchText?: string;
     videoTitle?: string;
   } | null>(null);
-  const [iframeRef, setIframeRef] = useState<HTMLIFrameElement | null>(null);
 
   useEffect(() => {
     if (query) {
@@ -80,19 +79,6 @@ function SearchContent() {
 
   const openVideo = (youtubeVideoId: string, startTime?: number, matchText?: string, videoTitle?: string) => {
     setSelectedVideo({ youtubeVideoId, startTime, matchText, videoTitle });
-  };
-
-  const playFromTimestamp = (startTime: number) => {
-    if (selectedVideo) {
-      // Update the video with autoplay to immediately start playing at the new timestamp
-      setSelectedVideo({
-        ...selectedVideo,
-        startTime: startTime
-      });
-
-      // Reset iframe ref to force reload
-      setIframeRef(null);
-    }
   };
 
   const toggleExpandMatches = (videoId: string) => {
@@ -274,53 +260,48 @@ function SearchContent() {
             <div className="flex flex-col md:flex-row gap-4">
               {/* Context sidebar - only show if we have match text */}
               {selectedVideo.matchText && (
-                <div className="w-full md:w-80 bg-white rounded-lg p-4 flex-shrink-0" style={{ border: '3px solid red' }}>
-                  <h3 className="font-semibold text-red-600 mb-2 text-2xl">
-                    🔴🔴🔴 TEST VERSION DEPLOYED - COMMIT a2aca01 🔴🔴🔴
+                <div className="w-full md:w-80 bg-white rounded-lg p-4 flex-shrink-0">
+                  <h3 className="font-semibold text-gray-900 mb-2 text-sm">
+                    Playing from:
                   </h3>
                   {selectedVideo.videoTitle && (
                     <p className="text-sm font-medium text-gray-700 mb-3">
                       {selectedVideo.videoTitle}
                     </p>
                   )}
-                  <button
-                    type="button"
-                    className="border-l-4 border-blue-500 pl-3 py-2 cursor-pointer hover:bg-yellow-200 bg-yellow-300 w-full text-left block"
-                    style={{ minHeight: '100px' }}
+                  <div
+                    className="border-l-4 border-blue-500 pl-3 py-2 bg-gray-50 cursor-pointer hover:bg-gray-100 transition-colors"
                     onClick={() => {
-                      alert('CLICKED! Time: ' + selectedVideo.startTime);
-                      console.log('Div clicked!', selectedVideo.startTime);
-                      if (selectedVideo.startTime) {
-                        playFromTimestamp(selectedVideo.startTime);
+                      if (selectedVideo.youtubeVideoId && selectedVideo.startTime) {
+                        // Reload the iframe with the timestamp and autoplay
+                        const iframe = document.querySelector('iframe[src*="youtube.com/embed"]') as HTMLIFrameElement;
+                        if (iframe) {
+                          iframe.src = `https://www.youtube.com/embed/${selectedVideo.youtubeVideoId}?start=${Math.floor(selectedVideo.startTime)}&autoplay=1`;
+                        }
                       }
                     }}
-                    onMouseEnter={() => console.log('Mouse entered!')}
-                    onMouseLeave={() => console.log('Mouse left!')}
                   >
                     <div className="flex items-center gap-2 mb-2">
                       <span className="text-sm font-medium text-blue-600">
                         {selectedVideo.startTime ? formatTimestamp(selectedVideo.startTime) : '0:00'}
                       </span>
-                      <svg className="w-4 h-4 flex-shrink-0" viewBox="0 0 24 24" fill="#FF0000">
+                      <svg className="w-4 h-4" viewBox="0 0 24 24" fill="#FF0000">
                         <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
                       </svg>
-                      <span className="text-sm font-medium hover:underline" style={{ color: '#FF0000' }}>
-                        Play from here (CLICK THIS YELLOW AREA)
-                      </span>
+                      <span className="text-sm font-medium hover:underline" style={{ color: '#FF0000' }}>Play from here</span>
                     </div>
                     <p className="text-sm text-gray-700">{selectedVideo.matchText}</p>
-                  </button>
+                  </div>
                 </div>
               )}
               {/* Video player */}
               <div className="flex-1 bg-white rounded-lg overflow-hidden">
                 <div className="aspect-video">
                   <iframe
-                    ref={(ref) => setIframeRef(ref)}
                     src={`https://www.youtube.com/embed/${selectedVideo.youtubeVideoId}${
                       selectedVideo.startTime
-                        ? `?start=${Math.floor(selectedVideo.startTime)}&autoplay=1`
-                        : '?autoplay=0'
+                        ? `?start=${Math.floor(selectedVideo.startTime)}`
+                        : ''
                     }`}
                     className="w-full h-full"
                     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
