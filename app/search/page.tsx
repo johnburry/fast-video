@@ -39,6 +39,7 @@ function SearchContent() {
     matchText?: string;
     videoTitle?: string;
   } | null>(null);
+  const [iframeRef, setIframeRef] = useState<HTMLIFrameElement | null>(null);
 
   useEffect(() => {
     if (query) {
@@ -79,6 +80,26 @@ function SearchContent() {
 
   const openVideo = (youtubeVideoId: string, startTime?: number, matchText?: string, videoTitle?: string) => {
     setSelectedVideo({ youtubeVideoId, startTime, matchText, videoTitle });
+  };
+
+  const playFromTimestamp = (startTime: number) => {
+    if (iframeRef && selectedVideo) {
+      // Use postMessage to control the YouTube iframe
+      const message = JSON.stringify({
+        event: 'command',
+        func: 'seekTo',
+        args: [startTime, true]
+      });
+      iframeRef.contentWindow?.postMessage(message, '*');
+
+      // Also send play command
+      const playMessage = JSON.stringify({
+        event: 'command',
+        func: 'playVideo',
+        args: []
+      });
+      iframeRef.contentWindow?.postMessage(playMessage, '*');
+    }
   };
 
   const toggleExpandMatches = (videoId: string) => {
@@ -277,7 +298,13 @@ function SearchContent() {
                       <svg className="w-4 h-4" viewBox="0 0 24 24" fill="#FF0000">
                         <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
                       </svg>
-                      <span className="text-sm" style={{ color: '#FF0000' }}>Play from here</span>
+                      <span
+                        className="text-sm cursor-pointer hover:underline"
+                        style={{ color: '#FF0000' }}
+                        onClick={() => selectedVideo.startTime && playFromTimestamp(selectedVideo.startTime)}
+                      >
+                        Play from here
+                      </span>
                     </div>
                     <p className="text-sm text-gray-700">{selectedVideo.matchText}</p>
                   </div>
@@ -287,10 +314,11 @@ function SearchContent() {
               <div className="flex-1 bg-white rounded-lg overflow-hidden">
                 <div className="aspect-video">
                   <iframe
+                    ref={(ref) => setIframeRef(ref)}
                     src={`https://www.youtube.com/embed/${selectedVideo.youtubeVideoId}${
                       selectedVideo.startTime
-                        ? `?start=${Math.floor(selectedVideo.startTime)}`
-                        : ''
+                        ? `?start=${Math.floor(selectedVideo.startTime)}&enablejsapi=1`
+                        : '?enablejsapi=1'
                     }`}
                     className="w-full h-full"
                     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
