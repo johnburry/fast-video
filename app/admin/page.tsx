@@ -9,6 +9,7 @@ export default function AdminPage() {
   const [channelHandle, setChannelHandle] = useState('');
   const [importLimit, setImportLimit] = useState<number>(1000);
   const [includeLiveVideos, setIncludeLiveVideos] = useState(false);
+  const [skipTranscripts, setSkipTranscripts] = useState(true);
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<any>(null);
   const [error, setError] = useState<string | null>(null);
@@ -66,7 +67,7 @@ export default function AdminPage() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ channelHandle, limit: importLimit, includeLiveVideos }),
+        body: JSON.stringify({ channelHandle, limit: importLimit, includeLiveVideos, skipTranscripts }),
       });
 
       if (!response.body) {
@@ -205,6 +206,27 @@ export default function AdminPage() {
                 </label>
                 <p className="text-sm text-gray-500">
                   Import ALL YouTube live videos in addition to standard videos (processes all live videos first, then regular videos)
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-start">
+              <div className="flex items-center h-5">
+                <input
+                  id="skipTranscripts"
+                  type="checkbox"
+                  checked={skipTranscripts}
+                  onChange={(e) => setSkipTranscripts(e.target.checked)}
+                  disabled={loading}
+                  className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
+                />
+              </div>
+              <div className="ml-3">
+                <label htmlFor="skipTranscripts" className="text-sm font-medium text-gray-700">
+                  Skip Transcript Download (Recommended ✓)
+                </label>
+                <p className="text-sm text-gray-500">
+                  Skip downloading transcripts during import to prevent timeouts. Import will complete in seconds instead of timing out after ~10 videos. Videos will be created without transcripts - you'll need to download transcripts separately later.
                 </p>
               </div>
             </div>

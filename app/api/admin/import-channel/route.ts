@@ -65,7 +65,7 @@ function parseRelativeTime(relativeTime: string): string | null {
 }
 
 export async function POST(request: NextRequest) {
-  const { channelHandle, limit, includeLiveVideos } = await request.json();
+  const { channelHandle, limit, includeLiveVideos, skipTranscripts } = await request.json();
 
   if (!channelHandle) {
     return NextResponse.json(
@@ -77,6 +77,7 @@ export async function POST(request: NextRequest) {
   // Use provided limit or default to 50, with max of 1000
   const videoLimit = Math.min(Math.max(1, limit || 50), 1000);
   const shouldIncludeLiveVideos = includeLiveVideos === true;
+  const shouldSkipTranscripts = skipTranscripts === true;
 
   // Create a streaming response
   const encoder = new TextEncoder();
@@ -359,12 +360,19 @@ export async function POST(request: NextRequest) {
           videoId = newVideo.id;
         }
 
-        // Only fetch transcript if video doesn't have one
+        // Only fetch transcript if video doesn't have one AND we're not skipping transcripts
         const hasTranscript = existingVideoMap.get(video.videoId) || false;
         if (hasTranscript) {
           console.log(`[IMPORT] Skipping transcript for ${video.videoId} - already exists`);
           processedCount++;
           skippedCount++;
+          continue;
+        }
+
+        // Skip transcript fetching if requested (for faster imports)
+        if (shouldSkipTranscripts) {
+          console.log(`[IMPORT] Skipping transcript for ${video.videoId} - skipTranscripts enabled`);
+          processedCount++;
           continue;
         }
 
