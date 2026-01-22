@@ -283,9 +283,10 @@ function SearchContent() {
                       {selectedVideo.videoTitle}
                     </p>
                   )}
-                  <div
-                    className="border-l-4 border-blue-500 pl-3 py-2 cursor-pointer hover:bg-gray-100"
-                    style={{ backgroundColor: 'yellow', minHeight: '100px' }}
+                  <button
+                    type="button"
+                    className="border-l-4 border-blue-500 pl-3 py-2 cursor-pointer hover:bg-yellow-200 bg-yellow-300 w-full text-left block"
+                    style={{ minHeight: '100px' }}
                     onClick={() => {
                       alert('CLICKED! Time: ' + selectedVideo.startTime);
                       console.log('Div clicked!', selectedVideo.startTime);
@@ -308,7 +309,7 @@ function SearchContent() {
                       </span>
                     </div>
                     <p className="text-sm text-gray-700">{selectedVideo.matchText}</p>
-                  </div>
+                  </button>
                 </div>
               )}
               {/* Video player */}
