@@ -4,6 +4,7 @@ import { Suspense, useState, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { formatTimestamp } from '@/lib/youtube/transcript';
 import { getThumbnailUrl } from '@/lib/thumbnail';
+import { useTenantConfig } from '@/lib/tenant-config';
 
 interface SearchResult {
   videoId: string;
@@ -29,6 +30,7 @@ interface SearchResult {
 function SearchContent() {
   const searchParams = useSearchParams();
   const query = searchParams.get('q');
+  const tenantConfig = useTenantConfig();
   const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -99,11 +101,17 @@ function SearchContent() {
       <div className="bg-white py-4">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <a href="/" className="inline-block">
-            <img
-              src="/playsermons-logo-2.png"
-              alt="PlaySermons"
-              className="h-16 w-auto"
-            />
+            {tenantConfig.logo.type === 'image' ? (
+              <img
+                src={tenantConfig.logo.imageUrl || '/playsermons-logo-2.png'}
+                alt={tenantConfig.logo.altText}
+                className="h-16 w-auto"
+              />
+            ) : (
+              <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                {tenantConfig.logo.text}
+              </h1>
+            )}
           </a>
         </div>
       </div>
@@ -117,7 +125,7 @@ function SearchContent() {
               Search Results for: "{query}"
             </h1>
             <p className="text-gray-400 mt-2">
-              Searching across all church sermons
+              {tenantConfig.searchResultsHeading}
             </p>
           </div>
         )}
