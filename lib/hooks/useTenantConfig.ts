@@ -8,13 +8,15 @@ const tenantCache: Map<string, { config: TenantConfig; timestamp: number }> = ne
 const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
 
 // Fetch tenant config from API
-async function fetchTenantConfig(hostname: string): Promise<TenantConfig> {
+async function fetchTenantConfig(hostname: string, skipCache = false): Promise<TenantConfig> {
   const cleanDomain = hostname.split(':')[0];
 
-  // Check cache first
-  const cached = tenantCache.get(cleanDomain);
-  if (cached && Date.now() - cached.timestamp < CACHE_DURATION) {
-    return cached.config;
+  // Check cache first (unless skipCache is true)
+  if (!skipCache) {
+    const cached = tenantCache.get(cleanDomain);
+    if (cached && Date.now() - cached.timestamp < CACHE_DURATION) {
+      return cached.config;
+    }
   }
 
   try {
@@ -48,7 +50,11 @@ export function useTenantConfig(): TenantConfig {
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      fetchTenantConfig(window.location.hostname).then(setConfig);
+      // Check if ?refresh_tenant=1 is in URL to bypass cache
+      const urlParams = new URLSearchParams(window.location.search);
+      const skipCache = urlParams.get('refresh_tenant') === '1';
+
+      fetchTenantConfig(window.location.hostname, skipCache).then(setConfig);
     }
   }, []);
 

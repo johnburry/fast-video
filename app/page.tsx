@@ -41,10 +41,20 @@ export default function Home() {
       <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-gray-50 via-gray-100 to-gray-200">
         <div className="max-w-4xl w-full mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center">
-            {/* Fast.Video Text Logo */}
-            <h1 className="text-8xl font-bold mb-12 bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-              Fast.Video
-            </h1>
+            {/* Logo - respects tenant config */}
+            <div className="mb-12">
+              {tenantConfig.logo.type === 'image' ? (
+                <img
+                  src={tenantConfig.logo.imageUrl!}
+                  alt={tenantConfig.logo.altText}
+                  className="h-32 w-auto mx-auto"
+                />
+              ) : (
+                <h1 className="text-8xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                  {tenantConfig.logo.text}
+                </h1>
+              )}
+            </div>
 
             {/* Search Box */}
             <form onSubmit={handleSearch} className="max-w-3xl mx-auto">
