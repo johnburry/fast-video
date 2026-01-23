@@ -107,6 +107,7 @@ export async function POST(request: NextRequest) {
         newToImport,
         importedWithTranscripts,
         importedWithoutTranscripts,
+        needsTranscripts: importedWithoutTranscripts, // Videos that need transcripts
       },
       channelExists: channelId !== null,
     });

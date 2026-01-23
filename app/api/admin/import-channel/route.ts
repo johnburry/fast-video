@@ -301,8 +301,12 @@ export async function POST(request: NextRequest) {
         const firstNewVideo = combinedVideos.find(v => !existingVideoMap.has(v.videoId));
         console.log(`First truly new video:`, firstNewVideo ? { id: firstNewVideo.videoId, title: firstNewVideo.title } : 'NONE - all videos exist!');
 
-        // ONLY PROCESS NEW VIDEOS - no metadata updates for existing videos
+        // Filter videos based on import mode
         const newVideos = combinedVideos.filter(v => !existingVideoMap.has(v.videoId));
+        const existingVideosWithoutTranscripts = combinedVideos.filter(v => {
+          const hasTranscript = existingVideoMap.get(v.videoId);
+          return existingVideoMap.has(v.videoId) && hasTranscript === false;
+        });
 
         // Sort new videos by publish date (newest to oldest)
         newVideos.sort((a, b) => {
@@ -320,41 +324,45 @@ export async function POST(request: NextRequest) {
         console.log(`  - Total from YouTube: ${combinedVideos.length}`);
         console.log(`  - Already in DB: ${existingVideoMap.size}`);
         console.log(`  - New videos to import: ${newVideos.length}`);
+        console.log(`  - Existing videos without transcripts: ${existingVideosWithoutTranscripts.length}`);
         console.log(`  - Skip transcripts mode: ${shouldSkipTranscripts}`);
 
         // Send early progress update so user can see what's happening
+        const needsTranscriptDownload = !shouldSkipTranscripts && existingVideosWithoutTranscripts.length > 0;
         sendProgress({
           type: 'status',
-          message: `Analysis: ${combinedVideos.length} videos on YouTube, ${existingVideoMap.size} already imported, ${newVideos.length} new videos to import${shouldSkipTranscripts ? ' (skip transcripts mode)' : ''}`
+          message: `Analysis: ${combinedVideos.length} videos on YouTube, ${existingVideoMap.size} already imported, ${newVideos.length} new to import${needsTranscriptDownload ? `, ${existingVideosWithoutTranscripts.length} need transcripts` : ''}${shouldSkipTranscripts ? ' (skip transcripts mode)' : ''}`
         });
 
-        // Prioritize live videos if enabled
-        let videosToProcess: any[];
+        // Determine which videos to process
+        let videosToImport: any[]; // New videos to create
+        let videosForTranscripts: any[] = []; // Existing videos needing transcripts
+
         if (shouldIncludeLiveVideos && liveVideos.length > 0) {
           const liveVideoIdsSet = new Set(liveVideos.map(v => v.videoId));
-          const liveVideosToProcess = newVideos.filter(v => liveVideoIdsSet.has(v.videoId));
-          const regularVideosToProcess = newVideos.filter(v => !liveVideoIdsSet.has(v.videoId));
+          const liveVideosToImport = newVideos.filter(v => liveVideoIdsSet.has(v.videoId));
+          const regularVideosToImport = newVideos.filter(v => !liveVideoIdsSet.has(v.videoId));
 
           // Combine with live videos first, up to the limit
-          videosToProcess = [...liveVideosToProcess, ...regularVideosToProcess].slice(0, videoLimit);
+          videosToImport = [...liveVideosToImport, ...regularVideosToImport].slice(0, videoLimit);
 
-          console.log(`Live videos to import: ${liveVideosToProcess.length}, Regular videos to import: ${regularVideosToProcess.length}`);
-          console.log(`Processing ${videosToProcess.length} new videos (limit: ${videoLimit})${shouldSkipTranscripts ? ' [SKIP TRANSCRIPTS MODE]' : ''}`);
-
-          sendProgress({
-            type: 'status',
-            message: `Importing ${videosToProcess.length} new videos${liveVideosToProcess.length > 0 ? ` (${liveVideosToProcess.length} live)` : ''}${shouldSkipTranscripts ? ' (skipping transcripts)' : ''}...`
-          });
+          console.log(`Live videos to import: ${liveVideosToImport.length}, Regular videos to import: ${regularVideosToImport.length}`);
         } else {
-          videosToProcess = newVideos.slice(0, videoLimit);
-
-          console.log(`Processing ${videosToProcess.length} new videos (limit: ${videoLimit})${shouldSkipTranscripts ? ' [SKIP TRANSCRIPTS MODE]' : ''}`);
-
-          sendProgress({
-            type: 'status',
-            message: `Importing ${videosToProcess.length} new videos${shouldSkipTranscripts ? ' (skipping transcripts)' : ''}...`
-          });
+          videosToImport = newVideos.slice(0, videoLimit);
         }
+
+        // If not skipping transcripts, also process existing videos without transcripts
+        if (!shouldSkipTranscripts) {
+          videosForTranscripts = existingVideosWithoutTranscripts.slice(0, videoLimit - videosToImport.length);
+        }
+
+        const totalToProcess = videosToImport.length + videosForTranscripts.length;
+        console.log(`Processing ${videosToImport.length} new videos and ${videosForTranscripts.length} existing videos for transcripts (total: ${totalToProcess})`);
+
+        sendProgress({
+          type: 'status',
+          message: `Importing ${videosToImport.length} new videos${videosForTranscripts.length > 0 ? ` and fetching ${videosForTranscripts.length} transcripts` : ''}...`
+        });
 
     // Update channel video count with actual total
     await supabaseAdmin
@@ -367,24 +375,23 @@ export async function POST(request: NextRequest) {
     let skippedCount = 0;
     const processedVideoIds: string[] = [];  // Track video IDs for embeddings later
 
-        console.log(`[IMPORT] About to process ${videosToProcess.length} videos`);
-        console.log(`[DEBUG] First 5 videos to process:`, videosToProcess.slice(0, 5).map(v => ({ id: v.videoId, title: v.title })));
+        console.log(`[IMPORT] About to process ${totalToProcess} total (${videosToImport.length} new + ${videosForTranscripts.length} transcript-only)`);
         sendProgress({
           type: 'status',
-          message: `Starting to process ${videosToProcess.length} videos...`
+          message: `Starting to process ${totalToProcess} videos...`
         });
 
-        // Process each video
-        for (const video of videosToProcess) {
+        // Process new videos (create records + transcripts)
+        for (const video of videosToImport) {
           try {
             const videoStartTime = Date.now();
-            console.log(`[TIMING] Starting video ${processedCount + 1}/${videosToProcess.length}: ${video.videoId}`);
+            console.log(`[TIMING] Starting video ${processedCount + 1}/${totalToProcess}: ${video.videoId}`);
 
             const isLiveVideo = shouldIncludeLiveVideos && liveVideos.some(lv => lv.videoId === video.videoId);
             sendProgress({
               type: 'progress',
               current: processedCount + 1,
-              total: videosToProcess.length,
+              total: totalToProcess,
               videoTitle: `${video.title}${isLiveVideo ? ' [LIVE]' : ''}`,
             });
 
@@ -501,9 +508,89 @@ export async function POST(request: NextRequest) {
 
             processedCount++;
             console.log(`[TIMING] Total time for video ${video.videoId}: ${Date.now() - videoStartTime}ms`);
-            console.log(`Processed ${processedCount}/${videosToProcess.length} videos`);
+            console.log(`Processed ${processedCount}/${totalToProcess} videos`);
           } catch (error) {
             console.error(`Error processing video ${video.videoId}:`, error);
+          }
+        }
+
+        // Process existing videos that need transcripts (transcript-only mode)
+        for (const video of videosForTranscripts) {
+          try {
+            const videoStartTime = Date.now();
+            console.log(`[TIMING] Starting transcript-only for video ${processedCount + 1}/${totalToProcess}: ${video.videoId}`);
+
+            // Get the database video ID
+            const { data: existingVideo } = await supabaseAdmin
+              .from('videos')
+              .select('id')
+              .eq('youtube_video_id', video.videoId)
+              .eq('channel_id', channelId)
+              .single();
+
+            if (!existingVideo) {
+              console.error(`[IMPORT] Video ${video.videoId} not found in database`);
+              continue;
+            }
+
+            const videoId = existingVideo.id;
+
+            sendProgress({
+              type: 'progress',
+              current: processedCount + 1,
+              total: totalToProcess,
+              videoTitle: `${video.title} [TRANSCRIPT ONLY]`,
+            });
+
+            // Fetch and save transcript
+            console.log(`[IMPORT] Fetching transcript for existing video ${video.videoId} (${video.title})...`);
+            sendProgress({
+              type: 'status',
+              message: `Fetching transcript for: ${video.title} (this may take a minute)...`
+            });
+
+            const transcriptStart = Date.now();
+            let transcript = await getVideoTranscript(video.videoId, false);
+            console.log(`[TIMING] Transcript fetch took ${Date.now() - transcriptStart}ms`);
+
+            if (!transcript || transcript.length === 0) {
+              console.log(`[IMPORT] No transcript available for ${video.videoId} - skipping`);
+              sendProgress({
+                type: 'status',
+                message: `⚠️ No transcript available for: ${video.title}`
+              });
+            } else {
+              console.log(`[IMPORT] Saving ${transcript.length} transcript segments for ${video.videoId}...`);
+              const transcriptRecords = transcript.map((segment) => ({
+                video_id: videoId,
+                text: segment.text,
+                start_time: segment.startTime,
+                duration: segment.duration,
+              }));
+
+              const { error: transcriptError } = await supabaseAdmin
+                .from('transcripts')
+                .insert(transcriptRecords);
+
+              if (transcriptError) {
+                console.error(`[IMPORT] Error saving transcript for video ${video.videoId}:`, transcriptError);
+              } else {
+                console.log(`[IMPORT] Successfully saved transcript for video ${video.videoId}`);
+                await supabaseAdmin
+                  .from('videos')
+                  .update({ has_transcript: true })
+                  .eq('id', videoId);
+
+                transcriptCount++;
+                processedVideoIds.push(videoId); // Track for embeddings
+              }
+            }
+
+            processedCount++;
+            console.log(`[TIMING] Total time for transcript ${video.videoId}: ${Date.now() - videoStartTime}ms`);
+            console.log(`Processed ${processedCount}/${totalToProcess} videos`);
+          } catch (error) {
+            console.error(`Error processing transcript for video ${video.videoId}:`, error);
           }
         }
 

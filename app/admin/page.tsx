@@ -335,7 +335,7 @@ export default function AdminPage() {
                 </button>
                 <button
                   type="submit"
-                  disabled={loading || preview.breakdown.newToImport === 0}
+                  disabled={loading || (preview.breakdown.newToImport === 0 && (skipTranscripts || preview.breakdown.needsTranscripts === 0))}
                   className="flex-1 bg-blue-600 text-white py-3 px-6 rounded-lg font-medium hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
                 >
                   {loading ? 'Importing...' : 'Start Import'}
@@ -400,10 +400,26 @@ export default function AdminPage() {
                   </div>
                 </div>
 
-                {preview.breakdown.newToImport === 0 && (
+                {preview.breakdown.newToImport === 0 && preview.breakdown.needsTranscripts === 0 && (
                   <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
                     <p className="text-yellow-800 text-sm font-medium">
-                      All videos have already been imported. No new videos to import.
+                      All videos have already been imported and have transcripts. Nothing to import.
+                    </p>
+                  </div>
+                )}
+
+                {preview.breakdown.newToImport === 0 && preview.breakdown.needsTranscripts > 0 && skipTranscripts && (
+                  <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                    <p className="text-blue-800 text-sm font-medium">
+                      No new videos to import, but {preview.breakdown.needsTranscripts.toLocaleString()} imported video{preview.breakdown.needsTranscripts !== 1 ? 's' : ''} need{preview.breakdown.needsTranscripts === 1 ? 's' : ''} transcripts. Uncheck "Skip Transcript Download" to download them.
+                    </p>
+                  </div>
+                )}
+
+                {preview.breakdown.newToImport === 0 && preview.breakdown.needsTranscripts > 0 && !skipTranscripts && (
+                  <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded-lg">
+                    <p className="text-green-800 text-sm font-medium">
+                      No new videos to import. Will download transcripts for {preview.breakdown.needsTranscripts.toLocaleString()} existing video{preview.breakdown.needsTranscripts !== 1 ? 's' : ''}.
                     </p>
                   </div>
                 )}
