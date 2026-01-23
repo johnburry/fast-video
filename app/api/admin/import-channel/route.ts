@@ -233,11 +233,24 @@ export async function POST(request: NextRequest) {
 
         console.log(`Found ${existingVideoMap.size} existing videos in database`);
 
-        // Filter out videos that already exist with transcripts
+        // Filter videos that need processing:
+        // 1. New videos (not in database yet)
+        // 2. Existing videos that don't have transcripts (has_transcript = false)
+        // Exclude videos that already have transcripts (has_transcript = true)
         const newVideos = combinedVideos.filter(v => !existingVideoMap.has(v.videoId));
-        const videosWithoutTranscripts = combinedVideos.filter(v =>
-          existingVideoMap.has(v.videoId) && !existingVideoMap.get(v.videoId)
-        );
+        const videosWithoutTranscripts = combinedVideos.filter(v => {
+          const hasTranscript = existingVideoMap.get(v.videoId);
+          // Only include videos that exist in DB and explicitly have has_transcript = false
+          // (exclude videos with has_transcript = true or null/undefined)
+          return existingVideoMap.has(v.videoId) && hasTranscript === false;
+        });
+
+        console.log(`[IMPORT] Video breakdown:`);
+        console.log(`  - Total from YouTube: ${combinedVideos.length}`);
+        console.log(`  - Already in DB: ${existingVideoMap.size}`);
+        console.log(`  - New videos: ${newVideos.length}`);
+        console.log(`  - Existing videos without transcripts: ${videosWithoutTranscripts.length}`);
+        console.log(`  - Videos to process: ${newVideos.length + videosWithoutTranscripts.length}`);
 
         // If live videos are enabled, prioritize them
         let videosToProcess: any[];
