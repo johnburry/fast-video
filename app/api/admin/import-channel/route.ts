@@ -306,6 +306,7 @@ export async function POST(request: NextRequest) {
     let processedCount = 0;
     let transcriptCount = 0;
     let skippedCount = 0;
+    const processedVideoIds: string[] = [];  // Track video IDs for embeddings later
 
         console.log(`[IMPORT] About to process ${videosToProcess.length} videos`);
         sendProgress({
@@ -392,6 +393,9 @@ export async function POST(request: NextRequest) {
 
           videoId = newVideo.id;
         }
+
+        // Track this video ID for embeddings later
+        processedVideoIds.push(videoId);
 
         // Only fetch transcript if video doesn't have one AND we're not skipping transcripts
         const hasTranscript = existingVideoMap.get(video.videoId) || false;
@@ -517,15 +521,20 @@ export async function POST(request: NextRequest) {
           }
         }
 
+        // Generate embeddings only for newly processed videos (not all videos in the channel)
+        const videosForEmbeddings = processedVideoIds.length > 0
+          ? processedVideoIds.map(id => ({ id }))
+          : [];
+
         // Generate embeddings for all videos with transcripts (if OpenAI API key is available)
-        if (process.env.OPENAI_API_KEY && channelVideos && channelVideos.length > 0) {
+        if (process.env.OPENAI_API_KEY && videosForEmbeddings.length > 0) {
           const embeddingsStartTime = Date.now();
           sendProgress({ type: 'status', message: 'Generating AI embeddings for semantic search...' });
-          console.log(`[EMBEDDINGS] Starting embedding generation for ${channelVideos.length} videos`);
-          console.log(`[TIMING] ⚠️ WARNING: This will process ${channelVideos.length} videos sequentially!`);
+          console.log(`[EMBEDDINGS] Starting embedding generation for ${videosForEmbeddings.length} newly imported videos (out of ${channelVideos?.length || 0} total)`);
+          console.log(`[TIMING] This will process ${videosForEmbeddings.length} videos sequentially`);
 
           let embeddingsGenerated = 0;
-          for (const channelVideo of channelVideos) {
+          for (const channelVideo of videosForEmbeddings) {
             try {
               const embeddingVideoStart = Date.now();
               console.log(`[TIMING] Starting embeddings for video ${channelVideo.id}...`);
