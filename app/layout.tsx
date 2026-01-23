@@ -23,6 +23,11 @@ export async function generateMetadata(): Promise<Metadata> {
 
   // Generate tenant-specific metadata
   if (tenantConfig.domain === 'fast.video') {
+    // Use the tenant logo image URL if available, otherwise fall back to a default
+    const ogImageUrl = tenantConfig.logo.imageUrl
+      ? `https://fast.video${tenantConfig.logo.imageUrl}`
+      : 'https://fast.video/playsermons-logo-2.png'; // Fallback to PlaySermons logo for now
+
     return {
       title: "Fast.Video: Lightning-Fast Video Search",
       description: "Search across video transcripts instantly. Find exactly what you're looking for in seconds with AI-powered semantic search.",
@@ -36,7 +41,7 @@ export async function generateMetadata(): Promise<Metadata> {
         description: "Search across video transcripts instantly. Find exactly what you're looking for in seconds with AI-powered semantic search.",
         images: [
           {
-            url: `https://fast.video${tenantConfig.logo.imageUrl || '/fast-video-og.png'}`,
+            url: ogImageUrl,
             width: 1200,
             height: 630,
             alt: 'Fast.Video',
@@ -49,7 +54,7 @@ export async function generateMetadata(): Promise<Metadata> {
         card: 'summary_large_image',
         title: "Fast.Video: Lightning-Fast Video Search",
         description: "Search across video transcripts instantly. Find exactly what you're looking for in seconds with AI-powered semantic search.",
-        images: [`https://fast.video${tenantConfig.logo.imageUrl || '/fast-video-og.png'}`],
+        images: [ogImageUrl],
       },
     };
   }
