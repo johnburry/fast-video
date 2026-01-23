@@ -19,7 +19,8 @@ export async function PATCH(
       isActive,
       subscriptionType,
       subscriptionStartDate,
-      channelHistory
+      channelHistory,
+      tenantId
     } = body;
 
     const { data, error } = await supabaseAdmin
@@ -35,6 +36,7 @@ export async function PATCH(
         subscription_type: subscriptionType,
         subscription_start_date: subscriptionStartDate,
         channel_history: channelHistory,
+        tenant_id: tenantId,
       })
       .eq('id', id)
       .select()

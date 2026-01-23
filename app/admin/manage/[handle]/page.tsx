@@ -23,6 +23,7 @@ interface Channel {
   subscriptionStartDate: string | null;
   channelHistory: string | null;
   introVideoPlaybackId: string | null;
+  tenantId: string | null;
 }
 
 export default function ManageChannelPage({
@@ -39,6 +40,7 @@ export default function ManageChannelPage({
   const [deleting, setDeleting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+  const [tenants, setTenants] = useState<any[]>([]);
 
   // Form fields
   const [name, setName] = useState('');
@@ -51,6 +53,7 @@ export default function ManageChannelPage({
   const [subscriptionType, setSubscriptionType] = useState('trial');
   const [subscriptionStartDate, setSubscriptionStartDate] = useState('');
   const [channelHistory, setChannelHistory] = useState('');
+  const [tenantId, setTenantId] = useState('');
   const [thumbnailFile, setThumbnailFile] = useState<File | null>(null);
   const [uploadingThumbnail, setUploadingThumbnail] = useState(false);
 
@@ -68,7 +71,20 @@ export default function ManageChannelPage({
 
   useEffect(() => {
     fetchChannel();
+    fetchTenants();
   }, [handle]);
+
+  const fetchTenants = async () => {
+    try {
+      const response = await fetch('/api/admin/tenants');
+      if (response.ok) {
+        const data = await response.json();
+        setTenants(data.tenants || []);
+      }
+    } catch (err) {
+      console.error('Error fetching tenants:', err);
+    }
+  };
 
   const fetchChannel = async () => {
     try {
@@ -93,6 +109,7 @@ export default function ManageChannelPage({
       setSubscriptionType(ch.subscriptionType || 'trial');
       setSubscriptionStartDate(ch.subscriptionStartDate ? ch.subscriptionStartDate.split('T')[0] : '');
       setChannelHistory(ch.channelHistory || '');
+      setTenantId(ch.tenantId || '');
 
       // Set previous values for change tracking
       setPrevSubscriptionType(ch.subscriptionType || 'trial');
@@ -151,6 +168,7 @@ export default function ManageChannelPage({
           subscriptionType,
           subscriptionStartDate: subscriptionStartDate || null,
           channelHistory: updatedHistory,
+          tenantId: tenantId || null,
         }),
       });
 
@@ -447,6 +465,27 @@ export default function ManageChannelPage({
           )}
 
           <form onSubmit={handleSave} className="space-y-6">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Tenant
+              </label>
+              <select
+                value={tenantId}
+                onChange={(e) => setTenantId(e.target.value)}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              >
+                <option value="">No tenant assigned</option>
+                {tenants.map((tenant) => (
+                  <option key={tenant.id} value={tenant.id}>
+                    {tenant.name} ({tenant.domain})
+                  </option>
+                ))}
+              </select>
+              <p className="mt-2 text-sm text-gray-500">
+                Select which tenant this channel belongs to
+              </p>
+            </div>
+
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Channel Name

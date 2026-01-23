@@ -20,7 +20,9 @@ export default function ManageChannelsPage() {
     subscriberCount: 0,
     externalLink: '',
     externalLinkName: '',
+    tenantId: '',
   });
+  const [tenants, setTenants] = useState<any[]>([]);
   const [submitting, setSubmitting] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
 
@@ -31,8 +33,21 @@ export default function ManageChannelsPage() {
     // Fetch channels if authenticated
     if (user) {
       fetchChannels();
+      fetchTenants();
     }
   }, [user]);
+
+  const fetchTenants = async () => {
+    try {
+      const response = await fetch('/api/admin/tenants');
+      if (response.ok) {
+        const data = await response.json();
+        setTenants(data.tenants || []);
+      }
+    } catch (err) {
+      console.error('Error fetching tenants:', err);
+    }
+  };
 
   const fetchChannels = async () => {
     setChannelsLoading(true);
@@ -84,6 +99,7 @@ export default function ManageChannelsPage() {
         subscriberCount: 0,
         externalLink: '',
         externalLinkName: '',
+        tenantId: '',
       });
       setShowAddForm(false);
     } catch (err) {
@@ -205,6 +221,30 @@ export default function ManageChannelsPage() {
               </div>
 
               <form onSubmit={handleAddChannel} className="space-y-4">
+                <div>
+                  <label htmlFor="tenantId" className="block text-sm font-medium text-gray-700 mb-1">
+                    Tenant <span className="text-red-500">*</span>
+                  </label>
+                  <select
+                    id="tenantId"
+                    value={formData.tenantId}
+                    onChange={(e) => setFormData({ ...formData, tenantId: e.target.value })}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    required
+                    disabled={submitting}
+                  >
+                    <option value="">Select a tenant</option>
+                    {tenants.map((tenant) => (
+                      <option key={tenant.id} value={tenant.id}>
+                        {tenant.name} ({tenant.domain})
+                      </option>
+                    ))}
+                  </select>
+                  <p className="mt-1 text-sm text-gray-500">
+                    Select which tenant this channel belongs to
+                  </p>
+                </div>
+
                 <div>
                   <label htmlFor="channelName" className="block text-sm font-medium text-gray-700 mb-1">
                     Channel Name <span className="text-red-500">*</span>
