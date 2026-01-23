@@ -154,9 +154,15 @@ export async function POST(request: NextRequest) {
       channelId = existingChannels[0].id;
       console.log(`Channel @${channelInfo.handle} already exists, updating...`);
 
+      // Fetch the existing channel to check if channel_name is empty
+      const { data: existingChannel } = await supabaseAdmin
+        .from('channels')
+        .select('channel_name')
+        .eq('id', channelId)
+        .single();
+
       // Update existing channel
       const updateData: any = {
-        channel_name: channelInfo.name,
         channel_description: channelInfo.description,
         thumbnail_url: r2ChannelThumbnailUrl,
         banner_url: r2ChannelBannerUrl,
@@ -164,10 +170,12 @@ export async function POST(request: NextRequest) {
         last_synced_at: new Date().toISOString(),
       };
 
-      // Update tenant_id if provided
-      if (assignedTenantId) {
-        updateData.tenant_id = assignedTenantId;
+      // Only update channel_name if it's currently empty or null
+      if (!existingChannel?.channel_name) {
+        updateData.channel_name = channelInfo.name;
       }
+
+      // DO NOT update tenant_id - keep the existing tenant assignment
 
       await supabaseAdmin.from('channels').update(updateData).eq('id', channelId);
     } else {
