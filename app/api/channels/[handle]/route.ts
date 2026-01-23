@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase/client';
+import { getServerTenantConfig } from '@/lib/tenant-config';
 
 export async function GET(
   request: NextRequest,
@@ -15,13 +16,32 @@ export async function GET(
       );
     }
 
-    // Get channel info
-    const { data: channel, error: channelError } = await supabase
+    // Get tenant from hostname to validate channel belongs to this tenant
+    const hostname = request.headers.get('host') || '';
+    const tenantConfig = await getServerTenantConfig(hostname);
+
+    // Get tenant_id from database
+    const { data: tenantData } = await supabase
+      .from('tenants')
+      .select('id')
+      .eq('domain', tenantConfig.domain)
+      .single();
+
+    const tenantId = tenantData?.id;
+
+    // Get channel info with tenant validation
+    let channelQuery = supabase
       .from('channels')
       .select('*')
       .eq('channel_handle', handle)
-      .eq('is_active', true)
-      .single();
+      .eq('is_active', true);
+
+    // If we have a tenant_id, validate the channel belongs to this tenant
+    if (tenantId) {
+      channelQuery = channelQuery.eq('tenant_id', tenantId);
+    }
+
+    const { data: channel, error: channelError } = await channelQuery.single();
 
     if (channelError || !channel) {
       return NextResponse.json(
