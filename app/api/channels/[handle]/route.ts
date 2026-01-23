@@ -30,16 +30,35 @@ export async function GET(
       );
     }
 
-    // Get all videos for the channel
-    const { data: videos, error: videosError } = await supabase
-      .from('videos')
-      .select('id, youtube_video_id, title, thumbnail_url, published_at, duration_seconds, view_count, has_transcript')
-      .eq('channel_id', channel.id)
-      .order('published_at', { ascending: false });
+    // Get all videos for the channel (Supabase has 1000 row limit, so paginate)
+    let allVideos: any[] = [];
+    let page = 0;
+    const pageSize = 1000;
+    let hasMore = true;
 
-    if (videosError) {
-      console.error('Error fetching videos:', videosError);
+    while (hasMore) {
+      const { data: pageVideos, error: videosError } = await supabase
+        .from('videos')
+        .select('id, youtube_video_id, title, thumbnail_url, published_at, duration_seconds, view_count, has_transcript')
+        .eq('channel_id', channel.id)
+        .order('published_at', { ascending: false })
+        .range(page * pageSize, (page + 1) * pageSize - 1);
+
+      if (videosError) {
+        console.error(`Error fetching videos (page ${page}):`, videosError);
+        break;
+      }
+
+      if (pageVideos && pageVideos.length > 0) {
+        allVideos = allVideos.concat(pageVideos);
+        hasMore = pageVideos.length === pageSize;
+        page++;
+      } else {
+        hasMore = false;
+      }
     }
+
+    const videos = allVideos;
 
     return NextResponse.json({
       channel: {
