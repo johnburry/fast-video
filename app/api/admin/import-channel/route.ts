@@ -74,8 +74,8 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  // Use provided limit or default to 50, with max of 1000
-  const videoLimit = Math.min(Math.max(1, limit || 50), 1000);
+  // Use provided limit or default to 50, with max of 5000
+  const videoLimit = Math.min(Math.max(1, limit || 50), 5000);
   const shouldIncludeLiveVideos = includeLiveVideos === true;
   const shouldSkipTranscripts = skipTranscripts === true;
 
