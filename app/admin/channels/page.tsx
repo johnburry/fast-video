@@ -167,7 +167,7 @@ export default function ManageChannelsPage() {
                     {filteredChannels.map((channel) => (
                       <a
                         key={channel.id}
-                        href={`/admin/manage/${channel.handle}`}
+                        href={`/admin/manage/${channel.id}`}
                         className="block border border-gray-200 rounded-lg p-4 hover:border-blue-500 hover:shadow-md transition-all"
                       >
                         <div className="flex items-center gap-4">
@@ -183,7 +183,7 @@ export default function ManageChannelsPage() {
                               {channel.name}
                             </h3>
                             <p className="text-sm text-gray-600">
-                              @{channel.handle}
+                              {channel.handle ? `@${channel.handle}` : 'No handle set'}
                             </p>
                             <p className="text-xs text-gray-500 mt-1">
                               {channel.videoCount || 0} videos

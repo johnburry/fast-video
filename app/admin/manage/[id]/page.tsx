@@ -29,9 +29,9 @@ interface Channel {
 export default function ManageChannelPage({
   params,
 }: {
-  params: Promise<{ handle: string }>;
+  params: Promise<{ id: string }>;
 }) {
-  const { handle } = use(params);
+  const { id } = use(params);
   const router = useRouter();
   const { user, loading: authLoading } = useAuth();
   const [channel, setChannel] = useState<Channel | null>(null);
@@ -72,7 +72,7 @@ export default function ManageChannelPage({
   useEffect(() => {
     fetchChannel();
     fetchTenants();
-  }, [handle]);
+  }, [id]);
 
   const fetchTenants = async () => {
     try {
@@ -88,7 +88,7 @@ export default function ManageChannelPage({
 
   const fetchChannel = async () => {
     try {
-      const response = await fetch(`/api/admin/channels/handle/${handle}`);
+      const response = await fetch(`/api/admin/channels/${id}`);
       if (!response.ok) {
         throw new Error('Channel not found');
       }
@@ -97,7 +97,7 @@ export default function ManageChannelPage({
       setChannel(ch);
 
       // Set page title
-      document.title = `FV Admin: ${ch.handle}`;
+      document.title = `FV Admin: ${ch.handle || ch.name}`;
 
       setName(ch.name);
       setShortName(ch.shortName || '');
@@ -178,16 +178,9 @@ export default function ManageChannelPage({
 
       const data = await response.json();
 
-      // If handle was changed, redirect to new URL
-      if (channelHandle !== handle) {
-        setSuccess('Channel updated successfully! Redirecting...');
-        setTimeout(() => {
-          router.push(`/admin/manage/${channelHandle}`);
-        }, 1000);
-      } else {
-        setSuccess('Channel updated successfully!');
-        fetchChannel();
-      }
+      // Update success message and refresh
+      setSuccess('Channel updated successfully!');
+      fetchChannel();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to update channel');
     } finally {
