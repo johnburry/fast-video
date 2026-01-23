@@ -220,24 +220,42 @@ export async function POST(request: NextRequest) {
           console.log(`[IMPORT] Found ${allVideos.length} videos`);
         }
 
-        // Fetch all existing video IDs for this channel to avoid re-importing
-        // Note: Supabase has a default limit of 1000 rows, so we need to fetch ALL videos
+        // Fetch ALL existing video IDs for this channel to avoid re-importing
+        // Supabase has a hard limit of 1000 rows per query, so we need to paginate
         sendProgress({ type: 'status', message: 'Checking for existing videos...' });
-        const { data: existingVideos, error: fetchError } = await supabaseAdmin
-          .from('videos')
-          .select('youtube_video_id, has_transcript')
-          .eq('channel_id', channelId)
-          .limit(10000);  // Fetch up to 10000 videos (more than our import limit of 5000)
 
-        if (fetchError) {
-          console.error('[IMPORT] Error fetching existing videos:', fetchError);
+        let allExistingVideos: { youtube_video_id: string; has_transcript: boolean }[] = [];
+        let page = 0;
+        const pageSize = 1000;
+        let hasMore = true;
+
+        while (hasMore) {
+          const { data: pageVideos, error: fetchError } = await supabaseAdmin
+            .from('videos')
+            .select('youtube_video_id, has_transcript')
+            .eq('channel_id', channelId)
+            .range(page * pageSize, (page + 1) * pageSize - 1);
+
+          if (fetchError) {
+            console.error(`[IMPORT] Error fetching existing videos (page ${page}):`, fetchError);
+            break;
+          }
+
+          if (pageVideos && pageVideos.length > 0) {
+            allExistingVideos = allExistingVideos.concat(pageVideos);
+            console.log(`[IMPORT] Fetched page ${page + 1}: ${pageVideos.length} videos (total so far: ${allExistingVideos.length})`);
+            hasMore = pageVideos.length === pageSize;
+            page++;
+          } else {
+            hasMore = false;
+          }
         }
 
         const existingVideoMap = new Map(
-          (existingVideos || []).map(v => [v.youtube_video_id, v.has_transcript])
+          allExistingVideos.map(v => [v.youtube_video_id, v.has_transcript])
         );
 
-        console.log(`Found ${existingVideoMap.size} existing videos in database (query returned ${existingVideos?.length || 0} rows)`);
+        console.log(`Found ${existingVideoMap.size} existing videos in database (fetched ${allExistingVideos.length} total rows across ${page} pages)`);
         console.log(`First 3 existing videos:`, Array.from(existingVideoMap.entries()).slice(0, 3));
 
         // Check if the "new" videos are actually in the existingVideoMap
