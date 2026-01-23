@@ -304,6 +304,18 @@ export async function POST(request: NextRequest) {
         // ONLY PROCESS NEW VIDEOS - no metadata updates for existing videos
         const newVideos = combinedVideos.filter(v => !existingVideoMap.has(v.videoId));
 
+        // Sort new videos by publish date (newest to oldest)
+        newVideos.sort((a, b) => {
+          const dateA = parseRelativeTime(a.publishedAt);
+          const dateB = parseRelativeTime(b.publishedAt);
+
+          // If dates are invalid, keep original order
+          if (!dateA || !dateB) return 0;
+
+          // Newest first (descending order)
+          return new Date(dateB).getTime() - new Date(dateA).getTime();
+        });
+
         console.log(`[IMPORT] Video breakdown:`);
         console.log(`  - Total from YouTube: ${combinedVideos.length}`);
         console.log(`  - Already in DB: ${existingVideoMap.size}`);
