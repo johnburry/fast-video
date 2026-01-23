@@ -542,9 +542,14 @@ export default function ManageTenantsPage() {
                                 />
                               )}
                               <div className="flex-1 min-w-0">
-                                <p className="text-sm font-medium text-gray-900 truncate">
+                                <a
+                                  href={`/admin/manage/${channel.id}`}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="text-sm font-medium text-blue-600 hover:text-blue-800 truncate block hover:underline"
+                                >
                                   {channel.name}
-                                </p>
+                                </a>
                                 {channel.handle && (
                                   <p className="text-xs text-gray-500">@{channel.handle}</p>
                                 )}
