@@ -568,6 +568,21 @@ export default function ChannelPage({
             </div>
           )}
         </div>
+
+        {/* Footer */}
+        <div className="py-8 text-center border-t border-gray-800">
+          <p className="text-gray-400 text-sm">
+            Built by{' '}
+            <a
+              href="https://reorbit.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-blue-500 hover:text-blue-400 transition-colors"
+            >
+              Reorbit
+            </a>
+          </p>
+        </div>
       </div>
 
       {/* Video Player Modal */}
