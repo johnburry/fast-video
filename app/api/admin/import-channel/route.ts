@@ -221,11 +221,13 @@ export async function POST(request: NextRequest) {
         }
 
         // Fetch all existing video IDs for this channel to avoid re-importing
+        // Note: Supabase has a default limit of 1000 rows, so we need to fetch ALL videos
         sendProgress({ type: 'status', message: 'Checking for existing videos...' });
         const { data: existingVideos } = await supabaseAdmin
           .from('videos')
           .select('youtube_video_id, has_transcript')
-          .eq('channel_id', channelId);
+          .eq('channel_id', channelId)
+          .limit(10000);  // Fetch up to 10000 videos (more than our import limit of 5000)
 
         const existingVideoMap = new Map(
           (existingVideos || []).map(v => [v.youtube_video_id, v.has_transcript])
