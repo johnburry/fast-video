@@ -107,7 +107,7 @@ export default function ChannelPage({
   }, [channelData, hasShownHelloVideo]);
 
   useEffect(() => {
-    if (channelData?.channel.handle) {
+    if (channelData?.channel.name) {
       // Get tenant name from hostname
       const hostname = window.location.hostname;
       const parts = hostname.split('.');

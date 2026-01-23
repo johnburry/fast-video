@@ -25,19 +25,14 @@ export default function Home() {
 
       try {
         const response = await fetch('/api/channels/default');
-        console.log('[Homepage] Default channel response status:', response.status);
         if (response.ok) {
           const data = await response.json();
-          console.log('[Homepage] Default channel data:', data);
           if (data.defaultChannel) {
             // Redirect to the default channel using handle OR id
             const channelPath = data.defaultChannel.handle || data.defaultChannel.id;
-            console.log('[Homepage] Redirecting to:', channelPath);
             setIsRedirecting(true); // Set flag before redirecting
             router.push(`/${channelPath}`);
             return;
-          } else {
-            console.log('[Homepage] No default channel, showing search page');
           }
         }
       } catch (err) {
