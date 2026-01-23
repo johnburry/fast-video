@@ -40,6 +40,32 @@ export default function Home() {
     return null;
   }
 
+  // Check if this is an unknown/unconfigured domain
+  // We check if the current hostname doesn't match any known tenant domain
+  const currentHostname = typeof window !== 'undefined' ? window.location.hostname.split(':')[0] : '';
+  const isConfiguredTenant = currentHostname && (
+    currentHostname.endsWith('playsermons.com') ||
+    currentHostname.endsWith('fast.video') ||
+    currentHostname.includes('localhost') ||
+    currentHostname.includes('vercel.app')
+  );
+
+  // Show "Site Not Configured" page for unknown domains
+  if (!isConfiguredTenant && currentHostname) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center bg-white">
+        <div className="max-w-md mx-auto px-4 text-center">
+          <h1 className="text-4xl font-bold text-gray-900 mb-4">
+            This site is not configured
+          </h1>
+          <p className="text-gray-600 text-lg">
+            The domain <code className="bg-gray-100 px-2 py-1 rounded">{currentHostname}</code> has not been set up yet.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   // Fast.Video gets a minimal homepage
   if (tenantConfig.domain === 'fast.video') {
     return (
