@@ -27,8 +27,9 @@ export default function Home() {
         if (response.ok) {
           const data = await response.json();
           if (data.defaultChannel) {
-            // Redirect to the default channel
-            router.push(`/${data.defaultChannel.handle}`);
+            // Redirect to the default channel using handle OR id
+            const channelPath = data.defaultChannel.handle || data.defaultChannel.id;
+            router.push(`/${channelPath}`);
             return;
           }
         }
@@ -66,8 +67,9 @@ export default function Home() {
     return null;
   }
 
-  // Fast.Video gets a minimal homepage
-  if (tenantConfig.domain === 'fast.video') {
+  // Only PlaySermons.com gets the full marketing homepage
+  // All other tenants (fast.video, audralambert.com, etc.) get a minimal search page
+  if (tenantConfig.domain !== 'playsermons.com') {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-gray-50 via-gray-100 to-gray-200">
         <div className="max-w-4xl w-full mx-auto px-4 sm:px-6 lg:px-8">
@@ -111,7 +113,7 @@ export default function Home() {
     );
   }
 
-  // PlaySermons gets the full homepage
+  // PlaySermons.com gets the full marketing homepage
   return (
     <div className="min-h-screen" style={{ backgroundColor: '#FFF' }}>
       {/* White top section - Logo only */}
