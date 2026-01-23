@@ -13,8 +13,34 @@ const FEATURED_CHANNEL_IDS = [
 export default function Home() {
   const [searchQuery, setSearchQuery] = useState('');
   const [channels, setChannels] = useState<any[]>([]);
+  const [checkingDefaultChannel, setCheckingDefaultChannel] = useState(true);
   const router = useRouter();
   const tenantConfig = useTenantConfig();
+
+  useEffect(() => {
+    // Check if this tenant has a default channel (single channel without subdomain)
+    const checkDefaultChannel = async () => {
+      if (tenantConfig.isLoading) return;
+
+      try {
+        const response = await fetch('/api/channels/default');
+        if (response.ok) {
+          const data = await response.json();
+          if (data.defaultChannel) {
+            // Redirect to the default channel
+            router.push(`/${data.defaultChannel.handle}`);
+            return;
+          }
+        }
+      } catch (err) {
+        console.error('Error checking default channel:', err);
+      } finally {
+        setCheckingDefaultChannel(false);
+      }
+    };
+
+    checkDefaultChannel();
+  }, [tenantConfig.isLoading, router]);
 
   useEffect(() => {
     // Fetch featured channels
@@ -36,7 +62,7 @@ export default function Home() {
   };
 
   // Show nothing while loading to prevent flash
-  if (tenantConfig.isLoading) {
+  if (tenantConfig.isLoading || checkingDefaultChannel) {
     return null;
   }
 
