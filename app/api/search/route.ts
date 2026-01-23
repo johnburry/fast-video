@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase/client';
+import { getServerTenantConfig } from '@/lib/tenant-config';
 
 export async function GET(request: NextRequest) {
   try {
@@ -15,6 +16,19 @@ export async function GET(request: NextRequest) {
       );
     }
 
+    // Get tenant from hostname to filter results
+    const hostname = request.headers.get('host') || '';
+    const tenantConfig = await getServerTenantConfig(hostname);
+
+    // Get tenant_id from database
+    const { data: tenantData } = await supabase
+      .from('tenants')
+      .select('id')
+      .eq('domain', tenantConfig.domain)
+      .single();
+
+    const tenantId = tenantData?.id;
+
     // Search transcripts - also get video_id for fetching previous segments
     let transcriptSearchQuery = supabase
       .from('search_results')
@@ -24,6 +38,11 @@ export async function GET(request: NextRequest) {
         config: 'english',
       })
       .order('start_time', { ascending: true });
+
+    // Filter by tenant_id if we have one
+    if (tenantId) {
+      transcriptSearchQuery = transcriptSearchQuery.eq('tenant_id', tenantId);
+    }
 
     // Filter by channel if specified
     if (channelHandle) {
@@ -54,13 +73,19 @@ export async function GET(request: NextRequest) {
           id,
           channel_handle,
           channel_name,
-          thumbnail_url
+          thumbnail_url,
+          tenant_id
         )
       `)
       .textSearch('title', query, {
         type: 'websearch',
         config: 'english',
       });
+
+    // Filter by tenant_id if we have one
+    if (tenantId) {
+      videoQuery = videoQuery.eq('channels.tenant_id', tenantId);
+    }
 
     // Filter by channel if specified
     if (channelHandle) {

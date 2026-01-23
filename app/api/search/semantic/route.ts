@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase/server';
+import { getServerTenantConfig } from '@/lib/tenant-config';
 import OpenAI from 'openai';
 
 // Initialize OpenAI client
@@ -22,7 +23,20 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    console.log(`[SEMANTIC SEARCH] Query: "${query}", Channel: ${channelHandle || 'all'}`);
+    // Get tenant from hostname to filter results
+    const hostname = request.headers.get('host') || '';
+    const tenantConfig = await getServerTenantConfig(hostname);
+
+    // Get tenant_id from database
+    const { data: tenantData } = await supabaseAdmin
+      .from('tenants')
+      .select('id')
+      .eq('domain', tenantConfig.domain)
+      .single();
+
+    const tenantId = tenantData?.id;
+
+    console.log(`[SEMANTIC SEARCH] Query: "${query}", Channel: ${channelHandle || 'all'}, Tenant: ${tenantId || 'all'}`);
 
     // Generate embedding for the search query
     const embeddingResponse = await openai.embeddings.create({
@@ -38,6 +52,7 @@ export async function GET(request: NextRequest) {
       .rpc('search_transcripts_semantic', {
         query_embedding: JSON.stringify(queryEmbedding),
         channel_handle_filter: channelHandle,
+        tenant_id_filter: tenantId,
         match_threshold: threshold,
         match_count: limit * 3, // Get more results to group by video
       });

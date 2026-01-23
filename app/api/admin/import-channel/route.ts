@@ -65,7 +65,7 @@ function parseRelativeTime(relativeTime: string): string | null {
 }
 
 export async function POST(request: NextRequest) {
-  const { channelHandle, limit, includeLiveVideos, skipTranscripts } = await request.json();
+  const { channelHandle, limit, includeLiveVideos, skipTranscripts, tenantId } = await request.json();
 
   if (!channelHandle) {
     return NextResponse.json(
@@ -78,6 +78,24 @@ export async function POST(request: NextRequest) {
   const videoLimit = Math.min(Math.max(1, limit || 50), 5000);
   const shouldIncludeLiveVideos = includeLiveVideos === true;
   const shouldSkipTranscripts = skipTranscripts === true;
+
+  // Get tenant_id from request or derive from hostname
+  let assignedTenantId = tenantId;
+  if (!assignedTenantId) {
+    const hostname = request.headers.get('host') || '';
+    const cleanDomain = hostname.split(':')[0];
+
+    // Try to find tenant by domain
+    const { data: tenantData } = await supabaseAdmin
+      .from('tenants')
+      .select('id')
+      .eq('domain', cleanDomain)
+      .single();
+
+    if (tenantData) {
+      assignedTenantId = tenantData.id;
+    }
+  }
 
   // Create a streaming response
   const encoder = new TextEncoder();
@@ -137,31 +155,44 @@ export async function POST(request: NextRequest) {
       console.log(`Channel @${channelInfo.handle} already exists, updating...`);
 
       // Update existing channel
-      await supabaseAdmin.from('channels').update({
-          channel_name: channelInfo.name,
-          channel_description: channelInfo.description,
-          thumbnail_url: r2ChannelThumbnailUrl,
-          banner_url: r2ChannelBannerUrl,
-          subscriber_count: channelInfo.subscriberCount,
-          last_synced_at: new Date().toISOString(),
-        })
-        .eq('id', channelId);
+      const updateData: any = {
+        channel_name: channelInfo.name,
+        channel_description: channelInfo.description,
+        thumbnail_url: r2ChannelThumbnailUrl,
+        banner_url: r2ChannelBannerUrl,
+        subscriber_count: channelInfo.subscriberCount,
+        last_synced_at: new Date().toISOString(),
+      };
+
+      // Update tenant_id if provided
+      if (assignedTenantId) {
+        updateData.tenant_id = assignedTenantId;
+      }
+
+      await supabaseAdmin.from('channels').update(updateData).eq('id', channelId);
     } else {
       // Create new channel
       const sanitizedHandle = sanitizeHandleForSubdomain(channelInfo.handle);
-      const { data: newChannel, error: channelError } = await supabaseAdmin
+      const insertData: any = {
+        youtube_channel_id: channelInfo.channelId,
+        channel_handle: sanitizedHandle,
+        youtube_channel_handle: channelInfo.handle,
+        channel_name: channelInfo.name,
+        channel_description: channelInfo.description,
+        thumbnail_url: r2ChannelThumbnailUrl,
+        banner_url: r2ChannelBannerUrl,
+        subscriber_count: channelInfo.subscriberCount,
+        last_synced_at: new Date().toISOString(),
+      };
+
+      // Add tenant_id if provided
+      if (assignedTenantId) {
+        insertData.tenant_id = assignedTenantId;
+      }
+
+      const { data: newChannel, error: channelError} = await supabaseAdmin
         .from('channels')
-        .insert({
-          youtube_channel_id: channelInfo.channelId,
-          channel_handle: sanitizedHandle,
-          youtube_channel_handle: channelInfo.handle,
-          channel_name: channelInfo.name,
-          channel_description: channelInfo.description,
-          thumbnail_url: r2ChannelThumbnailUrl,
-          banner_url: r2ChannelBannerUrl,
-          subscriber_count: channelInfo.subscriberCount,
-          last_synced_at: new Date().toISOString(),
-        })
+        .insert(insertData)
         .select('id')
         .single();
 

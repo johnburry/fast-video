@@ -10,6 +10,8 @@ export default function AdminPage() {
   const [importLimit, setImportLimit] = useState<number>(5000);
   const [includeLiveVideos, setIncludeLiveVideos] = useState(false);
   const [skipTranscripts, setSkipTranscripts] = useState(true);
+  const [selectedTenantId, setSelectedTenantId] = useState<string>('');
+  const [tenants, setTenants] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<any>(null);
   const [error, setError] = useState<string | null>(null);
@@ -18,6 +20,18 @@ export default function AdminPage() {
   useEffect(() => {
     // Set page title
     document.title = 'FV Admin: Import';
+
+    // Fetch tenants
+    if (user) {
+      fetch('/api/admin/tenants')
+        .then(res => res.json())
+        .then(data => {
+          if (data.tenants) {
+            setTenants(data.tenants);
+          }
+        })
+        .catch(err => console.error('Error fetching tenants:', err));
+    }
 
     // Check for querystring parameter first
     const urlParams = new URLSearchParams(window.location.search);
@@ -50,7 +64,7 @@ export default function AdminPage() {
     if (subdomain && !channelHandle) {
       setChannelHandle(subdomain);
     }
-  }, [channelHandle]);
+  }, [channelHandle, user]);
 
 
   const handleImport = async (e: React.FormEvent) => {
@@ -67,7 +81,13 @@ export default function AdminPage() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ channelHandle, limit: importLimit, includeLiveVideos, skipTranscripts }),
+        body: JSON.stringify({
+          channelHandle,
+          limit: importLimit,
+          includeLiveVideos,
+          skipTranscripts,
+          tenantId: selectedTenantId || undefined
+        }),
       });
 
       if (!response.body) {
@@ -144,6 +164,32 @@ export default function AdminPage() {
             </p>
 
           <form onSubmit={handleImport} className="space-y-6">
+            <div>
+              <label
+                htmlFor="tenantId"
+                className="block text-sm font-medium text-gray-700 mb-2"
+              >
+                Tenant
+              </label>
+              <select
+                id="tenantId"
+                value={selectedTenantId}
+                onChange={(e) => setSelectedTenantId(e.target.value)}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                disabled={loading}
+              >
+                <option value="">Auto-detect from domain</option>
+                {tenants.map((tenant) => (
+                  <option key={tenant.id} value={tenant.id}>
+                    {tenant.name} ({tenant.domain})
+                  </option>
+                ))}
+              </select>
+              <p className="mt-2 text-sm text-gray-500">
+                Select which tenant this channel belongs to. Leave as "Auto-detect" to determine based on current domain.
+              </p>
+            </div>
+
             <div>
               <label
                 htmlFor="channelHandle"
