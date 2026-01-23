@@ -8,14 +8,11 @@ export function TenantTitle() {
 
   useEffect(() => {
     if (!tenantConfig.isLoading) {
-      // Update document title based on tenant
-      if (tenantConfig.domain === 'fast.video') {
-        document.title = 'Fast.Video: Lightning-Fast Video Search';
-      } else {
-        document.title = 'PlaySermons: AI Search for Your Sermon Videos';
-      }
+      // Update document title based on tenant tagline or name
+      const title = tenantConfig.tagline || tenantConfig.name;
+      document.title = title;
     }
-  }, [tenantConfig.isLoading, tenantConfig.domain]);
+  }, [tenantConfig.isLoading, tenantConfig.tagline, tenantConfig.name]);
 
   return null;
 }
