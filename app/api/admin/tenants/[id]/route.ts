@@ -13,13 +13,14 @@ const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey, {
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const { data: tenant, error } = await supabaseAdmin
       .from('tenants')
       .select('*')
-      .eq('id', params.id)
+      .eq('id', id)
       .single();
 
     if (error) {
@@ -43,9 +44,10 @@ export async function GET(
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const body = await request.json();
     const {
       domain,
@@ -87,7 +89,7 @@ export async function PUT(
     const { data: tenant, error } = await supabaseAdmin
       .from('tenants')
       .update(updateData)
-      .eq('id', params.id)
+      .eq('id', id)
       .select()
       .single();
 
@@ -108,14 +110,15 @@ export async function PUT(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     // First check if any channels are using this tenant
     const { data: channels, error: channelsError } = await supabaseAdmin
       .from('channels')
       .select('id')
-      .eq('tenant_id', params.id)
+      .eq('tenant_id', id)
       .limit(1);
 
     if (channelsError) {
@@ -136,7 +139,7 @@ export async function DELETE(
     const { error } = await supabaseAdmin
       .from('tenants')
       .delete()
-      .eq('id', params.id);
+      .eq('id', id);
 
     if (error) {
       console.error('Error deleting tenant:', error);
