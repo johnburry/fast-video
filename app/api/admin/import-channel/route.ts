@@ -301,67 +301,46 @@ export async function POST(request: NextRequest) {
         const firstNewVideo = combinedVideos.find(v => !existingVideoMap.has(v.videoId));
         console.log(`First truly new video:`, firstNewVideo ? { id: firstNewVideo.videoId, title: firstNewVideo.title } : 'NONE - all videos exist!');
 
-        // Filter videos that need processing:
-        // 1. New videos (not in database yet)
-        // 2. Existing videos that don't have transcripts (has_transcript = false)
-        // Exclude videos that already have transcripts (has_transcript = true)
+        // ONLY PROCESS NEW VIDEOS - no metadata updates for existing videos
         const newVideos = combinedVideos.filter(v => !existingVideoMap.has(v.videoId));
-        const videosWithoutTranscripts = combinedVideos.filter(v => {
-          const hasTranscript = existingVideoMap.get(v.videoId);
-          // Only include videos that exist in DB and explicitly have has_transcript = false
-          // (exclude videos with has_transcript = true or null/undefined)
-          return existingVideoMap.has(v.videoId) && hasTranscript === false;
-        });
 
         console.log(`[IMPORT] Video breakdown:`);
         console.log(`  - Total from YouTube: ${combinedVideos.length}`);
         console.log(`  - Already in DB: ${existingVideoMap.size}`);
-        console.log(`  - New videos: ${newVideos.length}`);
-        console.log(`  - Existing videos without transcripts: ${videosWithoutTranscripts.length}`);
+        console.log(`  - New videos to import: ${newVideos.length}`);
         console.log(`  - Skip transcripts mode: ${shouldSkipTranscripts}`);
 
         // Send early progress update so user can see what's happening
         sendProgress({
           type: 'status',
-          message: `Analysis: ${combinedVideos.length} videos on YouTube, ${existingVideoMap.size} already in database, ${newVideos.length} new videos to import${shouldSkipTranscripts ? ' (skip transcripts mode)' : ''}`
+          message: `Analysis: ${combinedVideos.length} videos on YouTube, ${existingVideoMap.size} already imported, ${newVideos.length} new videos to import${shouldSkipTranscripts ? ' (skip transcripts mode)' : ''}`
         });
 
-        // If live videos are enabled, prioritize them
+        // Prioritize live videos if enabled
         let videosToProcess: any[];
         if (shouldIncludeLiveVideos && liveVideos.length > 0) {
           const liveVideoIdsSet = new Set(liveVideos.map(v => v.videoId));
-          // When skipping transcripts, only process new videos (no point updating existing videos)
-          const videosToConsider = shouldSkipTranscripts ? newVideos : [...newVideos, ...videosWithoutTranscripts];
-          const liveVideosToProcess = videosToConsider.filter(v => liveVideoIdsSet.has(v.videoId));
-          const regularVideosToProcess = videosToConsider.filter(v => !liveVideoIdsSet.has(v.videoId));
+          const liveVideosToProcess = newVideos.filter(v => liveVideoIdsSet.has(v.videoId));
+          const regularVideosToProcess = newVideos.filter(v => !liveVideoIdsSet.has(v.videoId));
 
           // Combine with live videos first, up to the limit
           videosToProcess = [...liveVideosToProcess, ...regularVideosToProcess].slice(0, videoLimit);
 
-          console.log(`Found ${combinedVideos.length} total videos (${liveVideos.length} live), ${newVideos.length} new, ${videosWithoutTranscripts.length} need transcripts`);
-          console.log(`Live videos to process: ${liveVideosToProcess.length}, Regular videos to process: ${regularVideosToProcess.length}`);
-          console.log(`Processing ${videosToProcess.length} videos (limit: ${videoLimit})${shouldSkipTranscripts ? ' [SKIP TRANSCRIPTS MODE]' : ''}`);
+          console.log(`Live videos to import: ${liveVideosToProcess.length}, Regular videos to import: ${regularVideosToProcess.length}`);
+          console.log(`Processing ${videosToProcess.length} new videos (limit: ${videoLimit})${shouldSkipTranscripts ? ' [SKIP TRANSCRIPTS MODE]' : ''}`);
 
           sendProgress({
             type: 'status',
-            message: shouldSkipTranscripts
-              ? `Found ${newVideos.length} new videos${liveVideos.length > 0 ? ` (${liveVideosToProcess.length} live)` : ''}. Processing ${videosToProcess.length} videos (skipping transcripts)...`
-              : `Found ${liveVideos.length} live videos, ${newVideos.length} new videos and ${videosWithoutTranscripts.length} videos needing transcripts. Processing ${videosToProcess.length} videos (${liveVideosToProcess.length} live). Starting import...`
+            message: `Importing ${videosToProcess.length} new videos${liveVideosToProcess.length > 0 ? ` (${liveVideosToProcess.length} live)` : ''}${shouldSkipTranscripts ? ' (skipping transcripts)' : ''}...`
           });
         } else {
-          // When skipping transcripts, only process new videos (no point updating existing videos)
-          videosToProcess = shouldSkipTranscripts
-            ? newVideos.slice(0, videoLimit)
-            : [...newVideos, ...videosWithoutTranscripts].slice(0, videoLimit);
+          videosToProcess = newVideos.slice(0, videoLimit);
 
-          console.log(`Found ${combinedVideos.length} total videos, ${newVideos.length} new, ${videosWithoutTranscripts.length} need transcripts`);
-          console.log(`Processing ${videosToProcess.length} videos (limit: ${videoLimit})${shouldSkipTranscripts ? ' [SKIP TRANSCRIPTS MODE]' : ''}`);
+          console.log(`Processing ${videosToProcess.length} new videos (limit: ${videoLimit})${shouldSkipTranscripts ? ' [SKIP TRANSCRIPTS MODE]' : ''}`);
 
           sendProgress({
             type: 'status',
-            message: shouldSkipTranscripts
-              ? `Found ${newVideos.length} new videos. Processing ${videosToProcess.length} videos (skipping transcripts)...`
-              : `Found ${newVideos.length} new videos and ${videosWithoutTranscripts.length} videos needing transcripts. Processing ${videosToProcess.length} videos. Starting import...`
+            message: `Importing ${videosToProcess.length} new videos${shouldSkipTranscripts ? ' (skipping transcripts)' : ''}...`
           });
         }
 
@@ -405,79 +384,35 @@ export async function POST(request: NextRequest) {
             );
             console.log(`[TIMING] R2 upload took ${Date.now() - r2Start}ms`);
 
-        let videoId: string;
-        const videoExists = existingVideoMap.has(video.videoId);
+        // Create new video (all videos in videosToProcess are new)
+        const publishedAt = parseRelativeTime(video.publishedAt);
+        const { data: newVideo, error: videoError } = await supabaseAdmin
+          .from('videos')
+          .insert({
+            channel_id: channelId,
+            youtube_video_id: video.videoId,
+            title: video.title,
+            description: video.description,
+            thumbnail_url: r2ThumbnailUrl,
+            duration_seconds: video.durationSeconds,
+            published_at: publishedAt,
+            view_count: video.viewCount,
+            like_count: video.likeCount,
+            comment_count: video.commentCount,
+            has_transcript: false,
+          })
+          .select('id')
+          .single();
 
-        if (videoExists) {
-          console.log(`[DEBUG] ⚠️ WARNING: Video ${video.videoId} (${video.title}) is in videosToProcess but also exists in database! This should not happen when skipTranscripts=true`);
+        if (videoError || !newVideo) {
+          console.error(`Error creating video ${video.videoId}:`, videoError);
+          continue;
         }
 
-        if (videoExists) {
-          // Video exists, get its ID and update metadata (but don't re-fetch transcript)
-          const { data: existingVideo } = await supabaseAdmin
-            .from('videos')
-            .select('id')
-            .eq('youtube_video_id', video.videoId)
-            .single();
-
-          if (!existingVideo) {
-            console.error(`Video ${video.videoId} marked as existing but not found in DB`);
-            continue;
-          }
-
-          videoId = existingVideo.id;
-
-          // Update video metadata
-          await supabaseAdmin
-            .from('videos')
-            .update({
-              title: video.title,
-              description: video.description,
-              thumbnail_url: r2ThumbnailUrl,
-              duration_seconds: video.durationSeconds,
-              view_count: video.viewCount,
-            })
-            .eq('id', videoId);
-        } else {
-          // Create new video
-          const publishedAt = parseRelativeTime(video.publishedAt);
-          const { data: newVideo, error: videoError } = await supabaseAdmin
-            .from('videos')
-            .insert({
-              channel_id: channelId,
-              youtube_video_id: video.videoId,
-              title: video.title,
-              description: video.description,
-              thumbnail_url: r2ThumbnailUrl,
-              duration_seconds: video.durationSeconds,
-              published_at: publishedAt,
-              view_count: video.viewCount,
-              like_count: video.likeCount,
-              comment_count: video.commentCount,
-              has_transcript: false,
-            })
-            .select('id')
-            .single();
-
-          if (videoError || !newVideo) {
-            console.error(`Error creating video ${video.videoId}:`, videoError);
-            continue;
-          }
-
-          videoId = newVideo.id;
-        }
+        const videoId = newVideo.id;
 
         // Track this video ID for embeddings later
         processedVideoIds.push(videoId);
-
-        // Only fetch transcript if video doesn't have one AND we're not skipping transcripts
-        const hasTranscript = existingVideoMap.get(video.videoId) || false;
-        if (hasTranscript) {
-          console.log(`[IMPORT] Skipping transcript for ${video.videoId} - already exists`);
-          processedCount++;
-          skippedCount++;
-          continue;
-        }
 
         // Skip transcript fetching if requested (for faster imports)
         if (shouldSkipTranscripts) {

@@ -17,6 +17,8 @@ export default function AdminPage() {
   const [error, setError] = useState<string | null>(null);
   const [progressStatus, setProgressStatus] = useState<string>('');
   const [currentVideo, setCurrentVideo] = useState<{ current: number; total: number; title: string } | null>(null);
+  const [preview, setPreview] = useState<any>(null);
+  const [loadingPreview, setLoadingPreview] = useState(false);
   useEffect(() => {
     // Set page title
     document.title = 'FV Admin: Import';
@@ -66,6 +68,38 @@ export default function AdminPage() {
     }
   }, [channelHandle, user]);
 
+  const handleGetPreview = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoadingPreview(true);
+    setError(null);
+    setPreview(null);
+
+    try {
+      const response = await fetch('/api/admin/import-channel/preview', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          channelHandle,
+          limit: importLimit,
+          includeLiveVideos,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to fetch preview');
+      }
+
+      const data = await response.json();
+      setPreview(data);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'An error occurred');
+    } finally {
+      setLoadingPreview(false);
+    }
+  };
 
   const handleImport = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -163,7 +197,7 @@ export default function AdminPage() {
               Import YouTube channels and their transcripts
             </p>
 
-          <form onSubmit={handleImport} className="space-y-6">
+          <form onSubmit={preview ? handleImport : handleGetPreview} className="space-y-6">
             <div>
               <label
                 htmlFor="tenantId"
@@ -278,14 +312,104 @@ export default function AdminPage() {
               </div>
             </div>
 
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full bg-blue-600 text-white py-3 px-6 rounded-lg font-medium hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
-            >
-              {loading ? 'Importing...' : 'Import Channel'}
-            </button>
+            {!preview ? (
+              <button
+                type="submit"
+                disabled={loadingPreview}
+                className="w-full bg-purple-600 text-white py-3 px-6 rounded-lg font-medium hover:bg-purple-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
+              >
+                {loadingPreview ? 'Loading...' : 'Get Import Preview'}
+              </button>
+            ) : (
+              <div className="flex gap-3">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setPreview(null);
+                    setError(null);
+                  }}
+                  disabled={loading}
+                  className="flex-1 bg-gray-600 text-white py-3 px-6 rounded-lg font-medium hover:bg-gray-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
+                >
+                  ← Back to Settings
+                </button>
+                <button
+                  type="submit"
+                  disabled={loading || preview.breakdown.newToImport === 0}
+                  className="flex-1 bg-blue-600 text-white py-3 px-6 rounded-lg font-medium hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
+                >
+                  {loading ? 'Importing...' : 'Start Import'}
+                </button>
+              </div>
+            )}
           </form>
+
+          {/* Preview Breakdown */}
+          {preview && !loading && (
+            <div className="mt-8 p-6 bg-indigo-50 border border-indigo-200 rounded-lg">
+              <div className="flex items-start gap-4 mb-6">
+                {preview.channel.thumbnailUrl && (
+                  <img
+                    src={preview.channel.thumbnailUrl}
+                    alt={preview.channel.name}
+                    className="w-24 h-24 rounded-lg object-cover flex-shrink-0"
+                  />
+                )}
+                <div className="flex-1">
+                  <h2 className="text-indigo-900 font-bold text-xl mb-1">
+                    {preview.channel.name}
+                  </h2>
+                  <p className="text-indigo-700 text-sm">
+                    @{preview.channel.handle}
+                  </p>
+                  <p className="text-indigo-600 text-sm mt-1">
+                    {preview.channel.subscriberCount?.toLocaleString()} subscribers
+                  </p>
+                </div>
+              </div>
+
+              <div className="border-t border-indigo-200 pt-4">
+                <h3 className="text-indigo-900 font-semibold mb-3">Import Breakdown</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="bg-white p-4 rounded-lg border border-indigo-100">
+                    <p className="text-2xl font-bold text-indigo-900">
+                      {preview.breakdown.totalOnYouTube.toLocaleString()}
+                    </p>
+                    <p className="text-sm text-gray-600">Total videos on YouTube</p>
+                  </div>
+
+                  <div className="bg-white p-4 rounded-lg border border-indigo-100">
+                    <p className="text-2xl font-bold text-green-700">
+                      {preview.breakdown.alreadyImported.toLocaleString()}
+                    </p>
+                    <p className="text-sm text-gray-600">Already imported</p>
+                  </div>
+
+                  <div className="bg-white p-4 rounded-lg border border-indigo-100">
+                    <p className="text-2xl font-bold text-blue-700">
+                      {preview.breakdown.newToImport.toLocaleString()}
+                    </p>
+                    <p className="text-sm text-gray-600">New videos to import</p>
+                  </div>
+
+                  <div className="bg-white p-4 rounded-lg border border-indigo-100">
+                    <p className="text-2xl font-bold text-purple-700">
+                      {preview.breakdown.importedWithTranscripts.toLocaleString()}
+                    </p>
+                    <p className="text-sm text-gray-600">Imported with transcripts</p>
+                  </div>
+                </div>
+
+                {preview.breakdown.newToImport === 0 && (
+                  <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                    <p className="text-yellow-800 text-sm font-medium">
+                      All videos have already been imported. No new videos to import.
+                    </p>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
 
           {loading && (
             <div className="mt-8 p-4 bg-blue-50 border border-blue-200 rounded-lg">
