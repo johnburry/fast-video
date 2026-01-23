@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { useTenantConfig } from '@/lib/tenant-config';
+import { useTenantConfig } from '@/lib/hooks/useTenantConfig';
 
 const FEATURED_CHANNEL_IDS = [
   'a5c701d0-fd07-44ff-b547-44dc61ac9cc9',

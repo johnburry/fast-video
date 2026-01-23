@@ -4,7 +4,7 @@ import { Suspense, useState, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { formatTimestamp } from '@/lib/youtube/transcript';
 import { getThumbnailUrl } from '@/lib/thumbnail';
-import { useTenantConfig } from '@/lib/tenant-config';
+import { useTenantConfig } from '@/lib/hooks/useTenantConfig';
 
 interface SearchResult {
   videoId: string;

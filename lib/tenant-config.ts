@@ -1,5 +1,3 @@
-import { useState, useEffect } from 'react';
-
 export interface TenantConfig {
   id?: string;
   name: string;
@@ -97,7 +95,7 @@ export function getTenantConfig(hostname?: string): TenantConfig {
 }
 
 // Transform database tenant to TenantConfig
-function transformDbTenant(dbTenant: any): TenantConfig {
+export function transformDbTenant(dbTenant: any): TenantConfig {
   return {
     id: dbTenant.id,
     name: dbTenant.name,
@@ -114,58 +112,6 @@ function transformDbTenant(dbTenant: any): TenantConfig {
     features: dbTenant.features,
     colors: dbTenant.colors,
   };
-}
-
-// Cache for tenant configs to avoid repeated API calls
-const tenantCache: Map<string, { config: TenantConfig; timestamp: number }> = new Map();
-const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
-
-// Fetch tenant config from API
-async function fetchTenantConfig(hostname: string): Promise<TenantConfig> {
-  const cleanDomain = hostname.split(':')[0];
-
-  // Check cache first
-  const cached = tenantCache.get(cleanDomain);
-  if (cached && Date.now() - cached.timestamp < CACHE_DURATION) {
-    return cached.config;
-  }
-
-  try {
-    const response = await fetch(`/api/tenants/by-domain?domain=${encodeURIComponent(cleanDomain)}`);
-    if (response.ok) {
-      const data = await response.json();
-      const config = transformDbTenant(data.tenant);
-
-      // Update cache
-      tenantCache.set(cleanDomain, { config, timestamp: Date.now() });
-
-      return config;
-    }
-  } catch (error) {
-    console.error('Error fetching tenant config:', error);
-  }
-
-  // Fall back to hardcoded config
-  return getTenantConfig(hostname);
-}
-
-// Hook for client-side usage with database fetching
-export function useTenantConfig(): TenantConfig {
-  const [config, setConfig] = useState<TenantConfig>(() => {
-    // Initial fallback
-    if (typeof window === 'undefined') {
-      return tenantConfigs['playsermons.com'];
-    }
-    return getTenantConfig(window.location.hostname);
-  });
-
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      fetchTenantConfig(window.location.hostname).then(setConfig);
-    }
-  }, []);
-
-  return config;
 }
 
 // Server-side function to get tenant config from database
