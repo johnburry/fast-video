@@ -24,8 +24,10 @@ export async function generateMetadata(): Promise<Metadata> {
   // Generate tenant-specific metadata
   if (tenantConfig.domain === 'fast.video') {
     // Use the tenant logo image URL if available, otherwise fall back to a default
+    // Check if URL is already absolute (starts with http:// or https://)
+    const isAbsoluteUrl = tenantConfig.logo.imageUrl?.startsWith('http://') || tenantConfig.logo.imageUrl?.startsWith('https://');
     const ogImageUrl = tenantConfig.logo.imageUrl
-      ? `https://fast.video${tenantConfig.logo.imageUrl}`
+      ? (isAbsoluteUrl ? tenantConfig.logo.imageUrl : `https://fast.video${tenantConfig.logo.imageUrl}`)
       : 'https://fast.video/playsermons-logo-2.png'; // Fallback to PlaySermons logo for now
 
     // Use tagline from tenant config for OG title, or tenant name if no tagline
@@ -64,8 +66,10 @@ export async function generateMetadata(): Promise<Metadata> {
   }
 
   // Default to PlaySermons or any other tenant
+  // Check if URL is already absolute (starts with http:// or https://)
+  const isAbsoluteUrl = tenantConfig.logo.imageUrl?.startsWith('http://') || tenantConfig.logo.imageUrl?.startsWith('https://');
   const ogImageUrl = tenantConfig.logo.imageUrl
-    ? `https://${tenantConfig.domain}${tenantConfig.logo.imageUrl}`
+    ? (isAbsoluteUrl ? tenantConfig.logo.imageUrl : `https://${tenantConfig.domain}${tenantConfig.logo.imageUrl}`)
     : 'https://playsermons.com/playsermons-logo.png';
 
   const ogTitle = tenantConfig.tagline || `${tenantConfig.name}: AI Search for Your Sermon Videos`;
