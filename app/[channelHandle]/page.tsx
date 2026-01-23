@@ -108,7 +108,20 @@ export default function ChannelPage({
 
   useEffect(() => {
     if (channelData?.channel.handle) {
-      document.title = `@${channelData.channel.handle} PlaySermons.com`;
+      // Get tenant name from hostname
+      const hostname = window.location.hostname;
+      const parts = hostname.split('.');
+
+      // Extract tenant domain (e.g., "fast.video" from "channel.fast.video")
+      let tenantDomain = hostname;
+      if (parts.length >= 3) {
+        tenantDomain = parts.slice(-2).join('.'); // Get last 2 parts (e.g., "fast.video")
+      }
+
+      // Capitalize first letter for display
+      const tenantName = tenantDomain.split('.')[0].charAt(0).toUpperCase() + tenantDomain.split('.')[0].slice(1);
+
+      document.title = `🔍 ${channelData.channel.name} - ${tenantName}`;
     }
   }, [channelData]);
 
