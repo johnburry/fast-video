@@ -39,13 +39,14 @@ async function fetchTenantConfig(hostname: string, skipCache = false): Promise<T
 }
 
 // Hook for client-side usage with database fetching
-export function useTenantConfig(): TenantConfig {
-  const [config, setConfig] = useState<TenantConfig>(() => {
-    // Initial fallback
+export function useTenantConfig(): TenantConfig & { isLoading?: boolean } {
+  const [config, setConfig] = useState<TenantConfig & { isLoading?: boolean }>(() => {
+    // Initial fallback based on actual hostname to prevent flash
     if (typeof window === 'undefined') {
-      return getTenantConfig('playsermons.com');
+      return { ...getTenantConfig('playsermons.com'), isLoading: true };
     }
-    return getTenantConfig(window.location.hostname);
+    // Use hostname-specific fallback to minimize flash
+    return { ...getTenantConfig(window.location.hostname), isLoading: true };
   });
 
   useEffect(() => {
@@ -54,7 +55,9 @@ export function useTenantConfig(): TenantConfig {
       const urlParams = new URLSearchParams(window.location.search);
       const skipCache = urlParams.get('refresh_tenant') === '1';
 
-      fetchTenantConfig(window.location.hostname, skipCache).then(setConfig);
+      fetchTenantConfig(window.location.hostname, skipCache).then((fetchedConfig) => {
+        setConfig({ ...fetchedConfig, isLoading: false });
+      });
     }
   }, []);
 

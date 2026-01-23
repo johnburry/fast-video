@@ -35,6 +35,11 @@ export default function Home() {
     }
   };
 
+  // Show nothing while loading to prevent flash
+  if (tenantConfig.isLoading) {
+    return null;
+  }
+
   // Fast.Video gets a minimal homepage
   if (tenantConfig.domain === 'fast.video') {
     return (

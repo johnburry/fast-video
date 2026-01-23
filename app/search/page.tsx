@@ -42,6 +42,11 @@ function SearchContent() {
     videoTitle?: string;
   } | null>(null);
 
+  // Prevent flash by not rendering until tenant config is loaded
+  if (tenantConfig.isLoading) {
+    return null;
+  }
+
   useEffect(() => {
     if (query) {
       performSearch(query);
