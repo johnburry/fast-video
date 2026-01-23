@@ -14,14 +14,14 @@ export function AdminToolbar() {
         <div className="flex items-center justify-between h-16">
           <div className="flex items-center space-x-8">
             <Link
-              href="/admin"
+              href="/admin/tenants"
               className={`text-sm font-medium transition-colors ${
-                pathname === '/admin'
+                pathname === '/admin/tenants'
                   ? 'text-white'
                   : 'text-gray-400 hover:text-white'
               }`}
             >
-              Import Channel
+              Manage Tenants
             </Link>
             <Link
               href="/admin/channels"
@@ -32,16 +32,6 @@ export function AdminToolbar() {
               }`}
             >
               Manage Channels
-            </Link>
-            <Link
-              href="/admin/tenants"
-              className={`text-sm font-medium transition-colors ${
-                pathname === '/admin/tenants'
-                  ? 'text-white'
-                  : 'text-gray-400 hover:text-white'
-              }`}
-            >
-              Manage Tenants
             </Link>
             <Link
               href="/admin/embeddings"
