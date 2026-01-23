@@ -301,6 +301,12 @@ export async function POST(request: NextRequest) {
     let transcriptCount = 0;
     let skippedCount = 0;
 
+        console.log(`[IMPORT] About to process ${videosToProcess.length} videos`);
+        sendProgress({
+          type: 'status',
+          message: `Starting to process ${videosToProcess.length} videos...`
+        });
+
         // Process each video
         for (const video of videosToProcess) {
           try {
