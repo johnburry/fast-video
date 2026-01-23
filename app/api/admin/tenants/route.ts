@@ -53,7 +53,7 @@ export async function POST(request: NextRequest) {
     } = body;
 
     // Validate required fields
-    if (!domain || !name || !logo_type || !logo_alt_text || !search_placeholder || !search_results_heading) {
+    if (!domain || !name || !logo_type || !logo_alt_text) {
       return NextResponse.json(
         { error: 'Missing required fields' },
         { status: 400 }
@@ -77,8 +77,8 @@ export async function POST(request: NextRequest) {
         logo_image_url,
         logo_alt_text,
         tagline,
-        search_placeholder,
-        search_results_heading,
+        search_placeholder: search_placeholder || 'Search all videos',
+        search_results_heading: search_results_heading || 'Search',
         redirect_url,
         features,
         colors,

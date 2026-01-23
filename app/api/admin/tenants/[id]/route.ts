@@ -81,8 +81,8 @@ export async function PUT(
     if (logo_image_url !== undefined) updateData.logo_image_url = logo_image_url;
     if (logo_alt_text !== undefined) updateData.logo_alt_text = logo_alt_text;
     if (tagline !== undefined) updateData.tagline = tagline;
-    if (search_placeholder !== undefined) updateData.search_placeholder = search_placeholder;
-    if (search_results_heading !== undefined) updateData.search_results_heading = search_results_heading;
+    if (search_placeholder !== undefined) updateData.search_placeholder = search_placeholder || 'Search all videos';
+    if (search_results_heading !== undefined) updateData.search_results_heading = search_results_heading || 'Search';
     if (redirect_url !== undefined) updateData.redirect_url = redirect_url;
     if (features !== undefined) updateData.features = features;
     if (colors !== undefined) updateData.colors = colors;

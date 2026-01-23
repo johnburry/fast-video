@@ -272,6 +272,11 @@ export default function ManageTenantsPage() {
                               {tenant.logo_text || tenant.name}
                             </span>
                           )}
+                          {tenant.redirect_url && (
+                            <span className="px-3 py-1 text-xs font-bold bg-orange-100 text-orange-800 rounded border border-orange-300">
+                              ↗ REDIRECT
+                            </span>
+                          )}
                           {!tenant.is_active && (
                             <span className="px-2 py-1 text-xs font-medium bg-red-100 text-red-800 rounded">
                               Inactive
@@ -287,12 +292,23 @@ export default function ManageTenantsPage() {
                           {tenant.tagline && (
                             <p className="text-gray-600 italic">{tenant.tagline}</p>
                           )}
-                          <p className="text-gray-600">
-                            <span className="font-medium">Search Placeholder:</span> "{tenant.search_placeholder}"
-                          </p>
-                          <p className="text-gray-600">
-                            <span className="font-medium">Search Results Heading:</span> "{tenant.search_results_heading}"
-                          </p>
+                          {tenant.redirect_url ? (
+                            <p className="text-orange-700 font-medium">
+                              <span className="font-bold">Redirects to:</span>{' '}
+                              <a href={tenant.redirect_url} target="_blank" rel="noopener noreferrer" className="underline hover:text-orange-900">
+                                {tenant.redirect_url}
+                              </a>
+                            </p>
+                          ) : (
+                            <>
+                              <p className="text-gray-600">
+                                <span className="font-medium">Search Placeholder:</span> "{tenant.search_placeholder || 'Search all videos'}"
+                              </p>
+                              <p className="text-gray-600">
+                                <span className="font-medium">Search Results Heading:</span> "{tenant.search_results_heading || 'Search'}"
+                              </p>
+                            </>
+                          )}
                         </div>
                       </div>
                       <div className="flex gap-2 ml-4">
@@ -476,7 +492,7 @@ export default function ManageTenantsPage() {
 
                 <div>
                   <label htmlFor="search_placeholder" className="block text-sm font-medium text-gray-700 mb-1">
-                    Search Placeholder <span className="text-red-500">*</span>
+                    Search Placeholder
                   </label>
                   <input
                     type="text"
@@ -484,15 +500,17 @@ export default function ManageTenantsPage() {
                     value={formData.search_placeholder}
                     onChange={(e) => setFormData({ ...formData, search_placeholder: e.target.value })}
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    required
                     disabled={submitting}
-                    placeholder="Search all videos"
+                    placeholder="Search all videos (default)"
                   />
+                  <p className="mt-1 text-sm text-gray-500">
+                    Optional: Defaults to "Search all videos" if not specified
+                  </p>
                 </div>
 
                 <div>
                   <label htmlFor="search_results_heading" className="block text-sm font-medium text-gray-700 mb-1">
-                    Search Results Heading <span className="text-red-500">*</span>
+                    Search Results Heading
                   </label>
                   <input
                     type="text"
@@ -500,10 +518,12 @@ export default function ManageTenantsPage() {
                     value={formData.search_results_heading}
                     onChange={(e) => setFormData({ ...formData, search_results_heading: e.target.value })}
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    required
                     disabled={submitting}
-                    placeholder="Searching videos across all channels"
+                    placeholder="Search (default)"
                   />
+                  <p className="mt-1 text-sm text-gray-500">
+                    Optional: Defaults to "Search" if not specified
+                  </p>
                 </div>
 
                 <div className="pt-4 border-t border-gray-200">
