@@ -21,6 +21,12 @@ export async function generateMetadata(): Promise<Metadata> {
   const hostname = headersList.get('host') || 'playsermons.com';
   const tenantConfig = await getServerTenantConfig(hostname);
 
+  // Debug logging to see what we're getting from the database
+  console.log('[METADATA] Hostname:', hostname);
+  console.log('[METADATA] Tenant config:', JSON.stringify(tenantConfig, null, 2));
+  console.log('[METADATA] Tagline value:', tenantConfig.tagline);
+  console.log('[METADATA] Tagline type:', typeof tenantConfig.tagline);
+
   // Generate tenant-specific metadata
   if (tenantConfig.domain === 'fast.video') {
     // Use the tenant logo image URL if available, otherwise fall back to a default
@@ -31,6 +37,9 @@ export async function generateMetadata(): Promise<Metadata> {
     // Use tagline from tenant config for OG title, or tenant name if no tagline
     const ogTitle = tenantConfig.tagline || tenantConfig.name;
     const description = tenantConfig.tagline || "Search across video transcripts instantly. Find exactly what you're looking for in seconds with AI-powered semantic search.";
+
+    console.log('[METADATA] Fast.Video - ogTitle:', ogTitle);
+    console.log('[METADATA] Fast.Video - description:', description);
 
     return {
       title: ogTitle,
