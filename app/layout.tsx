@@ -28,65 +28,76 @@ export async function generateMetadata(): Promise<Metadata> {
       ? `https://fast.video${tenantConfig.logo.imageUrl}`
       : 'https://fast.video/playsermons-logo-2.png'; // Fallback to PlaySermons logo for now
 
+    // Use tagline from tenant config for OG title, or tenant name if no tagline
+    const ogTitle = tenantConfig.tagline || tenantConfig.name;
+    const description = tenantConfig.tagline || "Search across video transcripts instantly. Find exactly what you're looking for in seconds with AI-powered semantic search.";
+
     return {
-      title: "Fast.Video: Lightning-Fast Video Search",
-      description: "Search across video transcripts instantly. Find exactly what you're looking for in seconds with AI-powered semantic search.",
+      title: tenantConfig.tagline || "Fast.Video: Lightning-Fast Video Search",
+      description: description,
       icons: {
         icon: '/icon',
         shortcut: '/favicon.ico',
         apple: '/apple-icon',
       },
       openGraph: {
-        title: "Fast.Video: Lightning-Fast Video Search",
-        description: "Search across video transcripts instantly. Find exactly what you're looking for in seconds with AI-powered semantic search.",
+        title: ogTitle,
+        description: description,
         images: [
           {
             url: ogImageUrl,
             width: 1200,
             height: 630,
-            alt: 'Fast.Video',
+            alt: tenantConfig.name,
           },
         ],
         type: 'website',
-        siteName: 'Fast.Video',
+        siteName: tenantConfig.name,
       },
       twitter: {
         card: 'summary_large_image',
-        title: "Fast.Video: Lightning-Fast Video Search",
-        description: "Search across video transcripts instantly. Find exactly what you're looking for in seconds with AI-powered semantic search.",
+        title: ogTitle,
+        description: description,
         images: [ogImageUrl],
       },
     };
   }
 
-  // Default to PlaySermons
+  // Default to PlaySermons or any other tenant
+  const ogImageUrl = tenantConfig.logo.imageUrl
+    ? `https://${tenantConfig.domain}${tenantConfig.logo.imageUrl}`
+    : 'https://playsermons.com/playsermons-logo.png';
+
+  const ogTitle = tenantConfig.tagline || `${tenantConfig.name}: AI Search for Your Sermon Videos`;
+  const description = tenantConfig.tagline || "Unlock your church's sermon library with AI-powered search. Make every sermon instantly searchable across your entire YouTube video library.";
+
   return {
-    title: "PlaySermons: AI Search for Your Sermon Videos",
-    description: "Unlock your church's sermon library with AI-powered search. Make every sermon instantly searchable across your entire YouTube video library.",
+    title: ogTitle,
+    description: description,
     icons: {
       icon: '/icon',
       shortcut: '/favicon.ico',
       apple: '/apple-icon',
     },
     openGraph: {
-      title: "PlaySermons: AI Search for Your Sermon Videos",
-      description: "Unlock your church's sermon library with AI-powered search. Make every sermon instantly searchable across your entire YouTube video library.",
+      title: ogTitle,
+      description: description,
       images: [
         {
-          url: 'https://playsermons.com/playsermons-logo.png',
+          url: ogImageUrl,
           width: 1200,
           height: 630,
-          alt: 'PlaySermons Logo',
+          alt: `${tenantConfig.name} Logo`,
         },
       ],
       type: 'website',
-      siteName: 'PlaySermons',
+      siteName: tenantConfig.name,
     },
     twitter: {
       card: 'summary_large_image',
-      title: "PlaySermons: AI Search for Your Sermon Videos",
-      description: "Unlock your church's sermon library with AI-powered search. Make every sermon instantly searchable across your entire YouTube video library.",
-      images: ['https://playsermons.com/playsermons-logo.png'],
+      title: ogTitle,
+      description: description,
+      images: [ogImageUrl],
     },
   };
 }
