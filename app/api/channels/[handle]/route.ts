@@ -29,19 +29,22 @@ export async function GET(
 
     const tenantId = tenantData?.id;
 
-    // Get channel info with tenant validation
-    let channelQuery = supabase
+    // If we couldn't find a tenant for this domain, return 404
+    if (!tenantId) {
+      return NextResponse.json(
+        { error: 'Channel not found' },
+        { status: 404 }
+      );
+    }
+
+    // Get channel info with tenant validation - channel MUST belong to this tenant
+    const { data: channel, error: channelError } = await supabase
       .from('channels')
       .select('*')
       .eq('channel_handle', handle)
-      .eq('is_active', true);
-
-    // If we have a tenant_id, validate the channel belongs to this tenant
-    if (tenantId) {
-      channelQuery = channelQuery.eq('tenant_id', tenantId);
-    }
-
-    const { data: channel, error: channelError } = await channelQuery.single();
+      .eq('tenant_id', tenantId)
+      .eq('is_active', true)
+      .single();
 
     if (channelError || !channel) {
       return NextResponse.json(
