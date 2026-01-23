@@ -250,36 +250,44 @@ export async function POST(request: NextRequest) {
         console.log(`  - Already in DB: ${existingVideoMap.size}`);
         console.log(`  - New videos: ${newVideos.length}`);
         console.log(`  - Existing videos without transcripts: ${videosWithoutTranscripts.length}`);
-        console.log(`  - Videos to process: ${newVideos.length + videosWithoutTranscripts.length}`);
+        console.log(`  - Skip transcripts mode: ${shouldSkipTranscripts}`);
 
         // If live videos are enabled, prioritize them
         let videosToProcess: any[];
         if (shouldIncludeLiveVideos && liveVideos.length > 0) {
           const liveVideoIdsSet = new Set(liveVideos.map(v => v.videoId));
-          const liveVideosToProcess = [...newVideos, ...videosWithoutTranscripts].filter(v => liveVideoIdsSet.has(v.videoId));
-          const regularVideosToProcess = [...newVideos, ...videosWithoutTranscripts].filter(v => !liveVideoIdsSet.has(v.videoId));
+          // When skipping transcripts, only process new videos (no point updating existing videos)
+          const videosToConsider = shouldSkipTranscripts ? newVideos : [...newVideos, ...videosWithoutTranscripts];
+          const liveVideosToProcess = videosToConsider.filter(v => liveVideoIdsSet.has(v.videoId));
+          const regularVideosToProcess = videosToConsider.filter(v => !liveVideoIdsSet.has(v.videoId));
 
           // Combine with live videos first, up to the limit
           videosToProcess = [...liveVideosToProcess, ...regularVideosToProcess].slice(0, videoLimit);
 
           console.log(`Found ${combinedVideos.length} total videos (${liveVideos.length} live), ${newVideos.length} new, ${videosWithoutTranscripts.length} need transcripts`);
           console.log(`Live videos to process: ${liveVideosToProcess.length}, Regular videos to process: ${regularVideosToProcess.length}`);
-          console.log(`Processing ${videosToProcess.length} videos (limit: ${videoLimit})`);
+          console.log(`Processing ${videosToProcess.length} videos (limit: ${videoLimit})${shouldSkipTranscripts ? ' [SKIP TRANSCRIPTS MODE]' : ''}`);
 
           sendProgress({
             type: 'status',
-            message: `Found ${liveVideos.length} live videos, ${newVideos.length} new videos and ${videosWithoutTranscripts.length} videos needing transcripts. Processing ${videosToProcess.length} videos (${liveVideosToProcess.length} live). Starting import...`
+            message: shouldSkipTranscripts
+              ? `Found ${newVideos.length} new videos${liveVideos.length > 0 ? ` (${liveVideosToProcess.length} live)` : ''}. Processing ${videosToProcess.length} videos (skipping transcripts)...`
+              : `Found ${liveVideos.length} live videos, ${newVideos.length} new videos and ${videosWithoutTranscripts.length} videos needing transcripts. Processing ${videosToProcess.length} videos (${liveVideosToProcess.length} live). Starting import...`
           });
         } else {
-          // Process all videos up to the limit (no live video prioritization)
-          videosToProcess = [...newVideos, ...videosWithoutTranscripts].slice(0, videoLimit);
+          // When skipping transcripts, only process new videos (no point updating existing videos)
+          videosToProcess = shouldSkipTranscripts
+            ? newVideos.slice(0, videoLimit)
+            : [...newVideos, ...videosWithoutTranscripts].slice(0, videoLimit);
 
           console.log(`Found ${combinedVideos.length} total videos, ${newVideos.length} new, ${videosWithoutTranscripts.length} need transcripts`);
-          console.log(`Processing ${videosToProcess.length} videos (limit: ${videoLimit})`);
+          console.log(`Processing ${videosToProcess.length} videos (limit: ${videoLimit})${shouldSkipTranscripts ? ' [SKIP TRANSCRIPTS MODE]' : ''}`);
 
           sendProgress({
             type: 'status',
-            message: `Found ${newVideos.length} new videos and ${videosWithoutTranscripts.length} videos needing transcripts. Processing ${videosToProcess.length} videos. Starting import...`
+            message: shouldSkipTranscripts
+              ? `Found ${newVideos.length} new videos. Processing ${videosToProcess.length} videos (skipping transcripts)...`
+              : `Found ${newVideos.length} new videos and ${videosWithoutTranscripts.length} videos needing transcripts. Processing ${videosToProcess.length} videos. Starting import...`
           });
         }
 
