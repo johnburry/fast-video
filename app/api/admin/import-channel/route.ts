@@ -252,6 +252,12 @@ export async function POST(request: NextRequest) {
         console.log(`  - Existing videos without transcripts: ${videosWithoutTranscripts.length}`);
         console.log(`  - Skip transcripts mode: ${shouldSkipTranscripts}`);
 
+        // Send early progress update so user can see what's happening
+        sendProgress({
+          type: 'status',
+          message: `Analysis: ${combinedVideos.length} videos on YouTube, ${existingVideoMap.size} already in database, ${newVideos.length} new videos to import${shouldSkipTranscripts ? ' (skip transcripts mode)' : ''}`
+        });
+
         // If live videos are enabled, prioritize them
         let videosToProcess: any[];
         if (shouldIncludeLiveVideos && liveVideos.length > 0) {
