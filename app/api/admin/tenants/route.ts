@@ -46,6 +46,7 @@ export async function POST(request: NextRequest) {
       tagline,
       search_placeholder,
       search_results_heading,
+      redirect_url,
       features,
       colors,
       is_active
@@ -78,6 +79,7 @@ export async function POST(request: NextRequest) {
         tagline,
         search_placeholder,
         search_results_heading,
+        redirect_url,
         features,
         colors,
         is_active: is_active ?? true

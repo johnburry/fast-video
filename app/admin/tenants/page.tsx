@@ -15,6 +15,7 @@ interface Tenant {
   tagline?: string;
   search_placeholder: string;
   search_results_heading: string;
+  redirect_url?: string;
   features?: any;
   colors?: any;
   is_active: boolean;
@@ -38,6 +39,7 @@ export default function ManageTenantsPage() {
     tagline: '',
     search_placeholder: '',
     search_results_heading: '',
+    redirect_url: '',
     is_active: true,
   });
   const [submitting, setSubmitting] = useState(false);
@@ -123,6 +125,7 @@ export default function ManageTenantsPage() {
       tagline: '',
       search_placeholder: '',
       search_results_heading: '',
+      redirect_url: '',
       is_active: true,
     });
     setEditingTenant(null);
@@ -142,6 +145,7 @@ export default function ManageTenantsPage() {
       tagline: tenant.tagline || '',
       search_placeholder: tenant.search_placeholder,
       search_results_heading: tenant.search_results_heading,
+      redirect_url: tenant.redirect_url || '',
       is_active: tenant.is_active,
     });
     setShowAddForm(true);
@@ -500,6 +504,24 @@ export default function ManageTenantsPage() {
                     disabled={submitting}
                     placeholder="Searching videos across all channels"
                   />
+                </div>
+
+                <div className="pt-4 border-t border-gray-200">
+                  <label htmlFor="redirect_url" className="block text-sm font-medium text-gray-700 mb-1">
+                    Redirect URL
+                  </label>
+                  <input
+                    type="url"
+                    id="redirect_url"
+                    value={formData.redirect_url}
+                    onChange={(e) => setFormData({ ...formData, redirect_url: e.target.value })}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    disabled={submitting}
+                    placeholder="https://example.com"
+                  />
+                  <p className="mt-1 text-sm text-gray-500">
+                    Optional: If set, visiting this tenant's domain will immediately redirect to this URL. Use this to create redirect-only tenants.
+                  </p>
                 </div>
 
                 <div className="flex items-center">

@@ -19,6 +19,13 @@ export default function Home() {
   const tenantConfig = useTenantConfig();
 
   useEffect(() => {
+    // Check if tenant has a redirect URL and redirect immediately
+    if (!tenantConfig.isLoading && tenantConfig.redirectUrl) {
+      setIsRedirecting(true);
+      window.location.href = tenantConfig.redirectUrl;
+      return;
+    }
+
     // Check if this tenant has a default channel (single channel without subdomain)
     const checkDefaultChannel = async () => {
       if (tenantConfig.isLoading) return;
@@ -43,7 +50,7 @@ export default function Home() {
     };
 
     checkDefaultChannel();
-  }, [tenantConfig.isLoading, router]);
+  }, [tenantConfig.isLoading, tenantConfig.redirectUrl, router]);
 
   useEffect(() => {
     // Fetch featured channels

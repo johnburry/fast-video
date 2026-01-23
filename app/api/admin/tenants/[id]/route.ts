@@ -59,6 +59,7 @@ export async function PUT(
       tagline,
       search_placeholder,
       search_results_heading,
+      redirect_url,
       features,
       colors,
       is_active
@@ -82,6 +83,7 @@ export async function PUT(
     if (tagline !== undefined) updateData.tagline = tagline;
     if (search_placeholder !== undefined) updateData.search_placeholder = search_placeholder;
     if (search_results_heading !== undefined) updateData.search_results_heading = search_results_heading;
+    if (redirect_url !== undefined) updateData.redirect_url = redirect_url;
     if (features !== undefined) updateData.features = features;
     if (colors !== undefined) updateData.colors = colors;
     if (is_active !== undefined) updateData.is_active = is_active;

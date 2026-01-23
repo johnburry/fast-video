@@ -11,6 +11,7 @@ export interface TenantConfig {
   tagline?: string;
   searchPlaceholder: string;
   searchResultsHeading: string;
+  redirectUrl?: string;
   features?: Array<{
     icon: string;
     title: string;
@@ -109,6 +110,7 @@ export function transformDbTenant(dbTenant: any): TenantConfig {
     tagline: dbTenant.tagline,
     searchPlaceholder: dbTenant.search_placeholder,
     searchResultsHeading: dbTenant.search_results_heading,
+    redirectUrl: dbTenant.redirect_url,
     features: dbTenant.features,
     colors: dbTenant.colors,
   };
