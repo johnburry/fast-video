@@ -16,6 +16,9 @@ export async function GET(
       );
     }
 
+    // Check if handle is a UUID (channel ID) or a handle
+    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(handle);
+
     // Get tenant from hostname to validate channel belongs to this tenant
     const hostname = request.headers.get('host') || '';
     const tenantConfig = await getServerTenantConfig(hostname);
@@ -38,13 +41,20 @@ export async function GET(
     }
 
     // Get channel info with tenant validation - channel MUST belong to this tenant
-    const { data: channel, error: channelError } = await supabase
+    // Query by ID if it's a UUID, otherwise by handle
+    let channelQuery = supabase
       .from('channels')
       .select('*')
-      .eq('channel_handle', handle)
       .eq('tenant_id', tenantId)
-      .eq('is_active', true)
-      .single();
+      .eq('is_active', true);
+
+    if (isUuid) {
+      channelQuery = channelQuery.eq('id', handle);
+    } else {
+      channelQuery = channelQuery.eq('channel_handle', handle);
+    }
+
+    const { data: channel, error: channelError } = await channelQuery.single();
 
     if (channelError || !channel) {
       return NextResponse.json(
