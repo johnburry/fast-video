@@ -223,17 +223,26 @@ export async function POST(request: NextRequest) {
         // Fetch all existing video IDs for this channel to avoid re-importing
         // Note: Supabase has a default limit of 1000 rows, so we need to fetch ALL videos
         sendProgress({ type: 'status', message: 'Checking for existing videos...' });
-        const { data: existingVideos } = await supabaseAdmin
+        const { data: existingVideos, error: fetchError } = await supabaseAdmin
           .from('videos')
           .select('youtube_video_id, has_transcript')
           .eq('channel_id', channelId)
           .limit(10000);  // Fetch up to 10000 videos (more than our import limit of 5000)
 
+        if (fetchError) {
+          console.error('[IMPORT] Error fetching existing videos:', fetchError);
+        }
+
         const existingVideoMap = new Map(
           (existingVideos || []).map(v => [v.youtube_video_id, v.has_transcript])
         );
 
-        console.log(`Found ${existingVideoMap.size} existing videos in database`);
+        console.log(`Found ${existingVideoMap.size} existing videos in database (query returned ${existingVideos?.length || 0} rows)`);
+        console.log(`First 3 existing videos:`, Array.from(existingVideoMap.entries()).slice(0, 3));
+
+        // Check if the "new" videos are actually in the existingVideoMap
+        const firstNewVideo = combinedVideos.find(v => !existingVideoMap.has(v.videoId));
+        console.log(`First truly new video:`, firstNewVideo ? { id: firstNewVideo.videoId, title: firstNewVideo.title } : 'NONE - all videos exist!');
 
         // Filter videos that need processing:
         // 1. New videos (not in database yet)
