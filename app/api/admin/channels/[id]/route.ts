@@ -77,21 +77,23 @@ export async function PATCH(
       tenantId
     } = body;
 
+    // Build update object dynamically to only update provided fields
+    const updateData: any = {};
+    if (name !== undefined) updateData.channel_name = name;
+    if (shortName !== undefined) updateData.short_name = shortName;
+    if (handle !== undefined) updateData.channel_handle = handle;
+    if (description !== undefined) updateData.channel_description = description;
+    if (externalLink !== undefined) updateData.external_link = externalLink;
+    if (externalLinkName !== undefined) updateData.external_link_name = externalLinkName;
+    if (isActive !== undefined) updateData.is_active = isActive;
+    if (subscriptionType !== undefined) updateData.subscription_type = subscriptionType;
+    if (subscriptionStartDate !== undefined) updateData.subscription_start_date = subscriptionStartDate;
+    if (channelHistory !== undefined) updateData.channel_history = channelHistory;
+    if (tenantId !== undefined) updateData.tenant_id = tenantId;
+
     const { data, error } = await supabaseAdmin
       .from('channels')
-      .update({
-        channel_name: name,
-        short_name: shortName,
-        channel_handle: handle,
-        channel_description: description,
-        external_link: externalLink,
-        external_link_name: externalLinkName,
-        is_active: isActive,
-        subscription_type: subscriptionType,
-        subscription_start_date: subscriptionStartDate,
-        channel_history: channelHistory,
-        tenant_id: tenantId,
-      })
+      .update(updateData)
       .eq('id', id)
       .select()
       .single();

@@ -42,6 +42,8 @@ export default function ManageTenantsPage() {
   });
   const [submitting, setSubmitting] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
+  const [tenantChannels, setTenantChannels] = useState<any[]>([]);
+  const [channelsLoading, setChannelsLoading] = useState(false);
 
   useEffect(() => {
     document.title = 'FV Admin: Tenants';
@@ -66,6 +68,50 @@ export default function ManageTenantsPage() {
     }
   };
 
+  const fetchTenantChannels = async (tenantId: string) => {
+    setChannelsLoading(true);
+    try {
+      const response = await fetch(`/api/admin/tenants/${tenantId}/channels`);
+      if (response.ok) {
+        const data = await response.json();
+        setTenantChannels(data.channels || []);
+      }
+    } catch (err) {
+      console.error('Error fetching tenant channels:', err);
+    } finally {
+      setChannelsLoading(false);
+    }
+  };
+
+  const handleRemoveChannel = async (channelId: string) => {
+    if (!editingTenant) return;
+
+    if (!confirm('Are you sure you want to unassign this channel from this tenant?')) {
+      return;
+    }
+
+    try {
+      const response = await fetch(`/api/admin/channels/${channelId}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          tenantId: null,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to unassign channel');
+      }
+
+      // Refresh the channel list
+      await fetchTenantChannels(editingTenant.id);
+    } catch (err) {
+      alert(err instanceof Error ? err.message : 'Failed to unassign channel');
+    }
+  };
+
   const resetForm = () => {
     setFormData({
       domain: '',
@@ -81,6 +127,7 @@ export default function ManageTenantsPage() {
     });
     setEditingTenant(null);
     setFormError(null);
+    setTenantChannels([]);
   };
 
   const handleEdit = (tenant: Tenant) => {
@@ -98,6 +145,8 @@ export default function ManageTenantsPage() {
       is_active: tenant.is_active,
     });
     setShowAddForm(true);
+    // Fetch channels for this tenant
+    fetchTenantChannels(tenant.id);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -466,6 +515,54 @@ export default function ManageTenantsPage() {
                     Active
                   </label>
                 </div>
+
+                {/* Associated Channels List */}
+                {editingTenant && (
+                  <div className="pt-4 border-t border-gray-200">
+                    <h3 className="text-lg font-semibold text-gray-900 mb-3">
+                      Associated Channels
+                    </h3>
+                    {channelsLoading ? (
+                      <p className="text-gray-600 text-sm">Loading channels...</p>
+                    ) : tenantChannels.length === 0 ? (
+                      <p className="text-gray-600 text-sm">No channels assigned to this tenant yet.</p>
+                    ) : (
+                      <div className="max-h-60 overflow-y-auto border border-gray-200 rounded-lg">
+                        {tenantChannels.map((channel) => (
+                          <div
+                            key={channel.id}
+                            className="flex items-center justify-between p-3 border-b border-gray-100 last:border-b-0 hover:bg-gray-50"
+                          >
+                            <div className="flex items-center gap-3 flex-1">
+                              {channel.thumbnail && (
+                                <img
+                                  src={channel.thumbnail}
+                                  alt={channel.name}
+                                  className="w-12 h-12 rounded-lg object-cover"
+                                />
+                              )}
+                              <div className="flex-1 min-w-0">
+                                <p className="text-sm font-medium text-gray-900 truncate">
+                                  {channel.name}
+                                </p>
+                                {channel.handle && (
+                                  <p className="text-xs text-gray-500">@{channel.handle}</p>
+                                )}
+                              </div>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => handleRemoveChannel(channel.id)}
+                              className="px-3 py-1 text-xs bg-red-50 text-red-700 rounded hover:bg-red-100 transition-colors"
+                            >
+                              Remove
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
 
                 {formError && (
                   <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
