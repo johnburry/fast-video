@@ -33,7 +33,7 @@ export async function generateMetadata(): Promise<Metadata> {
     const description = tenantConfig.tagline || "Search across video transcripts instantly. Find exactly what you're looking for in seconds with AI-powered semantic search.";
 
     return {
-      title: tenantConfig.tagline || "Fast.Video: Lightning-Fast Video Search",
+      title: ogTitle,
       description: description,
       icons: {
         icon: '/icon',
