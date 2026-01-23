@@ -41,6 +41,7 @@ export default function ManageChannelPage({
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [tenants, setTenants] = useState<any[]>([]);
+  const [tenantDomain, setTenantDomain] = useState<string>('playsermons.com');
 
   // Form fields
   const [name, setName] = useState('');
@@ -110,6 +111,17 @@ export default function ManageChannelPage({
       setSubscriptionStartDate(ch.subscriptionStartDate ? ch.subscriptionStartDate.split('T')[0] : '');
       setChannelHistory(ch.channelHistory || '');
       setTenantId(ch.tenantId || '');
+
+      // Fetch tenant domain if tenantId exists
+      if (ch.tenantId) {
+        const tenantResponse = await fetch(`/api/admin/tenants/${ch.tenantId}`);
+        if (tenantResponse.ok) {
+          const tenantData = await tenantResponse.json();
+          if (tenantData.tenant?.domain) {
+            setTenantDomain(tenantData.tenant.domain);
+          }
+        }
+      }
 
       // Set previous values for change tracking
       setPrevSubscriptionType(ch.subscriptionType || 'trial');
@@ -419,7 +431,11 @@ export default function ManageChannelPage({
               <p className="text-gray-600 mb-4">@{channel.handle}</p>
               <div className="flex items-center gap-3">
                 <a
-                  href={`https://${channel.handle}.playsermons.com`}
+                  href={
+                    channel.handle
+                      ? `https://${channel.handle}.${tenantDomain}`
+                      : `https://${tenantDomain}/${channel.id}`
+                  }
                   target="_blank"
                   rel="noopener noreferrer"
                   className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors text-sm"
@@ -522,7 +538,7 @@ export default function ManageChannelPage({
                 title="Only lowercase letters, numbers, and hyphens are allowed"
               />
               <p className="mt-2 text-sm text-gray-500">
-                Used in the URL: {channelHandle}.playsermons.com
+                Used in the URL: {channelHandle}.{tenantDomain}
               </p>
             </div>
 
