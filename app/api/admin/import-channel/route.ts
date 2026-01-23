@@ -309,6 +309,7 @@ export async function POST(request: NextRequest) {
     const processedVideoIds: string[] = [];  // Track video IDs for embeddings later
 
         console.log(`[IMPORT] About to process ${videosToProcess.length} videos`);
+        console.log(`[DEBUG] First 5 videos to process:`, videosToProcess.slice(0, 5).map(v => ({ id: v.videoId, title: v.title })));
         sendProgress({
           type: 'status',
           message: `Starting to process ${videosToProcess.length} videos...`
@@ -338,6 +339,10 @@ export async function POST(request: NextRequest) {
 
         let videoId: string;
         const videoExists = existingVideoMap.has(video.videoId);
+
+        if (videoExists) {
+          console.log(`[DEBUG] ⚠️ WARNING: Video ${video.videoId} (${video.title}) is in videosToProcess but also exists in database! This should not happen when skipTranscripts=true`);
+        }
 
         if (videoExists) {
           // Video exists, get its ID and update metadata (but don't re-fetch transcript)
