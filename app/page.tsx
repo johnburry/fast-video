@@ -14,6 +14,7 @@ export default function Home() {
   const [searchQuery, setSearchQuery] = useState('');
   const [channels, setChannels] = useState<any[]>([]);
   const [checkingDefaultChannel, setCheckingDefaultChannel] = useState(true);
+  const [isRedirecting, setIsRedirecting] = useState(false);
   const router = useRouter();
   const tenantConfig = useTenantConfig();
 
@@ -29,6 +30,7 @@ export default function Home() {
           if (data.defaultChannel) {
             // Redirect to the default channel using handle OR id
             const channelPath = data.defaultChannel.handle || data.defaultChannel.id;
+            setIsRedirecting(true); // Set flag before redirecting
             router.push(`/${channelPath}`);
             return;
           }
@@ -62,8 +64,8 @@ export default function Home() {
     }
   };
 
-  // Show nothing while loading to prevent flash
-  if (tenantConfig.isLoading || checkingDefaultChannel) {
+  // Show nothing while loading or redirecting to prevent flash
+  if (tenantConfig.isLoading || checkingDefaultChannel || isRedirecting) {
     return null;
   }
 
