@@ -89,6 +89,7 @@ export default function AdminPage() {
             const data = JSON.parse(line);
 
             if (data.type === 'status') {
+              console.log('[IMPORT STATUS]', data.message);
               setProgressStatus(data.message);
             } else if (data.type === 'progress') {
               setCurrentVideo({
