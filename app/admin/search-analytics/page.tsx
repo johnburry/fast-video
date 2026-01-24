@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import AdminToolbar from '@/components/AdminToolbar';
+import { AdminToolbar } from '@/components/AdminToolbar';
 
 interface SearchAnalytic {
   id: string;
