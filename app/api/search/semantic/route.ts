@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase/server';
 import { getServerTenantConfig } from '@/lib/tenant-config';
+import { sendSearchNotification } from '@/lib/mailgun';
 import OpenAI from 'openai';
 
 // Initialize OpenAI client
@@ -150,6 +151,11 @@ export async function GET(request: NextRequest) {
 
     console.log(`[SEMANTIC SEARCH] Returning ${finalResults.length} videos with matches`);
 
+    // Log search analytics (async, don't wait for it)
+    logSemanticSearchAnalytics(request, query, channelHandle, finalResults.length, tenantConfig.domain, tenantId).catch(err => {
+      console.error('[SEMANTIC SEARCH] Failed to log analytics:', err);
+    });
+
     return NextResponse.json({
       query,
       results: finalResults,
@@ -162,5 +168,76 @@ export async function GET(request: NextRequest) {
       { error: 'Internal server error' },
       { status: 500 }
     );
+  }
+}
+
+/**
+ * Log semantic search analytics to database and send email notification
+ */
+async function logSemanticSearchAnalytics(
+  request: NextRequest,
+  query: string,
+  channelHandle: string | null,
+  resultsCount: number,
+  tenantDomain: string,
+  tenantId: string | undefined
+) {
+  try {
+    if (!tenantId) return;
+
+    // Get channel info if channelHandle is provided
+    let channelId = null;
+    let channelName = null;
+    let channelHandleForEmail = null;
+
+    if (channelHandle) {
+      const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(channelHandle);
+
+      const queryBuilder = supabaseAdmin
+        .from('channels')
+        .select('id, channel_name, channel_handle')
+        .eq('tenant_id', tenantId);
+
+      const { data: channelData } = isUUID
+        ? await queryBuilder.eq('id', channelHandle).single()
+        : await queryBuilder.eq('channel_handle', channelHandle).single();
+
+      if (channelData) {
+        channelId = channelData.id;
+        channelName = channelData.channel_name;
+        channelHandleForEmail = channelData.channel_handle;
+      }
+    }
+
+    // Get IP address from headers
+    const ipAddress =
+      request.headers.get('x-forwarded-for')?.split(',')[0].trim() ||
+      request.headers.get('x-real-ip') ||
+      request.headers.get('cf-connecting-ip') ||
+      'unknown';
+
+    // Insert analytics record
+    await supabaseAdmin.from('search_analytics').insert({
+      tenant_id: tenantId,
+      tenant_name: tenantDomain,
+      channel_id: channelId,
+      channel_name: channelName,
+      search_query: query,
+      results_count: resultsCount,
+      search_type: 'semantic',
+      ip_address: ipAddress,
+    });
+
+    // Send email notification (async, don't wait for it)
+    sendSearchNotification({
+      tenantName: tenantDomain,
+      channelHandle: channelHandleForEmail,
+      ipAddress: ipAddress,
+      searchQuery: query,
+    }).catch(err => {
+      console.error('[SEMANTIC SEARCH] Failed to send email notification:', err);
+    });
+  } catch (error) {
+    console.error('[SEMANTIC SEARCH] Error logging analytics:', error);
   }
 }
