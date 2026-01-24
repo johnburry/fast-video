@@ -47,11 +47,15 @@ export async function GET(request: NextRequest) {
 
     const queryEmbedding = embeddingResponse.data[0].embedding;
 
+    // Check if channelHandle is a UUID (channel ID) or a handle
+    const isUUID = channelHandle && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(channelHandle);
+
     // Call the database function to perform semantic search
     const { data: results, error } = await supabaseAdmin
       .rpc('search_transcripts_semantic', {
         query_embedding: JSON.stringify(queryEmbedding),
-        channel_handle_filter: channelHandle,
+        channel_handle_filter: isUUID ? null : channelHandle,
+        channel_id_filter: isUUID ? channelHandle : null,
         tenant_id_filter: tenantId,
         match_threshold: threshold,
         match_count: limit * 3, // Get more results to group by video

@@ -45,8 +45,14 @@ export async function GET(request: NextRequest) {
     }
 
     // Filter by channel if specified
+    // Check if channelHandle is a UUID (channel ID) or a handle
     if (channelHandle) {
-      transcriptSearchQuery = transcriptSearchQuery.eq('channel_handle', channelHandle);
+      const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(channelHandle);
+      if (isUUID) {
+        transcriptSearchQuery = transcriptSearchQuery.eq('channel_id', channelHandle);
+      } else {
+        transcriptSearchQuery = transcriptSearchQuery.eq('channel_handle', channelHandle);
+      }
     }
 
     const { data: transcriptData, error: transcriptError } = await transcriptSearchQuery;
@@ -88,8 +94,14 @@ export async function GET(request: NextRequest) {
     }
 
     // Filter by channel if specified
+    // Check if channelHandle is a UUID (channel ID) or a handle
     if (channelHandle) {
-      videoQuery = videoQuery.eq('channels.channel_handle', channelHandle);
+      const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(channelHandle);
+      if (isUUID) {
+        videoQuery = videoQuery.eq('channels.id', channelHandle);
+      } else {
+        videoQuery = videoQuery.eq('channels.channel_handle', channelHandle);
+      }
     }
 
     const { data: videoData, error: videoError } = await videoQuery;
