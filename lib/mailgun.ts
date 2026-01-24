@@ -3,7 +3,7 @@ import Mailgun from 'mailgun.js';
 
 interface SendSearchNotificationParams {
   tenantName: string;
-  channelName: string | null;
+  channelHandle: string | null;
   ipAddress: string;
   searchQuery: string;
 }
@@ -30,7 +30,7 @@ function getMailgunClient() {
 
 export async function sendSearchNotification({
   tenantName,
-  channelName,
+  channelHandle,
   ipAddress,
   searchQuery,
 }: SendSearchNotificationParams): Promise<void> {
@@ -46,8 +46,8 @@ export async function sendSearchNotification({
     const senderName = 'FV Notifications';
     const replyToEmail = 'notifications@mail.thought.app';
 
-    // Build subject line: FV: [tenant]/[channel_name]/[ip address] search: [search query]
-    const channelPart = channelName || 'all-channels';
+    // Build subject line: FV: [tenant]/[channel_handle]/[ip address] search: [search query]
+    const channelPart = channelHandle || 'all-channels';
     const emailSubject = `FV: ${tenantName}/${channelPart}/${ipAddress} search: ${searchQuery}`;
 
     const domain = process.env.MAILGUN_DOMAIN || 'mail.thought.app';

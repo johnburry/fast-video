@@ -154,13 +154,14 @@ async function logSearchAnalytics(
     // Get channel info if channelHandle is provided
     let channelId = null;
     let channelName = null;
+    let channelHandleForEmail = null;
 
     if (channelHandle) {
       const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(channelHandle);
 
       const query = supabaseAdmin
         .from('channels')
-        .select('id, channel_name')
+        .select('id, channel_name, channel_handle')
         .eq('tenant_id', tenantData.id);
 
       const { data: channelData } = isUUID
@@ -170,6 +171,7 @@ async function logSearchAnalytics(
       if (channelData) {
         channelId = channelData.id;
         channelName = channelData.channel_name;
+        channelHandleForEmail = channelData.channel_handle;
       }
     }
 
@@ -195,7 +197,7 @@ async function logSearchAnalytics(
     // Send email notification (async, don't wait for it)
     sendSearchNotification({
       tenantName: tenantConfig.domain,
-      channelName: channelName,
+      channelHandle: channelHandleForEmail,
       ipAddress: ipAddress,
       searchQuery: query,
     }).catch(err => {
