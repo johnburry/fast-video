@@ -11,6 +11,7 @@ interface SearchAnalytic {
   results_count: number;
   search_type: string;
   searched_at: string;
+  ip_address: string;
 }
 
 interface Summary {
@@ -182,6 +183,9 @@ export default function SearchAnalyticsPage() {
                         Search Query
                       </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        IP Address
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Results
                       </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -205,6 +209,9 @@ export default function SearchAnalyticsPage() {
                         </td>
                         <td className="px-6 py-4 text-sm text-gray-900">
                           <div className="max-w-md truncate">{item.search_query}</div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600 font-mono">
+                          {item.ip_address || 'unknown'}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
                           {item.results_count}

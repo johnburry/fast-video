@@ -277,6 +277,13 @@ async function logSearchAnalytics(
       }
     }
 
+    // Get IP address from headers
+    const ipAddress =
+      request.headers.get('x-forwarded-for')?.split(',')[0].trim() ||
+      request.headers.get('x-real-ip') ||
+      request.headers.get('cf-connecting-ip') ||
+      'unknown';
+
     // Insert analytics record
     await supabaseAdmin.from('search_analytics').insert({
       tenant_id: tenantData.id,
@@ -286,6 +293,7 @@ async function logSearchAnalytics(
       search_query: query,
       results_count: resultsCount,
       search_type: searchType,
+      ip_address: ipAddress,
     });
   } catch (error) {
     console.error('[SEARCH ANALYTICS] Error logging search:', error);
