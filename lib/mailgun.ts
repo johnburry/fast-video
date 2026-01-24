@@ -57,7 +57,7 @@ export async function sendSearchNotification({
       from: `${senderName} <${fromEmail}>`,
       to: [toEmail],
       subject: emailSubject,
-      text: '', // Empty body as requested
+      text: ' ', // Mailgun requires at least one content field (text/html/template)
       'h:Reply-To': replyToEmail,
     });
 
