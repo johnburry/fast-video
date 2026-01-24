@@ -15,7 +15,7 @@
     "@mux/mux-uploader-react": "^1.4.1",
     "@supabase/supabase-js": "^2.87.3",
     "@vercel/analytics": "^1.6.1",
-    "fathom-client": "^3.8.0",
+    "fathom-client": "^3.7.2",
     "next": "16.0.10",
     "openai": "^4.77.3",
     "qrcode.react": "^4.2.0",
