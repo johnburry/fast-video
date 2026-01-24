@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { Analytics } from "@vercel/analytics/next";
+import Fathom from "@/components/Fathom";
 import { headers } from 'next/headers';
 import { getServerTenantConfig } from '@/lib/tenant-config';
 import { TenantTitle } from '@/components/TenantTitle';
@@ -128,6 +129,7 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         <TenantTitle />
+        <Fathom />
         {children}
         <Analytics />
       </body>
