@@ -19,8 +19,14 @@ export default function Home() {
   const tenantConfig = useTenantConfig();
 
   useEffect(() => {
+    // Determine if we're on a subdomain (not the root domain)
+    const hostname = typeof window !== 'undefined' ? window.location.hostname : '';
+    const parts = hostname.split('.');
+    const isSubdomain = parts.length > 2 && parts[0] !== 'www';
+
     // Check if tenant has a redirect URL and redirect immediately
-    if (!tenantConfig.isLoading && tenantConfig.redirectUrl) {
+    // BUT only if we're NOT on a subdomain (subdomains should try to load channels)
+    if (!tenantConfig.isLoading && tenantConfig.redirectUrl && !isSubdomain) {
       setIsRedirecting(true);
       window.location.href = tenantConfig.redirectUrl;
       return;

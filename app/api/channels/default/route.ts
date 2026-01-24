@@ -41,8 +41,10 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ defaultChannel: null });
     }
 
-    // If there's exactly one channel, it's the default
-    if (channels.length === 1) {
+    // Only return a default channel if:
+    // 1. There's exactly one channel AND
+    // 2. That channel has NO handle (if it has a handle, it should use subdomain routing)
+    if (channels.length === 1 && !channels[0].channel_handle) {
       return NextResponse.json({
         defaultChannel: {
           id: channels[0].id,
@@ -52,7 +54,7 @@ export async function GET(request: NextRequest) {
       });
     }
 
-    // If there are multiple channels, no default
+    // If there are multiple channels, or if the single channel has a handle, no default
     return NextResponse.json({ defaultChannel: null });
   } catch (error) {
     console.error('Error checking default channel:', error);
