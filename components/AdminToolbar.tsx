@@ -53,6 +53,16 @@ export function AdminToolbar() {
             >
               Channel Visitors
             </Link>
+            <Link
+              href="/admin/search-analytics"
+              className={`text-sm font-medium transition-colors ${
+                pathname === '/admin/search-analytics'
+                  ? 'text-white'
+                  : 'text-gray-400 hover:text-white'
+              }`}
+            >
+              Search Analytics
+            </Link>
           </div>
           <button
             onClick={signOut}

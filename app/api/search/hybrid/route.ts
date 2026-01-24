@@ -1,4 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { supabaseAdmin } from '@/lib/supabase/server';
+import { getServerTenantConfig } from '@/lib/tenant-config';
 
 /**
  * Hybrid Search API - Combines keyword and semantic search
@@ -100,6 +102,11 @@ export async function GET(request: NextRequest) {
 
     console.log(`[HYBRID SEARCH] Returning ${finalResults.length} merged results`);
 
+    // Log search analytics (async, don't wait for it)
+    logSearchAnalytics(request, query, channelHandle, finalResults.length, 'hybrid').catch(err => {
+      console.error('[HYBRID SEARCH] Failed to log analytics:', err);
+    });
+
     return NextResponse.json({
       query,
       results: finalResults,
@@ -117,5 +124,65 @@ export async function GET(request: NextRequest) {
       { error: 'Internal server error' },
       { status: 500 }
     );
+  }
+}
+
+/**
+ * Log search analytics to database
+ */
+async function logSearchAnalytics(
+  request: NextRequest,
+  query: string,
+  channelHandle: string | null,
+  resultsCount: number,
+  searchType: string
+) {
+  try {
+    // Get tenant info
+    const hostname = request.headers.get('host') || '';
+    const tenantConfig = await getServerTenantConfig(hostname);
+
+    const { data: tenantData } = await supabaseAdmin
+      .from('tenants')
+      .select('id, domain')
+      .eq('domain', tenantConfig.domain)
+      .single();
+
+    if (!tenantData) return;
+
+    // Get channel info if channelHandle is provided
+    let channelId = null;
+    let channelName = null;
+
+    if (channelHandle) {
+      const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(channelHandle);
+
+      const query = supabaseAdmin
+        .from('channels')
+        .select('id, channel_name')
+        .eq('tenant_id', tenantData.id);
+
+      const { data: channelData } = isUUID
+        ? await query.eq('id', channelHandle).single()
+        : await query.eq('channel_handle', channelHandle).single();
+
+      if (channelData) {
+        channelId = channelData.id;
+        channelName = channelData.channel_name;
+      }
+    }
+
+    // Insert analytics record
+    await supabaseAdmin.from('search_analytics').insert({
+      tenant_id: tenantData.id,
+      tenant_name: tenantConfig.domain,
+      channel_id: channelId,
+      channel_name: channelName,
+      search_query: query,
+      results_count: resultsCount,
+      search_type: searchType,
+    });
+  } catch (error) {
+    console.error('[SEARCH ANALYTICS] Error logging search:', error);
   }
 }
