@@ -1,19 +1,31 @@
 import formData from 'form-data';
 import Mailgun from 'mailgun.js';
 
-const mailgun = new Mailgun(formData);
-
-const mg = mailgun.client({
-  username: 'api',
-  key: process.env.MAILGUN_API_KEY || '',
-  url: 'https://api.mailgun.net', // Use EU endpoint if needed: https://api.eu.mailgun.net
-});
-
 interface SendSearchNotificationParams {
   tenantName: string;
   channelName: string | null;
   ipAddress: string;
   searchQuery: string;
+}
+
+// Lazy initialization of Mailgun client to avoid build-time errors
+let mgClient: ReturnType<Mailgun['client']> | null = null;
+
+function getMailgunClient() {
+  if (!mgClient) {
+    const apiKey = process.env.MAILGUN_API_KEY;
+    if (!apiKey) {
+      throw new Error('MAILGUN_API_KEY is not configured');
+    }
+
+    const mailgun = new Mailgun(formData);
+    mgClient = mailgun.client({
+      username: 'api',
+      key: apiKey,
+      url: 'https://api.mailgun.net', // Use EU endpoint if needed: https://api.eu.mailgun.net
+    });
+  }
+  return mgClient;
 }
 
 export async function sendSearchNotification({
@@ -23,6 +35,12 @@ export async function sendSearchNotification({
   searchQuery,
 }: SendSearchNotificationParams): Promise<void> {
   try {
+    // Skip if no API key is configured (e.g., in development)
+    if (!process.env.MAILGUN_API_KEY) {
+      console.log('[MAILGUN] Skipping email - MAILGUN_API_KEY not configured');
+      return;
+    }
+
     const fromEmail = 'notifications@mail.thought.app';
     const toEmail = '5u62z12hv6@pomail.net';
     const senderName = 'FV Notifications';
@@ -33,6 +51,7 @@ export async function sendSearchNotification({
     const emailSubject = `FV: ${tenantName}/${channelPart}/${ipAddress} search: ${searchQuery}`;
 
     const domain = process.env.MAILGUN_DOMAIN || 'mail.thought.app';
+    const mg = getMailgunClient();
 
     await mg.messages.create(domain, {
       from: `${senderName} <${fromEmail}>`,
