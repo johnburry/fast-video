@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase/client';
 import { supabaseAdmin } from '@/lib/supabase/server';
 import { getServerTenantConfig } from '@/lib/tenant-config';
+import { sendSearchNotification } from '@/lib/mailgun';
 
 export async function GET(request: NextRequest) {
   try {
@@ -294,6 +295,16 @@ async function logSearchAnalytics(
       results_count: resultsCount,
       search_type: searchType,
       ip_address: ipAddress,
+    });
+
+    // Send email notification (async, don't wait for it)
+    sendSearchNotification({
+      tenantName: tenantConfig.domain,
+      channelName: channelName,
+      ipAddress: ipAddress,
+      searchQuery: query,
+    }).catch(err => {
+      console.error('[SEARCH ANALYTICS] Failed to send email notification:', err);
     });
   } catch (error) {
     console.error('[SEARCH ANALYTICS] Error logging search:', error);
