@@ -47,6 +47,7 @@ export async function POST(request: NextRequest) {
       search_placeholder,
       search_results_heading,
       redirect_url,
+      channels_gallery,
       features,
       colors,
       is_active
@@ -80,6 +81,7 @@ export async function POST(request: NextRequest) {
         search_placeholder: search_placeholder || 'Search all videos',
         search_results_heading: search_results_heading || 'Search',
         redirect_url,
+        channels_gallery: channels_gallery ?? false,
         features,
         colors,
         is_active: is_active ?? true

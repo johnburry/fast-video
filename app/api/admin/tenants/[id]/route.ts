@@ -60,6 +60,7 @@ export async function PUT(
       search_placeholder,
       search_results_heading,
       redirect_url,
+      channels_gallery,
       features,
       colors,
       is_active
@@ -84,6 +85,7 @@ export async function PUT(
     if (search_placeholder !== undefined) updateData.search_placeholder = search_placeholder || 'Search all videos';
     if (search_results_heading !== undefined) updateData.search_results_heading = search_results_heading || 'Search';
     if (redirect_url !== undefined) updateData.redirect_url = redirect_url;
+    if (channels_gallery !== undefined) updateData.channels_gallery = channels_gallery;
     if (features !== undefined) updateData.features = features;
     if (colors !== undefined) updateData.colors = colors;
     if (is_active !== undefined) updateData.is_active = is_active;
