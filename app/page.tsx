@@ -24,18 +24,21 @@ export default function Home() {
     const parts = hostname.split('.');
     const isSubdomain = parts.length > 2 && parts[0] !== 'www';
 
-    // Debug logging
-    console.log('Tenant config:', {
+    // Debug logging with alert to catch before redirect
+    const debugInfo = {
       isLoading: tenantConfig.isLoading,
       channelsGallery: tenantConfig.channelsGallery,
       redirectUrl: tenantConfig.redirectUrl,
       domain: tenantConfig.domain,
-    });
+      isSubdomain,
+    };
+    console.log('Tenant config:', debugInfo);
 
     // If channels gallery is enabled, skip redirect and default channel check
     // This takes priority over redirect URL
     if (!tenantConfig.isLoading && tenantConfig.channelsGallery) {
       console.log('Channels gallery enabled - skipping redirect');
+      alert('DEBUG: Channels gallery is enabled, should show gallery. channelsGallery=' + tenantConfig.channelsGallery);
       setCheckingDefaultChannel(false);
       return;
     }
@@ -44,6 +47,7 @@ export default function Home() {
     // BUT only if we're NOT on a subdomain (subdomains should try to load channels)
     if (!tenantConfig.isLoading && tenantConfig.redirectUrl && !isSubdomain && !tenantConfig.channelsGallery) {
       console.log('Redirecting to:', tenantConfig.redirectUrl);
+      alert('DEBUG: About to redirect. channelsGallery=' + tenantConfig.channelsGallery + ', redirectUrl=' + tenantConfig.redirectUrl);
       setIsRedirecting(true);
       window.location.href = tenantConfig.redirectUrl;
       return;
