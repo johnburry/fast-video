@@ -107,7 +107,7 @@ export default function Home() {
       <div className="min-h-screen bg-gradient-to-br from-gray-50 via-gray-100 to-gray-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
           {/* Header with Logo and Name */}
-          <div className="text-center mb-12">
+          <div className="text-center mb-12 w-full">
             {tenantConfig.logo.type === 'image' && tenantConfig.logo.imageUrl ? (
               <img
                 src={tenantConfig.logo.imageUrl}
@@ -119,11 +119,11 @@ export default function Home() {
                 {tenantConfig.logo.text || tenantConfig.name}
               </h1>
             )}
-            <h2 className="text-lg sm:text-xl md:text-2xl lg:text-3xl xl:text-4xl font-semibold text-gray-800 mb-2 px-6 break-words leading-tight">
+            <h2 className="text-base sm:text-lg md:text-xl lg:text-2xl xl:text-3xl font-semibold text-gray-800 mb-2 break-words leading-tight w-full">
               {tenantConfig.name}
             </h2>
             {tenantConfig.tagline && (
-              <p className="text-base sm:text-lg text-gray-600 max-w-2xl mx-auto px-4">
+              <p className="text-sm sm:text-base md:text-lg text-gray-600 max-w-2xl mx-auto px-4">
                 {tenantConfig.tagline}
               </p>
             )}
