@@ -115,15 +115,15 @@ export default function Home() {
                 className="h-32 w-auto mx-auto mb-6"
               />
             ) : (
-              <h1 className="text-6xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-6">
+              <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-6 px-4">
                 {tenantConfig.logo.text || tenantConfig.name}
               </h1>
             )}
-            <h2 className="text-3xl font-semibold text-gray-800 mb-2">
+            <h2 className="text-2xl sm:text-3xl md:text-4xl font-semibold text-gray-800 mb-2 px-4">
               {tenantConfig.name}
             </h2>
             {tenantConfig.tagline && (
-              <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+              <p className="text-base sm:text-lg text-gray-600 max-w-2xl mx-auto px-4">
                 {tenantConfig.tagline}
               </p>
             )}
