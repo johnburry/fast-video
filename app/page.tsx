@@ -119,7 +119,7 @@ export default function Home() {
                 {tenantConfig.logo.text || tenantConfig.name}
               </h1>
             )}
-            <h2 className="text-2xl sm:text-3xl md:text-4xl font-semibold text-gray-800 mb-2 px-4">
+            <h2 className="text-2xl sm:text-3xl md:text-4xl font-semibold text-gray-800 mb-2 px-4 break-words">
               {tenantConfig.name}
             </h2>
             {tenantConfig.tagline && (
