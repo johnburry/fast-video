@@ -11,8 +11,9 @@ export async function GET(
     // Fetch all channels for this tenant
     const { data: channels, error } = await supabaseAdmin
       .from('channels')
-      .select('id, channel_name, channel_handle, thumbnail_url')
+      .select('id, channel_name, channel_handle, channel_description, thumbnail_url')
       .eq('tenant_id', id)
+      .eq('is_active', true)
       .order('channel_name', { ascending: true });
 
     if (error) {
@@ -28,6 +29,7 @@ export async function GET(
       id: channel.id,
       name: channel.channel_name,
       handle: channel.channel_handle,
+      description: channel.channel_description,
       thumbnail: channel.thumbnail_url,
     }));
 

@@ -24,6 +24,12 @@ export default function Home() {
     const parts = hostname.split('.');
     const isSubdomain = parts.length > 2 && parts[0] !== 'www';
 
+    // If channels gallery is enabled, skip redirect and default channel check
+    if (!tenantConfig.isLoading && tenantConfig.channelsGallery) {
+      setCheckingDefaultChannel(false);
+      return;
+    }
+
     // Check if tenant has a redirect URL and redirect immediately
     // BUT only if we're NOT on a subdomain (subdomains should try to load channels)
     if (!tenantConfig.isLoading && tenantConfig.redirectUrl && !isSubdomain) {
@@ -56,19 +62,31 @@ export default function Home() {
     };
 
     checkDefaultChannel();
-  }, [tenantConfig.isLoading, tenantConfig.redirectUrl, router]);
+  }, [tenantConfig.isLoading, tenantConfig.redirectUrl, tenantConfig.channelsGallery, router]);
 
   useEffect(() => {
-    // Fetch featured channels
+    // Fetch channels - either tenant channels for gallery or featured channels
     const fetchChannels = async () => {
-      const response = await fetch('/api/channels/featured');
-      if (response.ok) {
-        const data = await response.json();
-        setChannels(data.channels || []);
+      if (tenantConfig.isLoading) return;
+
+      // If channels gallery is enabled, fetch all tenant channels
+      if (tenantConfig.channelsGallery && tenantConfig.id) {
+        const response = await fetch(`/api/admin/tenants/${tenantConfig.id}/channels`);
+        if (response.ok) {
+          const data = await response.json();
+          setChannels(data.channels || []);
+        }
+      } else {
+        // Otherwise fetch featured channels for marketing page
+        const response = await fetch('/api/channels/featured');
+        if (response.ok) {
+          const data = await response.json();
+          setChannels(data.channels || []);
+        }
       }
     };
     fetchChannels();
-  }, []);
+  }, [tenantConfig.isLoading, tenantConfig.channelsGallery, tenantConfig.id]);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -80,6 +98,83 @@ export default function Home() {
   // Show nothing while loading or redirecting to prevent flash
   if (tenantConfig.isLoading || checkingDefaultChannel || isRedirecting) {
     return null;
+  }
+
+  // Channels Gallery View - shows when channels_gallery is enabled
+  if (tenantConfig.channelsGallery) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 via-gray-100 to-gray-200">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+          {/* Header with Logo and Name */}
+          <div className="text-center mb-12">
+            {tenantConfig.logo.type === 'image' && tenantConfig.logo.imageUrl ? (
+              <img
+                src={tenantConfig.logo.imageUrl}
+                alt={tenantConfig.logo.altText}
+                className="h-32 w-auto mx-auto mb-6"
+              />
+            ) : (
+              <h1 className="text-6xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-6">
+                {tenantConfig.logo.text || tenantConfig.name}
+              </h1>
+            )}
+            <h2 className="text-3xl font-semibold text-gray-800 mb-2">
+              {tenantConfig.name}
+            </h2>
+            {tenantConfig.tagline && (
+              <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+                {tenantConfig.tagline}
+              </p>
+            )}
+          </div>
+
+          {/* Channels Grid */}
+          {channels.length === 0 ? (
+            <div className="text-center py-12">
+              <p className="text-gray-600 text-lg">No channels available yet.</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {channels.map((channel) => (
+                <a
+                  key={channel.id}
+                  href={`/${channel.handle || channel.id}`}
+                  className="bg-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 overflow-hidden border border-gray-200 hover:border-blue-400 group cursor-pointer"
+                >
+                  <div className="p-6">
+                    <div className="flex items-center space-x-4 mb-4">
+                      {channel.thumbnail && (
+                        <img
+                          src={channel.thumbnail}
+                          alt={channel.name}
+                          className="w-20 h-20 rounded-full object-cover"
+                        />
+                      )}
+                      <div className="flex-1 min-w-0">
+                        <h3 className="text-xl font-bold text-gray-900 group-hover:text-blue-600 transition-colors truncate">
+                          {channel.name}
+                        </h3>
+                        {channel.handle && (
+                          <p className="text-sm text-gray-500">@{channel.handle}</p>
+                        )}
+                      </div>
+                    </div>
+                    {channel.description && (
+                      <p className="text-gray-600 text-sm line-clamp-3 mb-4">
+                        {channel.description}
+                      </p>
+                    )}
+                    <div className="flex items-center text-blue-600 font-medium text-sm group-hover:translate-x-1 transition-transform">
+                      View Channel →
+                    </div>
+                  </div>
+                </a>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+    );
   }
 
   // Only PlaySermons.com gets the full marketing homepage

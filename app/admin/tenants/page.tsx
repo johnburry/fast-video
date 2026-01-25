@@ -16,6 +16,7 @@ interface Tenant {
   search_placeholder: string;
   search_results_heading: string;
   redirect_url?: string;
+  channels_gallery: boolean;
   features?: any;
   colors?: any;
   is_active: boolean;
@@ -40,6 +41,7 @@ export default function ManageTenantsPage() {
     search_placeholder: '',
     search_results_heading: '',
     redirect_url: '',
+    channels_gallery: false,
     is_active: true,
   });
   const [submitting, setSubmitting] = useState(false);
@@ -126,6 +128,7 @@ export default function ManageTenantsPage() {
       search_placeholder: '',
       search_results_heading: '',
       redirect_url: '',
+      channels_gallery: false,
       is_active: true,
     });
     setEditingTenant(null);
@@ -146,6 +149,7 @@ export default function ManageTenantsPage() {
       search_placeholder: tenant.search_placeholder,
       search_results_heading: tenant.search_results_heading,
       redirect_url: tenant.redirect_url || '',
+      channels_gallery: tenant.channels_gallery || false,
       is_active: tenant.is_active,
     });
     setShowAddForm(true);
@@ -272,7 +276,12 @@ export default function ManageTenantsPage() {
                               {tenant.logo_text || tenant.name}
                             </span>
                           )}
-                          {tenant.redirect_url && (
+                          {tenant.channels_gallery && (
+                            <span className="px-3 py-1 text-xs font-bold bg-purple-100 text-purple-800 rounded border border-purple-300">
+                              🎨 GALLERY
+                            </span>
+                          )}
+                          {tenant.redirect_url && !tenant.channels_gallery && (
                             <span className="px-3 py-1 text-xs font-bold bg-orange-100 text-orange-800 rounded border border-orange-300">
                               ↗ REDIRECT
                             </span>
@@ -527,6 +536,23 @@ export default function ManageTenantsPage() {
                 </div>
 
                 <div className="pt-4 border-t border-gray-200">
+                  <div className="flex items-center mb-4">
+                    <input
+                      type="checkbox"
+                      id="channels_gallery"
+                      checked={formData.channels_gallery}
+                      onChange={(e) => setFormData({ ...formData, channels_gallery: e.target.checked })}
+                      className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500"
+                      disabled={submitting}
+                    />
+                    <label htmlFor="channels_gallery" className="ml-2 text-sm font-medium text-gray-700">
+                      Enable Channels Gallery
+                    </label>
+                  </div>
+                  <p className="mb-4 text-sm text-gray-500">
+                    When enabled, the homepage will display a grid of all channels for this tenant instead of redirecting. This overrides the redirect URL setting.
+                  </p>
+
                   <label htmlFor="redirect_url" className="block text-sm font-medium text-gray-700 mb-1">
                     Redirect URL
                   </label>
@@ -535,12 +561,12 @@ export default function ManageTenantsPage() {
                     id="redirect_url"
                     value={formData.redirect_url}
                     onChange={(e) => setFormData({ ...formData, redirect_url: e.target.value })}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    disabled={submitting}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed"
+                    disabled={submitting || formData.channels_gallery}
                     placeholder="https://example.com"
                   />
                   <p className="mt-1 text-sm text-gray-500">
-                    Optional: If set, visiting this tenant's domain will immediately redirect to this URL. Use this to create redirect-only tenants.
+                    Optional: If set, visiting this tenant's domain will immediately redirect to this URL. Use this to create redirect-only tenants. {formData.channels_gallery && '(Disabled when Channels Gallery is enabled)'}
                   </p>
                 </div>
 
