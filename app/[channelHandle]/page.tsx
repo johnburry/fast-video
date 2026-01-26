@@ -213,7 +213,7 @@ export default function ChannelPage({
       setQuotesError(null);
 
       try {
-        const response = await fetch(`/api/videos/${selectedVideo.videoId}/quotes`);
+        const response = await fetch(`/api/quotes/${selectedVideo.videoId}`);
 
         if (!response.ok) {
           throw new Error('Failed to fetch quotes');
