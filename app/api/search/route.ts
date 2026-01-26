@@ -157,44 +157,44 @@ export async function GET(request: NextRequest) {
           };
         }
 
-        // Check if text has sentence-ending punctuation (excluding abbreviations)
+        // Use a simple context window: current segment ± 2 segments
+        // This gives roughly one sentence of context without over-extending
+        const contextWindow = 2;
+        let sentenceStart = Math.max(0, currentIndex - contextWindow);
+        let sentenceEnd = Math.min(segments.length - 1, currentIndex + contextWindow);
+
+        // Check if text has clear sentence-ending punctuation
         const hasSentenceEnder = (text: string): boolean => {
           const trimmed = text.trim();
           if (!/[.!?]$/.test(trimmed)) return false;
 
-          // Exclude common abbreviations that end with periods
+          // Exclude common abbreviations
           const commonAbbrevs = /\b(Mr|Mrs|Ms|Dr|Prof|Sr|Jr|vs|etc|Inc|Ltd|Co|Corp|Ave|St|Rd|Blvd|Ph\.D|M\.D)\s*\.$/i;
           return !commonAbbrevs.test(trimmed);
         };
 
-        // Find sentence start (go backwards until we hit a sentence ender)
-        let sentenceStart = currentIndex;
-        for (let i = currentIndex - 1; i >= 0; i--) {
+        // Refine start: look backwards for sentence ender (but don't go beyond context window)
+        for (let i = currentIndex - 1; i >= sentenceStart; i--) {
           const text = segments[i].text?.trim() || '';
-          // Skip music indicators
           if (text.includes('[music]') || text.includes('♪') || text.match(/^\[.*\]$/)) {
             sentenceStart = i + 1;
             break;
           }
-          // If we hit a sentence ender, the next segment is the start
           if (hasSentenceEnder(text)) {
             sentenceStart = i + 1;
             break;
           }
-          sentenceStart = i;
         }
 
-        // Find sentence end (go forwards until we hit a sentence ender)
-        let sentenceEnd = currentIndex;
-        for (let i = currentIndex; i < segments.length; i++) {
+        // Refine end: look forwards for sentence ender (but don't go beyond context window)
+        for (let i = currentIndex; i <= sentenceEnd; i++) {
           const text = segments[i].text?.trim() || '';
-          // Skip music indicators and stop
           if (text.includes('[music]') || text.includes('♪') || text.match(/^\[.*\]$/)) {
+            sentenceEnd = i - 1;
             break;
           }
-          sentenceEnd = i;
-          // If we hit a sentence ender, stop here
           if (hasSentenceEnder(text)) {
+            sentenceEnd = i;
             break;
           }
         }
