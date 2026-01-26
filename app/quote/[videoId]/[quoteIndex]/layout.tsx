@@ -73,13 +73,18 @@ export async function generateMetadata({
             alt: video.title,
           },
         ],
-        type: 'video.other',
+        type: 'article',
+        siteName: 'Video Quotes',
       },
       twitter: {
-        card: 'summary_large_image',
+        card: 'summary',
         title: ogTitle,
         description: ogDescription,
         images: [ogImage],
+      },
+      other: {
+        'twitter:label1': 'Quote',
+        'twitter:data1': video.title,
       },
     };
   } catch (error) {
