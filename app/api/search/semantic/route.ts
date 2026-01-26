@@ -75,29 +75,88 @@ export async function GET(request: NextRequest) {
     // Group results by video and get previous segments for better context
     const resultsByVideo = new Map<string, any>();
 
-    // Fetch previous segments for each match to get better start times
+    // Expand matches to full sentences and get context
     const matchesWithPrevious = await Promise.all(
       (results || []).map(async (result: any) => {
-        // Get previous segments that contain spoken text (not music)
-        const { data: prevSegments } = await supabaseAdmin
+        // Get segments before and after the match to build full sentences
+        const { data: segments } = await supabaseAdmin
           .from('transcripts')
-          .select('start_time, text')
+          .select('start_time, text, duration')
           .eq('video_id', result.video_id)
-          .lt('start_time', result.start_time)
-          .order('start_time', { ascending: false })
-          .limit(10);
+          .gte('start_time', result.start_time - 30) // Look back 30 seconds
+          .lte('start_time', result.start_time + 30) // Look forward 30 seconds
+          .order('start_time', { ascending: true });
 
-        // Find the first segment that doesn't contain music indicators
-        const nonMusicSegment = prevSegments?.find(seg => {
-          const text = seg.text?.toLowerCase() || '';
-          return !text.includes('[music]') &&
-                 !text.includes('♪') &&
-                 !text.match(/^\[.*\]$/);
-        });
+        if (!segments || segments.length === 0) {
+          return {
+            ...result,
+            previousStartTime: result.start_time,
+            fullSentence: result.text,
+          };
+        }
+
+        // Find the index of the current segment
+        const currentIndex = segments.findIndex(seg => seg.start_time === result.start_time);
+        if (currentIndex === -1) {
+          return {
+            ...result,
+            previousStartTime: result.start_time,
+            fullSentence: result.text,
+          };
+        }
+
+        // Sentence ending punctuation
+        const sentenceEnders = /[.!?]\s*$/;
+
+        // Find sentence start (go backwards until we hit a sentence ender or run out of segments)
+        let sentenceStart = currentIndex;
+        for (let i = currentIndex - 1; i >= 0; i--) {
+          const text = segments[i].text?.trim() || '';
+          // Skip music indicators
+          if (text.includes('[music]') || text.includes('♪') || text.match(/^\[.*\]$/)) {
+            sentenceStart = i + 1;
+            break;
+          }
+          sentenceStart = i;
+          // If previous segment ends with sentence ender, start from current
+          if (sentenceEnders.test(text)) {
+            sentenceStart = i + 1;
+            break;
+          }
+        }
+
+        // Find sentence end (go forwards until we hit a sentence ender)
+        let sentenceEnd = currentIndex;
+        for (let i = currentIndex; i < segments.length; i++) {
+          const text = segments[i].text?.trim() || '';
+          // Skip music indicators
+          if (text.includes('[music]') || text.includes('♪') || text.match(/^\[.*\]$/)) {
+            break;
+          }
+          sentenceEnd = i;
+          if (sentenceEnders.test(text)) {
+            break;
+          }
+        }
+
+        // Build full sentence text
+        const sentenceSegments = segments.slice(sentenceStart, sentenceEnd + 1);
+        const fullSentence = sentenceSegments
+          .map(seg => seg.text?.trim())
+          .filter(text => text && !text.includes('[music]') && !text.includes('♪'))
+          .join(' ')
+          .replace(/\s+/g, ' ') // Normalize whitespace
+          .trim();
+
+        // Calculate start time (3 seconds before sentence start)
+        const sentenceStartTime = segments[sentenceStart].start_time;
+        const playbackStartTime = Math.max(0, sentenceStartTime - 3);
 
         return {
           ...result,
-          previousStartTime: nonMusicSegment?.start_time || result.start_time,
+          previousStartTime: playbackStartTime,
+          fullSentence: fullSentence || result.text,
+          sentenceStartTime: sentenceStartTime,
         };
       })
     );
@@ -124,9 +183,10 @@ export async function GET(request: NextRequest) {
 
       resultsByVideo.get(result.video_id).matches.push({
         transcriptId: result.transcript_id,
-        text: result.text,
-        startTime: result.previousStartTime,
-        actualStartTime: result.start_time,
+        text: result.fullSentence, // Use full sentence instead of just the segment
+        startTime: result.previousStartTime, // Start 3 seconds before sentence
+        actualStartTime: result.start_time, // Keep original for reference
+        sentenceStartTime: result.sentenceStartTime, // When the sentence actually starts
         duration: result.duration,
         similarity: result.similarity, // Include similarity score
       });
