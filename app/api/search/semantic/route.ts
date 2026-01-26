@@ -89,7 +89,7 @@ export async function GET(request: NextRequest) {
     });
 
     // Build grouped results by video
-    matchesWithTiming.forEach((result) => {
+    matchesWithTiming.forEach((result: any) => {
       if (!resultsByVideo.has(result.video_id)) {
         resultsByVideo.set(result.video_id, {
           videoId: result.video_id,
