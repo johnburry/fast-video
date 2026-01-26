@@ -87,10 +87,16 @@ export default function LocationPage({
         {/* Video Info Header */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            Location from: {videoData.title}
+            Clip from video: {videoData.title}
           </h1>
           <p className="text-gray-600">
-            From {videoData.channel.channel_name}
+            From{' '}
+            <a
+              href={`/${videoData.channel.channel_handle}`}
+              className="text-blue-600 hover:text-blue-800 underline"
+            >
+              {videoData.channel.channel_name}
+            </a>
           </p>
         </div>
 
@@ -130,13 +136,6 @@ export default function LocationPage({
               </div>
             </div>
           </div>
-
-          <button
-            onClick={handleLocationClick}
-            className="mt-6 w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 px-6 rounded-lg transition-colors text-lg"
-          >
-            Watch Full Video
-          </button>
         </div>
       </div>
     </div>

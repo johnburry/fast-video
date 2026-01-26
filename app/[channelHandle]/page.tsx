@@ -704,9 +704,6 @@ export default function ChannelPage({
                       </>
                     ) : (
                       <>
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 5.5v13M15.5 12H8.5" />
-                        </svg>
                         Share
                       </>
                     )}
