@@ -54,7 +54,7 @@ export async function generateMetadata({
     const quoteTitle = quote.quote_text.length > 200
       ? quote.quote_text.substring(0, 197) + '...'
       : quote.quote_text;
-    const ogTitle = `Quote: ${quoteTitle}`;
+    const ogTitle = `Video Quote: ${quoteTitle}`;
     const ogDescription = ''; // Empty to avoid redundancy
     // Use maxresdefault (1920x1080) or hqdefault (480x360) for better quality
     const ogImage = `https://img.youtube.com/vi/${video.youtube_video_id}/maxresdefault.jpg`;
