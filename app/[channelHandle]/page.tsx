@@ -86,6 +86,7 @@ export default function ChannelPage({
     matchText?: string;
     videoTitle?: string;
     videoId?: string; // Internal video ID for fetching quotes
+    transcriptId?: string; // ID of the transcript segment for sharing
   } | null>(null);
   const [showRecordModal, setShowRecordModal] = useState(false);
   const [showHelloVideo, setShowHelloVideo] = useState(false);
@@ -197,8 +198,8 @@ export default function ChannelPage({
     }
   };
 
-  const openVideo = (youtubeVideoId: string, startTime?: number, matchText?: string, videoTitle?: string, videoId?: string) => {
-    setSelectedVideo({ youtubeVideoId, startTime, matchText, videoTitle, videoId });
+  const openVideo = (youtubeVideoId: string, startTime?: number, matchText?: string, videoTitle?: string, videoId?: string, transcriptId?: string) => {
+    setSelectedVideo({ youtubeVideoId, startTime, matchText, videoTitle, videoId, transcriptId });
   };
 
   // Fetch video quotes when a video is selected
@@ -490,7 +491,7 @@ export default function ChannelPage({
                           className="absolute top-0 left-0 w-full h-full object-contain cursor-pointer hover:opacity-90 transition-opacity"
                           style={{ borderTopLeftRadius: '25px', borderBottomLeftRadius: '25px' }}
                           onClick={() => firstMatch
-                            ? openVideo(result.youtubeVideoId, firstMatch.startTime, firstMatch.text, result.title, result.videoId)
+                            ? openVideo(result.youtubeVideoId, firstMatch.startTime, firstMatch.text, result.title, result.videoId, firstMatch.transcriptId)
                             : openVideo(result.youtubeVideoId, undefined, undefined, result.title, result.videoId)
                           }
                         />
@@ -501,7 +502,7 @@ export default function ChannelPage({
                         className="text-xl font-semibold text-gray-900 mb-2 cursor-pointer hover:text-blue-600 transition-colors"
                         style={{ marginTop: '1.5rem' }}
                         onClick={() => firstMatch
-                          ? openVideo(result.youtubeVideoId, firstMatch.startTime, firstMatch.text, result.title, result.videoId)
+                          ? openVideo(result.youtubeVideoId, firstMatch.startTime, firstMatch.text, result.title, result.videoId, firstMatch.transcriptId)
                           : openVideo(result.youtubeVideoId, undefined, undefined, result.title, result.videoId)
                         }
                       >
@@ -520,7 +521,7 @@ export default function ChannelPage({
                             key={match.transcriptId}
                             className="border-l-4 border-blue-500 pl-4 py-2 hover:bg-gray-50 cursor-pointer transition-colors"
                             onClick={() =>
-                              openVideo(result.youtubeVideoId, match.startTime, match.text, result.title, result.videoId)
+                              openVideo(result.youtubeVideoId, match.startTime, match.text, result.title, result.videoId, match.transcriptId)
                             }
                           >
                             <div className="flex items-center gap-2 mb-1">
@@ -681,7 +682,17 @@ export default function ChannelPage({
                     <p className="text-sm text-gray-700">{selectedVideo.matchText}</p>
                   </div>
                   <button
-                    onClick={copyVideoLocationToClipboard}
+                    onClick={() => {
+                      if (selectedVideo.videoId && selectedVideo.transcriptId) {
+                        const locationUrl = `${window.location.origin}/location/${selectedVideo.videoId}/${selectedVideo.transcriptId}`;
+                        navigator.clipboard.writeText(locationUrl).then(() => {
+                          setCopySuccess(true);
+                          setTimeout(() => setCopySuccess(false), 2000);
+                        }).catch(err => {
+                          console.error('Failed to copy:', err);
+                        });
+                      }
+                    }}
                     className="mt-4 w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg transition-colors flex items-center justify-center gap-2"
                   >
                     {copySuccess ? (
@@ -694,9 +705,9 @@ export default function ChannelPage({
                     ) : (
                       <>
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 5.5v13M15.5 12H8.5" />
                         </svg>
-                        Share this location in video
+                        Share
                       </>
                     )}
                   </button>
