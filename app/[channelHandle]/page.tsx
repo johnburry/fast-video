@@ -632,10 +632,10 @@ export default function ChannelPage({
       {/* Video Player Modal */}
       {selectedVideo && (
         <div
-          className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4"
+          className="fixed inset-0 bg-black bg-opacity-75 flex items-start justify-center z-50 p-4 overflow-y-auto"
           onClick={() => setSelectedVideo(null)}
         >
-          <div className="max-w-7xl w-full" onClick={(e) => e.stopPropagation()}>
+          <div className="max-w-7xl w-full my-8" onClick={(e) => e.stopPropagation()}>
             <div className="flex justify-end mb-2">
               <button
                 onClick={() => setSelectedVideo(null)}
