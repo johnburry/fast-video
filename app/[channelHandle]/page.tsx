@@ -790,10 +790,9 @@ export default function ChannelPage({
                             onClick={(e) => {
                               e.preventDefault();
                               e.stopPropagation();
-                              // Start 3 seconds before the quote to give context
-                              const startTime = Math.max(0, Math.floor(quote.startTime - 3));
-                              const url = `https://www.youtube.com/watch?v=${selectedVideo.youtubeVideoId}&t=${startTime}s`;
-                              navigator.clipboard.writeText(url).then(() => {
+                              // Generate quote page URL
+                              const quoteUrl = `${window.location.origin}/quote/${selectedVideo.videoId}/${quote.index}`;
+                              navigator.clipboard.writeText(quoteUrl).then(() => {
                                 alert('Quote link copied to clipboard!');
                               }).catch(err => {
                                 console.error('Failed to copy:', err);
