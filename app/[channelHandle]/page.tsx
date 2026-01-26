@@ -760,9 +760,11 @@ export default function ChannelPage({
                           className="bg-white rounded-lg p-4 shadow-md hover:shadow-lg transition-shadow cursor-pointer"
                           onClick={() => {
                             // Reload the iframe with the quote timestamp and autoplay
+                            // Start 3 seconds before the quote to give context
                             const iframe = document.querySelector('iframe[src*="youtube.com/embed"]') as HTMLIFrameElement;
                             if (iframe) {
-                              iframe.src = `https://www.youtube.com/embed/${selectedVideo.youtubeVideoId}?start=${Math.floor(quote.startTime)}&autoplay=1`;
+                              const startTime = Math.max(0, Math.floor(quote.startTime - 3));
+                              iframe.src = `https://www.youtube.com/embed/${selectedVideo.youtubeVideoId}?start=${startTime}&autoplay=1`;
                             }
                           }}
                         >
@@ -783,7 +785,9 @@ export default function ChannelPage({
                                 <button
                                   onClick={(e) => {
                                     e.stopPropagation();
-                                    const url = `https://www.youtube.com/watch?v=${selectedVideo.youtubeVideoId}&t=${Math.floor(quote.startTime)}s`;
+                                    // Start 3 seconds before the quote to give context
+                                    const startTime = Math.max(0, Math.floor(quote.startTime - 3));
+                                    const url = `https://www.youtube.com/watch?v=${selectedVideo.youtubeVideoId}&t=${startTime}s`;
                                     navigator.clipboard.writeText(url).then(() => {
                                       // Could add a toast notification here
                                       console.log('Quote link copied to clipboard');
