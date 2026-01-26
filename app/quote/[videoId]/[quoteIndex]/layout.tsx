@@ -50,14 +50,15 @@ export async function generateMetadata({
       };
     }
 
-    const ogTitle = `Quote from: ${video.title}`;
-    // Truncate description to 200 characters for better compatibility
-    const ogDescription = quote.quote_text.length > 200
+    // Make the quote text the title, truncate if needed
+    const quoteTitle = quote.quote_text.length > 200
       ? quote.quote_text.substring(0, 197) + '...'
       : quote.quote_text;
+    const ogTitle = `Quote: ${quoteTitle}`;
+    const ogDescription = ''; // Empty to avoid redundancy
     const ogImage = video.thumbnail_url || `https://img.youtube.com/vi/${video.youtube_video_id}/maxresdefault.jpg`;
 
-    console.log('[QUOTE METADATA] Generated - Title:', ogTitle, 'Description length:', ogDescription.length);
+    console.log('[QUOTE METADATA] Generated - Title:', ogTitle.substring(0, 50) + '...', 'Description:', ogDescription || '(empty)');
 
     return {
       title: ogTitle,
@@ -74,7 +75,7 @@ export async function generateMetadata({
           },
         ],
         type: 'article',
-        siteName: 'Video Quotes',
+        siteName: video.title,
       },
       twitter: {
         card: 'summary',
@@ -83,7 +84,7 @@ export async function generateMetadata({
         images: [ogImage],
       },
       other: {
-        'twitter:label1': 'Quote',
+        'twitter:label1': 'From',
         'twitter:data1': video.title,
       },
     };
