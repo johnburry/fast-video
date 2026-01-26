@@ -201,12 +201,32 @@ export async function GET(request: NextRequest) {
 
         // Build full sentence text
         const sentenceSegments = segments.slice(sentenceStart, sentenceEnd + 1);
-        const fullSentence = sentenceSegments
+        let fullSentence = sentenceSegments
           .map(seg => seg.text?.trim())
           .filter(text => text && !text.includes('[music]') && !text.includes('♪'))
           .join(' ')
           .replace(/\s+/g, ' ') // Normalize whitespace
           .trim();
+
+        // Strip incomplete sentence fragments from beginning and end
+        // A complete sentence should start with a capital letter or common starters
+        // and end with sentence-ending punctuation
+
+        // Strip leading fragment: find first capital letter or sentence start
+        const sentenceStartMatch = fullSentence.match(/[A-Z][^.!?]*/);
+        if (sentenceStartMatch && sentenceStartMatch.index && sentenceStartMatch.index > 0) {
+          fullSentence = fullSentence.substring(sentenceStartMatch.index);
+        }
+
+        // Strip trailing fragment: keep only up to last sentence-ending punctuation
+        const lastSentenceEnd = Math.max(
+          fullSentence.lastIndexOf('.'),
+          fullSentence.lastIndexOf('!'),
+          fullSentence.lastIndexOf('?')
+        );
+        if (lastSentenceEnd > 0) {
+          fullSentence = fullSentence.substring(0, lastSentenceEnd + 1);
+        }
 
         // Calculate start time (3 seconds before sentence start)
         const sentenceStartTime = segments[sentenceStart].start_time;
