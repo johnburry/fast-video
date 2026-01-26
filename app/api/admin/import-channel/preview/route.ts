@@ -105,12 +105,49 @@ export async function POST(request: NextRequest) {
             videoId: v.videoId,
             title: v.title,
             thumbnailUrl: v.thumbnailUrl,
+            publishedAt: v.publishedAt,
             status: isNew ? 'needs_import' : 'needs_transcript',
           };
         }
         return null;
       })
-      .filter(v => v !== null);
+      .filter(v => v !== null)
+      .sort((a, b) => {
+        // Parse relative time to date for sorting (newest first)
+        const parseRelativeTime = (relativeTime: string): number => {
+          if (!relativeTime) return 0;
+
+          const now = Date.now();
+          const match = relativeTime.match(/(\d+)\s+(second|minute|hour|day|week|month|year)s?\s+ago/i);
+
+          if (!match) {
+            const date = new Date(relativeTime);
+            return isNaN(date.getTime()) ? 0 : date.getTime();
+          }
+
+          const amount = parseInt(match[1], 10);
+          const unit = match[2].toLowerCase();
+
+          let milliseconds = 0;
+          switch (unit) {
+            case 'second': milliseconds = amount * 1000; break;
+            case 'minute': milliseconds = amount * 60 * 1000; break;
+            case 'hour': milliseconds = amount * 60 * 60 * 1000; break;
+            case 'day': milliseconds = amount * 24 * 60 * 60 * 1000; break;
+            case 'week': milliseconds = amount * 7 * 24 * 60 * 60 * 1000; break;
+            case 'month': milliseconds = amount * 30 * 24 * 60 * 60 * 1000; break;
+            case 'year': milliseconds = amount * 365 * 24 * 60 * 60 * 1000; break;
+          }
+
+          return now - milliseconds;
+        };
+
+        const dateA = parseRelativeTime(a.publishedAt);
+        const dateB = parseRelativeTime(b.publishedAt);
+
+        // Sort newest first (descending)
+        return dateB - dateA;
+      });
 
     return NextResponse.json({
       channel: {

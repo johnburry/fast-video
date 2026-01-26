@@ -563,6 +563,9 @@ export default function AdminPage() {
                       <h4 className="text-sm font-medium text-gray-900 mb-1 line-clamp-2">
                         {video.title}
                       </h4>
+                      <p className="text-xs text-gray-500 mb-2">
+                        {video.publishedAt}
+                      </p>
                       <div className="flex items-center gap-2 mb-3">
                         <span
                           className={`inline-block px-2 py-1 text-xs font-medium rounded ${
