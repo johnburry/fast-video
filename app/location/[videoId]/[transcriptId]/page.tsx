@@ -75,11 +75,8 @@ export default function LocationPage({
     return null;
   }
 
-  const handleLocationClick = () => {
-    // Navigate to YouTube with timestamp
-    const startTime = Math.max(0, Math.floor(location.startTime));
-    window.location.href = `https://www.youtube.com/watch?v=${videoData.youtube_video_id}&t=${startTime}s`;
-  };
+  // Calculate start time (3 seconds before the location)
+  const startTime = Math.max(0, Math.floor(location.startTime - 3));
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -117,24 +114,16 @@ export default function LocationPage({
             </div>
           </div>
 
-          {/* Video Thumbnail */}
-          <div
-            className="relative w-full bg-black rounded-lg overflow-hidden cursor-pointer hover:opacity-90 transition-opacity"
-            style={{ paddingBottom: '56.25%' }}
-            onClick={handleLocationClick}
-          >
-            <img
-              src={getThumbnailUrl(videoData.thumbnail_url, videoData.youtube_video_id)}
-              alt={videoData.title}
-              className="absolute top-0 left-0 w-full h-full object-contain"
+          {/* Embedded YouTube Player */}
+          <div className="relative w-full bg-black rounded-lg overflow-hidden" style={{ paddingBottom: '56.25%' }}>
+            <iframe
+              className="absolute top-0 left-0 w-full h-full"
+              src={`https://www.youtube.com/embed/${videoData.youtube_video_id}?start=${startTime}&autoplay=0`}
+              title={videoData.title}
+              frameBorder="0"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+              allowFullScreen
             />
-            <div className="absolute inset-0 flex items-center justify-center">
-              <div className="w-20 h-20 bg-red-600 rounded-full flex items-center justify-center hover:bg-red-700 transition-colors">
-                <svg className="w-10 h-10 text-white ml-1" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M8 5v14l11-7z"/>
-                </svg>
-              </div>
-            </div>
           </div>
         </div>
       </div>
