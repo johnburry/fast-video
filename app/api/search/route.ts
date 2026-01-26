@@ -157,10 +157,17 @@ export async function GET(request: NextRequest) {
           };
         }
 
-        // Sentence ending punctuation
-        const sentenceEnders = /[.!?]\s*$/;
+        // Check if text has sentence-ending punctuation (excluding abbreviations)
+        const hasSentenceEnder = (text: string): boolean => {
+          const trimmed = text.trim();
+          if (!/[.!?]$/.test(trimmed)) return false;
 
-        // Find sentence start (go backwards until we hit a sentence ender or run out of segments)
+          // Exclude common abbreviations that end with periods
+          const commonAbbrevs = /\b(Mr|Mrs|Ms|Dr|Prof|Sr|Jr|vs|etc|Inc|Ltd|Co|Corp|Ave|St|Rd|Blvd|Ph\.D|M\.D)\s*\.$/i;
+          return !commonAbbrevs.test(trimmed);
+        };
+
+        // Find sentence start (go backwards until we hit a sentence ender)
         let sentenceStart = currentIndex;
         for (let i = currentIndex - 1; i >= 0; i--) {
           const text = segments[i].text?.trim() || '';
@@ -169,24 +176,25 @@ export async function GET(request: NextRequest) {
             sentenceStart = i + 1;
             break;
           }
-          sentenceStart = i;
-          // If previous segment ends with sentence ender, start from current
-          if (sentenceEnders.test(text)) {
+          // If we hit a sentence ender, the next segment is the start
+          if (hasSentenceEnder(text)) {
             sentenceStart = i + 1;
             break;
           }
+          sentenceStart = i;
         }
 
         // Find sentence end (go forwards until we hit a sentence ender)
         let sentenceEnd = currentIndex;
         for (let i = currentIndex; i < segments.length; i++) {
           const text = segments[i].text?.trim() || '';
-          // Skip music indicators
+          // Skip music indicators and stop
           if (text.includes('[music]') || text.includes('♪') || text.match(/^\[.*\]$/)) {
             break;
           }
           sentenceEnd = i;
-          if (sentenceEnders.test(text)) {
+          // If we hit a sentence ender, stop here
+          if (hasSentenceEnder(text)) {
             break;
           }
         }
