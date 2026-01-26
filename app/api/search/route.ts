@@ -127,122 +127,21 @@ export async function GET(request: NextRequest) {
     // Group results by video
     const resultsByVideo = new Map<string, any>();
 
-    // Expand matches to full sentences and get context
-    const matchesWithPrevious = await Promise.all(
-      (data || []).map(async (result) => {
-        // Get segments before and after the match to build full sentences
-        const { data: segments } = await supabase
-          .from('transcripts')
-          .select('start_time, text, duration')
-          .eq('video_id', result.video_id)
-          .gte('start_time', result.start_time - 30) // Look back 30 seconds
-          .lte('start_time', result.start_time + 30) // Look forward 30 seconds
-          .order('start_time', { ascending: true });
+    // Keep it simple: just return the matched segment text
+    // Set playback to start 3 seconds before the matched segment
+    const matchesWithTiming = (data || []).map((result) => {
+      // Start playback 3 seconds before the matched segment
+      const playbackStartTime = Math.max(0, result.start_time - 3);
 
-        if (!segments || segments.length === 0) {
-          return {
-            ...result,
-            previousStartTime: result.start_time,
-            fullSentence: result.text,
-          };
-        }
-
-        // Find the index of the current segment
-        const currentIndex = segments.findIndex(seg => seg.start_time === result.start_time);
-        if (currentIndex === -1) {
-          return {
-            ...result,
-            previousStartTime: result.start_time,
-            fullSentence: result.text,
-          };
-        }
-
-        // Use a simple context window: current segment ± 2 segments
-        // This gives roughly one sentence of context without over-extending
-        const contextWindow = 2;
-        let sentenceStart = Math.max(0, currentIndex - contextWindow);
-        let sentenceEnd = Math.min(segments.length - 1, currentIndex + contextWindow);
-
-        // Check if text has clear sentence-ending punctuation
-        const hasSentenceEnder = (text: string): boolean => {
-          const trimmed = text.trim();
-          if (!/[.!?]$/.test(trimmed)) return false;
-
-          // Exclude common abbreviations
-          const commonAbbrevs = /\b(Mr|Mrs|Ms|Dr|Prof|Sr|Jr|vs|etc|Inc|Ltd|Co|Corp|Ave|St|Rd|Blvd|Ph\.D|M\.D)\s*\.$/i;
-          return !commonAbbrevs.test(trimmed);
-        };
-
-        // Refine start: look backwards for sentence ender (but don't go beyond context window)
-        for (let i = currentIndex - 1; i >= sentenceStart; i--) {
-          const text = segments[i].text?.trim() || '';
-          if (text.includes('[music]') || text.includes('♪') || text.match(/^\[.*\]$/)) {
-            sentenceStart = i + 1;
-            break;
-          }
-          if (hasSentenceEnder(text)) {
-            sentenceStart = i + 1;
-            break;
-          }
-        }
-
-        // Refine end: look forwards for sentence ender (but don't go beyond context window)
-        for (let i = currentIndex; i <= sentenceEnd; i++) {
-          const text = segments[i].text?.trim() || '';
-          if (text.includes('[music]') || text.includes('♪') || text.match(/^\[.*\]$/)) {
-            sentenceEnd = i - 1;
-            break;
-          }
-          if (hasSentenceEnder(text)) {
-            sentenceEnd = i;
-            break;
-          }
-        }
-
-        // Build full sentence text
-        const sentenceSegments = segments.slice(sentenceStart, sentenceEnd + 1);
-        let fullSentence = sentenceSegments
-          .map(seg => seg.text?.trim())
-          .filter(text => text && !text.includes('[music]') && !text.includes('♪'))
-          .join(' ')
-          .replace(/\s+/g, ' ') // Normalize whitespace
-          .trim();
-
-        // Strip incomplete sentence fragments from beginning and end
-        // A complete sentence should start with a capital letter or common starters
-        // and end with sentence-ending punctuation
-
-        // Strip leading fragment: find first capital letter or sentence start
-        const sentenceStartMatch = fullSentence.match(/[A-Z][^.!?]*/);
-        if (sentenceStartMatch && sentenceStartMatch.index && sentenceStartMatch.index > 0) {
-          fullSentence = fullSentence.substring(sentenceStartMatch.index);
-        }
-
-        // Strip trailing fragment: keep only up to last sentence-ending punctuation
-        const lastSentenceEnd = Math.max(
-          fullSentence.lastIndexOf('.'),
-          fullSentence.lastIndexOf('!'),
-          fullSentence.lastIndexOf('?')
-        );
-        if (lastSentenceEnd > 0) {
-          fullSentence = fullSentence.substring(0, lastSentenceEnd + 1);
-        }
-
-        // Calculate start time (3 seconds before sentence start)
-        const sentenceStartTime = segments[sentenceStart].start_time;
-        const playbackStartTime = Math.max(0, sentenceStartTime - 3);
-
-        return {
-          ...result,
-          previousStartTime: playbackStartTime,
-          fullSentence: fullSentence || result.text,
-          sentenceStartTime: sentenceStartTime,
-        };
-      })
-    );
+      return {
+        ...result,
+        previousStartTime: playbackStartTime,
+        displayText: result.text, // Just show the matched segment
+      };
+    });
 
     // Add transcript search results
-    matchesWithPrevious.forEach((result) => {
+    matchesWithTiming.forEach((result) => {
       if (!resultsByVideo.has(result.video_id)) {
         resultsByVideo.set(result.video_id, {
           videoId: result.video_id,
@@ -263,10 +162,9 @@ export async function GET(request: NextRequest) {
 
       resultsByVideo.get(result.video_id).matches.push({
         transcriptId: result.transcript_id,
-        text: result.fullSentence, // Use full sentence instead of just the segment
-        startTime: result.previousStartTime, // Start 3 seconds before sentence
+        text: result.displayText, // Just the matched segment
+        startTime: result.previousStartTime, // Start 3 seconds before matched segment
         actualStartTime: result.start_time, // Keep original for reference
-        sentenceStartTime: result.sentenceStartTime, // When the sentence actually starts
         duration: result.duration,
       });
     });
