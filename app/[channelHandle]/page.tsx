@@ -37,6 +37,14 @@ interface SearchResult {
   }>;
 }
 
+interface VideoQuote {
+  id?: string;
+  text: string;
+  startTime: number;
+  duration: number;
+  index: number;
+}
+
 interface ChannelData {
   channel: {
     id: string;
@@ -77,6 +85,7 @@ export default function ChannelPage({
     startTime?: number;
     matchText?: string;
     videoTitle?: string;
+    videoId?: string; // Internal video ID for fetching quotes
   } | null>(null);
   const [showRecordModal, setShowRecordModal] = useState(false);
   const [showHelloVideo, setShowHelloVideo] = useState(false);
@@ -86,6 +95,9 @@ export default function ChannelPage({
   const [hasWatchedVideo, setHasWatchedVideo] = useState(false);
   const [watchedVideoId, setWatchedVideoId] = useState<string | null>(null);
   const [copySuccess, setCopySuccess] = useState(false);
+  const [videoQuotes, setVideoQuotes] = useState<VideoQuote[]>([]);
+  const [quotesLoading, setQuotesLoading] = useState(false);
+  const [quotesError, setQuotesError] = useState<string | null>(null);
 
   useEffect(() => {
     fetchChannelData();
@@ -185,9 +197,41 @@ export default function ChannelPage({
     }
   };
 
-  const openVideo = (youtubeVideoId: string, startTime?: number, matchText?: string, videoTitle?: string) => {
-    setSelectedVideo({ youtubeVideoId, startTime, matchText, videoTitle });
+  const openVideo = (youtubeVideoId: string, startTime?: number, matchText?: string, videoTitle?: string, videoId?: string) => {
+    setSelectedVideo({ youtubeVideoId, startTime, matchText, videoTitle, videoId });
   };
+
+  // Fetch video quotes when a video is selected
+  useEffect(() => {
+    const fetchVideoQuotes = async () => {
+      if (!selectedVideo || !selectedVideo.videoId) {
+        setVideoQuotes([]);
+        return;
+      }
+
+      setQuotesLoading(true);
+      setQuotesError(null);
+
+      try {
+        const response = await fetch(`/api/videos/${selectedVideo.videoId}/quotes`);
+
+        if (!response.ok) {
+          throw new Error('Failed to fetch quotes');
+        }
+
+        const data = await response.json();
+        setVideoQuotes(data.quotes || []);
+      } catch (err) {
+        console.error('Error fetching video quotes:', err);
+        setQuotesError(err instanceof Error ? err.message : 'Failed to load quotes');
+        setVideoQuotes([]);
+      } finally {
+        setQuotesLoading(false);
+      }
+    };
+
+    fetchVideoQuotes();
+  }, [selectedVideo?.videoId]);
 
   const resetSearch = () => {
     setSearchQuery('');
@@ -446,8 +490,8 @@ export default function ChannelPage({
                           className="absolute top-0 left-0 w-full h-full object-contain cursor-pointer hover:opacity-90 transition-opacity"
                           style={{ borderTopLeftRadius: '25px', borderBottomLeftRadius: '25px' }}
                           onClick={() => firstMatch
-                            ? openVideo(result.youtubeVideoId, firstMatch.startTime, firstMatch.text, result.title)
-                            : openVideo(result.youtubeVideoId)
+                            ? openVideo(result.youtubeVideoId, firstMatch.startTime, firstMatch.text, result.title, result.videoId)
+                            : openVideo(result.youtubeVideoId, undefined, undefined, result.title, result.videoId)
                           }
                         />
                       </div>
@@ -457,8 +501,8 @@ export default function ChannelPage({
                         className="text-xl font-semibold text-gray-900 mb-2 cursor-pointer hover:text-blue-600 transition-colors"
                         style={{ marginTop: '1.5rem' }}
                         onClick={() => firstMatch
-                          ? openVideo(result.youtubeVideoId, firstMatch.startTime, firstMatch.text, result.title)
-                          : openVideo(result.youtubeVideoId)
+                          ? openVideo(result.youtubeVideoId, firstMatch.startTime, firstMatch.text, result.title, result.videoId)
+                          : openVideo(result.youtubeVideoId, undefined, undefined, result.title, result.videoId)
                         }
                       >
                         {result.title}
@@ -476,7 +520,7 @@ export default function ChannelPage({
                             key={match.transcriptId}
                             className="border-l-4 border-blue-500 pl-4 py-2 hover:bg-gray-50 cursor-pointer transition-colors"
                             onClick={() =>
-                              openVideo(result.youtubeVideoId, match.startTime, match.text, result.title)
+                              openVideo(result.youtubeVideoId, match.startTime, match.text, result.title, result.videoId)
                             }
                           >
                             <div className="flex items-center gap-2 mb-1">
@@ -530,7 +574,7 @@ export default function ChannelPage({
                   <div
                     key={video.id}
                     className="bg-white rounded-lg shadow-md overflow-hidden cursor-pointer hover:shadow-lg transition-shadow"
-                    onClick={() => openVideo(video.youtube_video_id)}
+                    onClick={() => openVideo(video.youtube_video_id, undefined, undefined, video.title, video.id)}
                   >
                     <div className="relative w-full bg-black" style={{ paddingBottom: '56.25%' }}>
                       <img
@@ -687,6 +731,78 @@ export default function ChannelPage({
                 </div>
               </div>
             </div>
+
+            {/* AI-Generated Powerful Quotes Section */}
+            {selectedVideo.videoId && (
+              <div className="mt-6">
+                {quotesLoading && (
+                  <div className="text-center py-8">
+                    <div className="inline-block animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500 mb-2"></div>
+                    <p className="text-white text-sm">Analyzing video transcript for powerful quotes...</p>
+                  </div>
+                )}
+
+                {quotesError && (
+                  <div className="bg-red-900 bg-opacity-50 text-white p-4 rounded-lg">
+                    <p className="text-sm">{quotesError}</p>
+                  </div>
+                )}
+
+                {!quotesLoading && !quotesError && videoQuotes.length > 0 && (
+                  <div>
+                    <h3 className="text-xl font-bold text-white mb-4">
+                      10 Most Powerful Quotes from this Video
+                    </h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {videoQuotes.map((quote) => (
+                        <div
+                          key={quote.index}
+                          className="bg-white rounded-lg p-4 shadow-md hover:shadow-lg transition-shadow cursor-pointer"
+                          onClick={() => {
+                            // Reload the iframe with the quote timestamp and autoplay
+                            const iframe = document.querySelector('iframe[src*="youtube.com/embed"]') as HTMLIFrameElement;
+                            if (iframe) {
+                              iframe.src = `https://www.youtube.com/embed/${selectedVideo.youtubeVideoId}?start=${Math.floor(quote.startTime)}&autoplay=1`;
+                            }
+                          }}
+                        >
+                          <div className="flex items-start gap-3">
+                            <div className="flex-shrink-0 w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center font-bold text-sm">
+                              {quote.index}
+                            </div>
+                            <div className="flex-1">
+                              <p className="text-gray-900 text-sm mb-2 leading-relaxed">{quote.text}</p>
+                              <div className="flex items-center gap-2">
+                                <span className="text-xs font-medium text-blue-600">
+                                  {formatTimestamp(quote.startTime)}
+                                </span>
+                                <svg className="w-3 h-3" viewBox="0 0 24 24" fill="#FF0000">
+                                  <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+                                </svg>
+                                <span className="text-xs hover:underline" style={{ color: '#FF0000' }}>Play from here</span>
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    const url = `https://www.youtube.com/watch?v=${selectedVideo.youtubeVideoId}&t=${Math.floor(quote.startTime)}s`;
+                                    navigator.clipboard.writeText(url).then(() => {
+                                      // Could add a toast notification here
+                                      console.log('Quote link copied to clipboard');
+                                    });
+                                  }}
+                                  className="ml-auto text-xs text-blue-600 hover:text-blue-800 font-medium"
+                                >
+                                  Share
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         </div>
       )}
