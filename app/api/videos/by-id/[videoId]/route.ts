@@ -16,7 +16,7 @@ export async function GET(
         title,
         thumbnail_url,
         channel_id,
-        channels (
+        channels!inner (
           channel_handle,
           channel_name
         )
@@ -32,14 +32,18 @@ export async function GET(
       );
     }
 
+    // TypeScript workaround: channels is returned as an array by Supabase
+    const channels = video.channels as any;
+    const channelData = Array.isArray(channels) ? channels[0] : channels;
+
     return NextResponse.json({
       id: video.id,
       youtube_video_id: video.youtube_video_id,
       title: video.title,
       thumbnail_url: video.thumbnail_url,
       channel: {
-        channel_handle: video.channels.channel_handle,
-        channel_name: video.channels.channel_name,
+        channel_handle: channelData.channel_handle,
+        channel_name: channelData.channel_name,
       },
     });
   } catch (error) {
