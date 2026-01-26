@@ -111,7 +111,13 @@ export default function QuotePage({
             Quote from: {videoData.title}
           </h1>
           <p className="text-gray-600">
-            From {videoData.channel.channel_name}
+            From{' '}
+            <a
+              href={`/${videoData.channel.channel_handle}`}
+              className="text-blue-600 hover:text-blue-800 underline"
+            >
+              {videoData.channel.channel_name}
+            </a>
           </p>
         </div>
 
