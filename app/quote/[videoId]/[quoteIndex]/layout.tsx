@@ -56,7 +56,8 @@ export async function generateMetadata({
       : quote.quote_text;
     const ogTitle = `Quote: ${quoteTitle}`;
     const ogDescription = ''; // Empty to avoid redundancy
-    const ogImage = video.thumbnail_url || `https://img.youtube.com/vi/${video.youtube_video_id}/maxresdefault.jpg`;
+    // Use maxresdefault (1920x1080) or hqdefault (480x360) for better quality
+    const ogImage = `https://img.youtube.com/vi/${video.youtube_video_id}/maxresdefault.jpg`;
 
     console.log('[QUOTE METADATA] Generated - Title:', ogTitle.substring(0, 50) + '...', 'Description:', ogDescription || '(empty)');
 
@@ -69,8 +70,8 @@ export async function generateMetadata({
         images: [
           {
             url: ogImage,
-            width: 1280,
-            height: 720,
+            width: 1920,
+            height: 1080,
             alt: video.title,
           },
         ],
