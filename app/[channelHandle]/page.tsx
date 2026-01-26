@@ -788,16 +788,20 @@ export default function ChannelPage({
                           {/* Share button positioned at bottom right */}
                           <button
                             onClick={(e) => {
+                              e.preventDefault();
                               e.stopPropagation();
                               // Start 3 seconds before the quote to give context
                               const startTime = Math.max(0, Math.floor(quote.startTime - 3));
                               const url = `https://www.youtube.com/watch?v=${selectedVideo.youtubeVideoId}&t=${startTime}s`;
                               navigator.clipboard.writeText(url).then(() => {
-                                // Could add a toast notification here
-                                console.log('Quote link copied to clipboard');
+                                alert('Quote link copied to clipboard!');
+                              }).catch(err => {
+                                console.error('Failed to copy:', err);
+                                alert('Failed to copy link');
                               });
                             }}
-                            className="absolute bottom-4 right-4 bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg transition-colors text-sm z-10"
+                            className="absolute bottom-4 right-4 bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg transition-colors text-sm pointer-events-auto"
+                            style={{ zIndex: 20 }}
                           >
                             Share
                           </button>
