@@ -94,6 +94,24 @@ export async function POST(request: NextRequest) {
     const importedWithTranscripts = videosWithTranscripts;
     const importedWithoutTranscripts = alreadyImported - videosWithTranscripts;
 
+    // Build list of videos that need action (new to import or need transcript)
+    const videosNeedingAction = combinedVideos
+      .map(v => {
+        const hasTranscript = existingVideoMap.get(v.videoId);
+        const isNew = !existingVideoMap.has(v.videoId);
+
+        if (isNew || hasTranscript === false) {
+          return {
+            videoId: v.videoId,
+            title: v.title,
+            thumbnailUrl: v.thumbnailUrl,
+            status: isNew ? 'needs_import' : 'needs_transcript',
+          };
+        }
+        return null;
+      })
+      .filter(v => v !== null);
+
     return NextResponse.json({
       channel: {
         name: channelInfo.name,
@@ -110,6 +128,8 @@ export async function POST(request: NextRequest) {
         needsTranscripts: importedWithoutTranscripts, // Videos that need transcripts
       },
       channelExists: channelId !== null,
+      channelId: channelId,
+      videos: videosNeedingAction,
     });
   } catch (error) {
     console.error('Error in preview:', error);

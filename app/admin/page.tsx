@@ -19,6 +19,9 @@ export default function AdminPage() {
   const [currentVideo, setCurrentVideo] = useState<{ current: number; total: number; title: string } | null>(null);
   const [preview, setPreview] = useState<any>(null);
   const [loadingPreview, setLoadingPreview] = useState(false);
+  const [processingVideo, setProcessingVideo] = useState<string | null>(null);
+  const [processingStatus, setProcessingStatus] = useState<string>('');
+  const [processedVideos, setProcessedVideos] = useState<Set<string>>(new Set());
   useEffect(() => {
     // Set page title
     document.title = 'FV Admin: Import';
@@ -98,6 +101,113 @@ export default function AdminPage() {
       setError(err instanceof Error ? err.message : 'An error occurred');
     } finally {
       setLoadingPreview(false);
+    }
+  };
+
+  const handleProcessSingleVideo = async (video: any, fetchTranscript: boolean) => {
+    setProcessingVideo(video.videoId);
+    setProcessingStatus(fetchTranscript ? 'Importing video and fetching transcript...' : 'Importing video...');
+
+    try {
+      const response = await fetch('/api/admin/import-video', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          channelId: preview.channelId,
+          video: video,
+          fetchTranscript: fetchTranscript,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        // Mark video as processed
+        setProcessedVideos((prev) => new Set(prev).add(video.videoId));
+
+        // Update preview data to reflect changes
+        if (fetchTranscript || data.transcriptFetched) {
+          // Remove from video list entirely if transcript was fetched
+          setPreview((prev: any) => ({
+            ...prev,
+            videos: prev.videos.filter((v: any) => v.videoId !== video.videoId),
+            breakdown: {
+              ...prev.breakdown,
+              newToImport: video.status === 'needs_import' ? prev.breakdown.newToImport - 1 : prev.breakdown.newToImport,
+              alreadyImported: video.status === 'needs_import' ? prev.breakdown.alreadyImported + 1 : prev.breakdown.alreadyImported,
+              needsTranscripts: prev.breakdown.needsTranscripts > 0 ? prev.breakdown.needsTranscripts - 1 : 0,
+              importedWithTranscripts: prev.breakdown.importedWithTranscripts + 1,
+            },
+          }));
+        } else {
+          // Update status to needs_transcript if only imported without transcript
+          setPreview((prev: any) => ({
+            ...prev,
+            videos: prev.videos.map((v: any) =>
+              v.videoId === video.videoId
+                ? { ...v, status: 'needs_transcript' }
+                : v
+            ),
+            breakdown: {
+              ...prev.breakdown,
+              newToImport: prev.breakdown.newToImport - 1,
+              alreadyImported: prev.breakdown.alreadyImported + 1,
+              needsTranscripts: prev.breakdown.needsTranscripts + 1,
+            },
+          }));
+        }
+      } else {
+        setError(data.message || 'Failed to process video');
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to process video');
+    } finally {
+      setProcessingVideo(null);
+      setProcessingStatus('');
+    }
+  };
+
+  const handleFetchTranscript = async (video: any) => {
+    setProcessingVideo(video.videoId);
+    setProcessingStatus('Fetching transcript...');
+
+    try {
+      const response = await fetch('/api/admin/fetch-transcript', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          channelId: preview.channelId,
+          youtubeVideoId: video.videoId,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        // Mark video as processed and remove from list
+        setProcessedVideos((prev) => new Set(prev).add(video.videoId));
+
+        setPreview((prev: any) => ({
+          ...prev,
+          videos: prev.videos.filter((v: any) => v.videoId !== video.videoId),
+          breakdown: {
+            ...prev.breakdown,
+            needsTranscripts: prev.breakdown.needsTranscripts > 0 ? prev.breakdown.needsTranscripts - 1 : 0,
+            importedWithTranscripts: prev.breakdown.importedWithTranscripts + 1,
+          },
+        }));
+      } else {
+        setError(data.message || 'Failed to fetch transcript');
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to fetch transcript');
+    } finally {
+      setProcessingVideo(null);
+      setProcessingStatus('');
     }
   };
 
@@ -427,6 +537,84 @@ export default function AdminPage() {
             </div>
           )}
 
+          {/* Video List for Manual Processing */}
+          {preview && !loading && preview.videos && preview.videos.length > 0 && (
+            <div className="mt-8 p-6 bg-gray-50 border border-gray-200 rounded-lg">
+              <h3 className="text-gray-900 font-semibold mb-4">
+                Videos Needing Action ({preview.videos.length})
+              </h3>
+              <div className="space-y-4 max-h-[600px] overflow-y-auto">
+                {preview.videos.map((video: any) => (
+                  <div
+                    key={video.videoId}
+                    className="bg-white rounded-lg border border-gray-200 p-4 flex gap-4 items-start"
+                  >
+                    {/* Thumbnail */}
+                    <div className="flex-shrink-0 w-40 h-24 bg-black rounded overflow-hidden">
+                      <img
+                        src={video.thumbnailUrl}
+                        alt={video.title}
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+
+                    {/* Video Info */}
+                    <div className="flex-1 min-w-0">
+                      <h4 className="text-sm font-medium text-gray-900 mb-1 line-clamp-2">
+                        {video.title}
+                      </h4>
+                      <div className="flex items-center gap-2 mb-3">
+                        <span
+                          className={`inline-block px-2 py-1 text-xs font-medium rounded ${
+                            video.status === 'needs_import'
+                              ? 'bg-blue-100 text-blue-800'
+                              : 'bg-yellow-100 text-yellow-800'
+                          }`}
+                        >
+                          {video.status === 'needs_import' ? 'Needs Import' : 'Needs Transcript'}
+                        </span>
+                      </div>
+
+                      {/* Action Buttons */}
+                      <div className="flex gap-2">
+                        {video.status === 'needs_import' ? (
+                          <>
+                            <button
+                              onClick={() => handleProcessSingleVideo(video, false)}
+                              disabled={processingVideo === video.videoId}
+                              className="px-3 py-1.5 text-sm bg-blue-600 text-white rounded hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
+                            >
+                              {processingVideo === video.videoId && !processingStatus.includes('transcript')
+                                ? 'Importing...'
+                                : 'Import'}
+                            </button>
+                            <button
+                              onClick={() => handleProcessSingleVideo(video, true)}
+                              disabled={processingVideo === video.videoId}
+                              className="px-3 py-1.5 text-sm bg-green-600 text-white rounded hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
+                            >
+                              {processingVideo === video.videoId && processingStatus.includes('transcript')
+                                ? 'Importing...'
+                                : 'Import + Get Transcript'}
+                            </button>
+                          </>
+                        ) : (
+                          <button
+                            onClick={() => handleFetchTranscript(video)}
+                            disabled={processingVideo === video.videoId}
+                            className="px-3 py-1.5 text-sm bg-purple-600 text-white rounded hover:bg-purple-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
+                          >
+                            {processingVideo === video.videoId ? 'Fetching...' : 'Get Transcript'}
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
           {loading && (
             <div className="mt-8 p-4 bg-blue-50 border border-blue-200 rounded-lg">
               <p className="text-blue-800 font-medium mb-3">
@@ -495,6 +683,20 @@ export default function AdminPage() {
                       View channel page →
                     </a>
                   </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Processing Modal */}
+          {processingVideo && (
+            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+              <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+                <div className="text-center">
+                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-2">Processing Video</h3>
+                  <p className="text-gray-600 text-sm">{processingStatus}</p>
+                  <p className="text-gray-500 text-xs mt-3">Please wait, this may take a minute...</p>
                 </div>
               </div>
             </div>

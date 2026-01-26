@@ -72,15 +72,12 @@ export default function QuotePage({
     );
   }
 
-  if (error || !videoData || quotes.length === 0) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">Quote Not Found</h1>
-          <p className="text-gray-600">{error || 'This quote could not be loaded.'}</p>
-        </div>
-      </div>
-    );
+  if (!videoData) {
+    return null;
+  }
+
+  if (quotes.length === 0) {
+    return null;
   }
 
   // Find the featured quote (the one being shared)

@@ -742,11 +742,6 @@ export default function ChannelPage({
                   </div>
                 )}
 
-                {quotesError && (
-                  <div className="bg-red-900 bg-opacity-50 text-white p-4 rounded-lg">
-                    <p className="text-sm">{quotesError}</p>
-                  </div>
-                )}
 
                 {!quotesLoading && !quotesError && videoQuotes.length > 0 && (
                   <div>
