@@ -62,7 +62,8 @@ export async function POST(request: NextRequest) {
       subscriberCount,
       externalLink,
       externalLinkName,
-      tenantId
+      tenantId,
+      isMusicChannel
     } = body;
 
     // Validate required fields
@@ -105,6 +106,7 @@ export async function POST(request: NextRequest) {
         external_link: externalLink || null,
         external_link_name: externalLinkName || null,
         tenant_id: tenantId || null,
+        is_music_channel: isMusicChannel || false,
         last_synced_at: new Date().toISOString(),
       })
       .select('id, channel_handle, channel_name, channel_description, thumbnail_url, subscriber_count, video_count')

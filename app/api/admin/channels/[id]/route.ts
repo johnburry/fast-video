@@ -39,6 +39,7 @@ export async function GET(
         externalLinkName: channel.external_link_name,
         helloVideoUrl: channel.hello_video_url,
         isActive: channel.is_active,
+        isMusicChannel: channel.is_music_channel,
         subscriptionType: channel.subscription_type,
         subscriptionStartDate: channel.subscription_start_date,
         channelHistory: channel.channel_history,
@@ -71,6 +72,7 @@ export async function PATCH(
       externalLink,
       externalLinkName,
       isActive,
+      isMusicChannel,
       subscriptionType,
       subscriptionStartDate,
       channelHistory,
@@ -86,6 +88,7 @@ export async function PATCH(
     if (externalLink !== undefined) updateData.external_link = externalLink;
     if (externalLinkName !== undefined) updateData.external_link_name = externalLinkName;
     if (isActive !== undefined) updateData.is_active = isActive;
+    if (isMusicChannel !== undefined) updateData.is_music_channel = isMusicChannel;
     if (subscriptionType !== undefined) updateData.subscription_type = subscriptionType;
     if (subscriptionStartDate !== undefined) updateData.subscription_start_date = subscriptionStartDate;
     if (channelHistory !== undefined) updateData.channel_history = channelHistory;
