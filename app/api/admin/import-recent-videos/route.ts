@@ -70,7 +70,7 @@ function isWithinHours(publishedAt: string, hours: number): boolean {
   return isWithin;
 }
 
-export async function POST(request: NextRequest) {
+async function runImportJob(request: NextRequest) {
   const startTime = Date.now();
 
   // Send job started email
@@ -336,4 +336,14 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     );
   }
+}
+
+// GET handler for Vercel cron jobs
+export async function GET(request: NextRequest) {
+  return runImportJob(request);
+}
+
+// POST handler for manual triggers
+export async function POST(request: NextRequest) {
+  return runImportJob(request);
 }
