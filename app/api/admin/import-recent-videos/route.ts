@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase/server';
-import { getChannelVideos, getChannelLiveVideos } from '@/lib/youtube/client';
+import { getChannelVideos, getChannelLiveVideos, getChannelByHandle } from '@/lib/youtube/client';
 import { getVideoTranscript } from '@/lib/youtube/transcript';
 import { uploadThumbnailToR2 } from '@/lib/r2';
 import { sendCronJobStartedEmail, sendCronJobCompletedEmail } from '@/lib/mailgun';
@@ -111,20 +111,42 @@ export async function POST(request: NextRequest) {
     // Process each channel
     for (const channel of channels) {
       try {
-        console.log(`[CRON] Processing channel: ${channel.channel_name} (ID: ${channel.id}, YT ID: ${channel.youtube_channel_id})`);
+        console.log(`[CRON] Processing channel: ${channel.channel_name} (ID: ${channel.id}, YT ID: ${channel.youtube_channel_id}, Handle: ${channel.youtube_channel_handle})`);
 
-        // Skip if no YouTube channel ID
-        if (!channel.youtube_channel_id) {
-          console.log(`[CRON] Skipping ${channel.channel_name} - no youtube_channel_id`);
-          metrics.errors.push(`${channel.channel_name}: No YouTube channel ID configured`);
+        // Resolve YouTube channel ID from handle if not present
+        let youtubeChannelId = channel.youtube_channel_id;
+
+        if (!youtubeChannelId && channel.youtube_channel_handle) {
+          console.log(`[CRON] No youtube_channel_id, resolving from handle: ${channel.youtube_channel_handle}`);
+          const channelInfo = await getChannelByHandle(channel.youtube_channel_handle);
+
+          if (channelInfo) {
+            youtubeChannelId = channelInfo.channelId;
+            console.log(`[CRON] Resolved channel ID: ${youtubeChannelId}`);
+
+            // Update the database with the resolved channel ID for future use
+            await supabaseAdmin
+              .from('channels')
+              .update({ youtube_channel_id: youtubeChannelId })
+              .eq('id', channel.id);
+          } else {
+            console.log(`[CRON] Failed to resolve channel ID from handle ${channel.youtube_channel_handle}`);
+            metrics.errors.push(`${channel.channel_name}: Could not resolve YouTube channel from handle`);
+            continue;
+          }
+        }
+
+        if (!youtubeChannelId) {
+          console.log(`[CRON] Skipping ${channel.channel_name} - no youtube_channel_id or youtube_channel_handle`);
+          metrics.errors.push(`${channel.channel_name}: No YouTube channel ID or handle configured`);
           continue;
         }
 
         // Fetch regular videos (limit to 100 to cover 72 hours)
-        const regularVideos = await getChannelVideos(channel.youtube_channel_id, 100);
+        const regularVideos = await getChannelVideos(youtubeChannelId, 100);
 
         // Fetch live videos (limit to 100 to cover 72 hours)
-        const liveVideos = await getChannelLiveVideos(channel.youtube_channel_id, 100);
+        const liveVideos = await getChannelLiveVideos(youtubeChannelId, 100);
 
         // Combine and deduplicate
         const liveVideoIds = new Set(liveVideos.map(v => v.videoId));

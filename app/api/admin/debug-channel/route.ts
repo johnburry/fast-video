@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase/server';
-import { getChannelVideos, getChannelLiveVideos } from '@/lib/youtube/client';
+import { getChannelVideos, getChannelLiveVideos, getChannelByHandle } from '@/lib/youtube/client';
 
 // Parse relative time strings like "5 days ago" to ISO timestamp
 function parseRelativeTime(relativeTime: string): string | null {
@@ -84,6 +84,8 @@ export async function POST(request: NextRequest) {
     const debug: any = {
       channel: channel,
       hasYoutubeChannelId: !!channel.youtube_channel_id,
+      hasYoutubeChannelHandle: !!channel.youtube_channel_handle,
+      resolvedChannelId: null,
       videos: {
         regular: [],
         live: [],
@@ -95,14 +97,37 @@ export async function POST(request: NextRequest) {
       errors: []
     };
 
-    if (!channel.youtube_channel_id) {
-      debug.errors.push('Channel has no youtube_channel_id');
+    // Resolve YouTube channel ID from handle if not present
+    let youtubeChannelId = channel.youtube_channel_id;
+
+    if (!youtubeChannelId && channel.youtube_channel_handle) {
+      debug.errors.push(`Channel has no youtube_channel_id, attempting to resolve from handle: ${channel.youtube_channel_handle}`);
+
+      try {
+        const channelInfo = await getChannelByHandle(channel.youtube_channel_handle);
+
+        if (channelInfo) {
+          youtubeChannelId = channelInfo.channelId;
+          debug.resolvedChannelId = youtubeChannelId;
+          debug.errors.push(`Successfully resolved channel ID: ${youtubeChannelId}`);
+        } else {
+          debug.errors.push(`Failed to resolve channel ID from handle: ${channel.youtube_channel_handle}`);
+          return NextResponse.json(debug);
+        }
+      } catch (error) {
+        debug.errors.push(`Error resolving channel from handle: ${error instanceof Error ? error.message : 'Unknown'}`);
+        return NextResponse.json(debug);
+      }
+    }
+
+    if (!youtubeChannelId) {
+      debug.errors.push('Channel has no youtube_channel_id or youtube_channel_handle');
       return NextResponse.json(debug);
     }
 
     try {
       // Fetch regular videos
-      debug.videos.regular = await getChannelVideos(channel.youtube_channel_id, 100);
+      debug.videos.regular = await getChannelVideos(youtubeChannelId, 100);
       debug.videos.regularCount = debug.videos.regular.length;
     } catch (error) {
       debug.errors.push(`Error fetching regular videos: ${error instanceof Error ? error.message : 'Unknown'}`);
@@ -110,7 +135,7 @@ export async function POST(request: NextRequest) {
 
     try {
       // Fetch live videos
-      debug.videos.live = await getChannelLiveVideos(channel.youtube_channel_id, 100);
+      debug.videos.live = await getChannelLiveVideos(youtubeChannelId, 100);
       debug.videos.liveCount = debug.videos.live.length;
     } catch (error) {
       debug.errors.push(`Error fetching live videos: ${error instanceof Error ? error.message : 'Unknown'}`);
