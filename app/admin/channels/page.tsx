@@ -25,6 +25,8 @@ export default function ManageChannelsPage() {
   const [tenants, setTenants] = useState<any[]>([]);
   const [submitting, setSubmitting] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
+  const [cronJobRunning, setCronJobRunning] = useState(false);
+  const [cronJobResult, setCronJobResult] = useState<string | null>(null);
 
   useEffect(() => {
     // Set page title
@@ -109,6 +111,30 @@ export default function ManageChannelsPage() {
     }
   };
 
+  const handleRunCronJob = async () => {
+    setCronJobRunning(true);
+    setCronJobResult(null);
+
+    try {
+      const response = await fetch('/api/admin/import-recent-videos', {
+        method: 'POST',
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Failed to run cron job');
+      }
+
+      const data = await response.json();
+      const totalVideos = data.metrics.channels.reduce((sum: number, ch: any) => sum + ch.videosImported, 0);
+      setCronJobResult(`Successfully imported ${totalVideos} videos from ${data.metrics.channels.length} channels. Elapsed time: ${(data.metrics.elapsedTimeMs / 1000).toFixed(2)}s`);
+    } catch (err) {
+      setCronJobResult(`Error: ${err instanceof Error ? err.message : 'An error occurred'}`);
+    } finally {
+      setCronJobRunning(false);
+    }
+  };
+
   // Filter channels by name
   const filteredChannels = channels.filter((channel) =>
     channel.name.toLowerCase().includes(filterText.toLowerCase())
@@ -137,13 +163,28 @@ export default function ManageChannelsPage() {
               <h1 className="text-3xl font-bold text-gray-900">
                 Manage Channels
               </h1>
-              <button
-                onClick={() => setShowAddForm(true)}
-                className="bg-blue-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-blue-700 transition-colors"
-              >
-                Add Channel
-              </button>
+              <div className="flex gap-2">
+                <button
+                  onClick={handleRunCronJob}
+                  disabled={cronJobRunning}
+                  className="bg-green-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
+                >
+                  {cronJobRunning ? 'Running...' : 'Import Recent Videos'}
+                </button>
+                <button
+                  onClick={() => setShowAddForm(true)}
+                  className="bg-blue-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-blue-700 transition-colors"
+                >
+                  Add Channel
+                </button>
+              </div>
             </div>
+
+            {cronJobResult && (
+              <div className={`mb-4 p-4 rounded-lg ${cronJobResult.startsWith('Error') ? 'bg-red-50 border border-red-200 text-red-800' : 'bg-green-50 border border-green-200 text-green-800'}`}>
+                <p className="text-sm">{cronJobResult}</p>
+              </div>
+            )}
 
             {channelsLoading ? (
               <p className="text-gray-600">Loading channels...</p>

@@ -2,5 +2,11 @@
   "buildCommand": "pnpm build",
   "installCommand": "pnpm install --no-frozen-lockfile",
   "framework": "nextjs",
-  "regions": ["iad1"]
+  "regions": ["iad1"],
+  "crons": [
+    {
+      "path": "/api/admin/import-recent-videos",
+      "schedule": "0 */6 * * *"
+    }
+  ]
 }
