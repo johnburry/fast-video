@@ -96,7 +96,7 @@ export async function sendCronJobStartedEmail(): Promise<void> {
     const startTime = new Date().toISOString();
     const emailBody = `Video import cron job has started at ${startTime}.
 
-This job will import new videos from the last 72 hours for all channels.`;
+This job will import new videos from the last 4 weeks for all channels.`;
 
     await mg.messages.create(domain, {
       from: `${senderName} <${fromEmail}>`,

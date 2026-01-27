@@ -142,10 +142,10 @@ export async function POST(request: NextRequest) {
           continue;
         }
 
-        // Fetch regular videos (limit to 100 to cover 72 hours)
+        // Fetch regular videos (limit to 100 to cover 4 weeks)
         const regularVideos = await getChannelVideos(youtubeChannelId, 100);
 
-        // Fetch live videos (limit to 100 to cover 72 hours)
+        // Fetch live videos (limit to 100 to cover 4 weeks)
         const liveVideos = await getChannelLiveVideos(youtubeChannelId, 100);
 
         // Combine and deduplicate
@@ -157,15 +157,15 @@ export async function POST(request: NextRequest) {
 
         console.log(`[CRON] Found ${allVideos.length} videos for ${channel.channel_name} (${regularVideos.length} regular, ${liveVideos.length} live)`);
 
-        // Filter videos from last 72 hours
+        // Filter videos from last 4 weeks (672 hours)
         const recentVideos = allVideos.filter(video => {
-          const isRecent = isWithinHours(video.publishedAt, 72);
+          const isRecent = isWithinHours(video.publishedAt, 672);
           if (!isRecent && allVideos.length > 0) {
             console.log(`[CRON] Video filtered out (too old): ${video.title} - published: ${video.publishedAt}`);
           }
           return isRecent;
         });
-        console.log(`[CRON] ${recentVideos.length} videos from last 72 hours for ${channel.channel_name}`);
+        console.log(`[CRON] ${recentVideos.length} videos from last 4 weeks for ${channel.channel_name}`);
 
         if (recentVideos.length === 0) {
           console.log(`[CRON] No recent videos for ${channel.channel_name}, skipping`);
