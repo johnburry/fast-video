@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useAuth } from '@/lib/hooks/useAuth';
 import { AdminToolbar } from '@/components/AdminToolbar';
 
@@ -27,6 +27,9 @@ export default function ManageChannelsPage() {
   const [formError, setFormError] = useState<string | null>(null);
   const [cronJobRunning, setCronJobRunning] = useState(false);
   const [cronJobResult, setCronJobResult] = useState<string | null>(null);
+  const [showLogPopup, setShowLogPopup] = useState(false);
+  const [logLines, setLogLines] = useState<string[]>([]);
+  const logEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     // Set page title
@@ -38,6 +41,13 @@ export default function ManageChannelsPage() {
       fetchTenants();
     }
   }, [user]);
+
+  // Auto-scroll log to bottom when new lines are added
+  useEffect(() => {
+    if (logEndRef.current) {
+      logEndRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [logLines]);
 
   const fetchTenants = async () => {
     try {
@@ -114,10 +124,15 @@ export default function ManageChannelsPage() {
   const handleRunCronJob = async () => {
     setCronJobRunning(true);
     setCronJobResult(null);
+    setShowLogPopup(true);
+    setLogLines(['[INFO] Starting video import job...']);
 
     try {
-      const response = await fetch('/api/admin/import-recent-videos', {
+      const response = await fetch('/api/admin/import-recent-videos-stream', {
         method: 'POST',
+        headers: {
+          'Accept': 'text/event-stream',
+        },
       });
 
       if (!response.ok) {
@@ -125,11 +140,69 @@ export default function ManageChannelsPage() {
         throw new Error(error.error || 'Failed to run cron job');
       }
 
-      const data = await response.json();
-      const totalVideos = data.metrics.channels.reduce((sum: number, ch: any) => sum + ch.videosImported, 0);
-      setCronJobResult(`Successfully imported ${totalVideos} videos from ${data.metrics.channels.length} channels. Elapsed time: ${(data.metrics.elapsedTimeMs / 1000).toFixed(2)}s`);
+      const reader = response.body?.getReader();
+      const decoder = new TextDecoder();
+
+      if (!reader) {
+        throw new Error('No response body');
+      }
+
+      let buffer = '';
+
+      while (true) {
+        const { done, value } = await reader.read();
+
+        if (done) break;
+
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split('\n');
+        buffer = lines.pop() || '';
+
+        for (const line of lines) {
+          if (line.trim()) {
+            try {
+              const data = JSON.parse(line);
+
+              if (data.type === 'log') {
+                setLogLines(prev => [...prev, data.message]);
+              } else if (data.type === 'complete') {
+                const totalVideos = data.metrics.channels.reduce((sum: number, ch: any) => sum + ch.videosImported, 0);
+                setLogLines(prev => [
+                  ...prev,
+                  '',
+                  '[SUCCESS] ========================================',
+                  `[SUCCESS] Job completed in ${(data.metrics.elapsedTimeMs / 1000).toFixed(2)}s`,
+                  `[SUCCESS] Total videos imported: ${totalVideos}`,
+                  `[SUCCESS] Channels processed: ${data.metrics.channels.length}`,
+                  '',
+                  '[METRICS] Per-Channel Results:',
+                  ...data.metrics.channels.map((ch: any) => `  - ${ch.channelName}: ${ch.videosImported} video(s)`),
+                ]);
+
+                if (data.metrics.errors.length > 0) {
+                  setLogLines(prev => [
+                    ...prev,
+                    '',
+                    `[ERROR] Errors encountered: ${data.metrics.errors.length}`,
+                    ...data.metrics.errors.map((err: string) => `  - ${err}`)
+                  ]);
+                }
+
+                setCronJobResult(`Successfully imported ${totalVideos} videos from ${data.metrics.channels.length} channels. Elapsed time: ${(data.metrics.elapsedTimeMs / 1000).toFixed(2)}s`);
+              } else if (data.type === 'error') {
+                setLogLines(prev => [...prev, `[ERROR] ${data.message}`]);
+                setCronJobResult(`Error: ${data.message}`);
+              }
+            } catch (e) {
+              // Ignore JSON parse errors
+            }
+          }
+        }
+      }
     } catch (err) {
-      setCronJobResult(`Error: ${err instanceof Error ? err.message : 'An error occurred'}`);
+      const errorMsg = err instanceof Error ? err.message : 'An error occurred';
+      setLogLines(prev => [...prev, `[ERROR] ${errorMsg}`]);
+      setCronJobResult(`Error: ${errorMsg}`);
     } finally {
       setCronJobRunning(false);
     }
@@ -240,6 +313,68 @@ export default function ManageChannelsPage() {
           </div>
         </div>
       </div>
+
+      {/* Log Popup Modal */}
+      {showLogPopup && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] flex flex-col">
+            <div className="p-6 border-b border-gray-200 flex justify-between items-center">
+              <h2 className="text-2xl font-bold text-gray-900">Video Import Log</h2>
+              <button
+                onClick={() => setShowLogPopup(false)}
+                disabled={cronJobRunning}
+                className="text-gray-400 hover:text-gray-600 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            <div className="flex-1 overflow-y-auto p-6 bg-gray-900 font-mono text-sm">
+              {logLines.map((line, index) => (
+                <div
+                  key={index}
+                  className={`whitespace-pre-wrap ${
+                    line.startsWith('[ERROR]') ? 'text-red-400' :
+                    line.startsWith('[SUCCESS]') ? 'text-green-400' :
+                    line.startsWith('[METRICS]') ? 'text-blue-400' :
+                    line.startsWith('[INFO]') ? 'text-cyan-400' :
+                    'text-gray-300'
+                  }`}
+                >
+                  {line}
+                </div>
+              ))}
+              {cronJobRunning && (
+                <div className="text-yellow-400 animate-pulse mt-2">
+                  Processing...
+                </div>
+              )}
+              <div ref={logEndRef} />
+            </div>
+
+            <div className="p-4 border-t border-gray-200 bg-gray-50 flex justify-end gap-2">
+              <button
+                onClick={() => {
+                  const text = logLines.join('\n');
+                  navigator.clipboard.writeText(text);
+                }}
+                className="px-4 py-2 border border-gray-300 rounded-lg font-medium text-gray-700 hover:bg-gray-100 transition-colors"
+              >
+                Copy Log
+              </button>
+              <button
+                onClick={() => setShowLogPopup(false)}
+                disabled={cronJobRunning}
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
+              >
+                {cronJobRunning ? 'Job Running...' : 'Close'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Add Channel Modal */}
       {showAddForm && (
