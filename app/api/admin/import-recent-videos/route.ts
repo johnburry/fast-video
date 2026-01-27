@@ -56,13 +56,18 @@ function parseRelativeTime(relativeTime: string): string | null {
 // Check if a video is within the last N hours
 function isWithinHours(publishedAt: string, hours: number): boolean {
   const publishedDate = parseRelativeTime(publishedAt);
-  if (!publishedDate) return false;
+  if (!publishedDate) {
+    console.log(`[CRON] Failed to parse date: "${publishedAt}"`);
+    return false;
+  }
 
   const now = new Date();
   const cutoffDate = new Date(now.getTime() - hours * 60 * 60 * 1000);
   const videoDate = new Date(publishedDate);
 
-  return videoDate >= cutoffDate;
+  const isWithin = videoDate >= cutoffDate;
+
+  return isWithin;
 }
 
 export async function POST(request: NextRequest) {
@@ -106,7 +111,14 @@ export async function POST(request: NextRequest) {
     // Process each channel
     for (const channel of channels) {
       try {
-        console.log(`[CRON] Processing channel: ${channel.channel_name} (${channel.youtube_channel_id})`);
+        console.log(`[CRON] Processing channel: ${channel.channel_name} (ID: ${channel.id}, YT ID: ${channel.youtube_channel_id})`);
+
+        // Skip if no YouTube channel ID
+        if (!channel.youtube_channel_id) {
+          console.log(`[CRON] Skipping ${channel.channel_name} - no youtube_channel_id`);
+          metrics.errors.push(`${channel.channel_name}: No YouTube channel ID configured`);
+          continue;
+        }
 
         // Fetch regular videos (limit to 100 to cover 72 hours)
         const regularVideos = await getChannelVideos(channel.youtube_channel_id, 100);
@@ -124,7 +136,13 @@ export async function POST(request: NextRequest) {
         console.log(`[CRON] Found ${allVideos.length} videos for ${channel.channel_name} (${regularVideos.length} regular, ${liveVideos.length} live)`);
 
         // Filter videos from last 72 hours
-        const recentVideos = allVideos.filter(video => isWithinHours(video.publishedAt, 72));
+        const recentVideos = allVideos.filter(video => {
+          const isRecent = isWithinHours(video.publishedAt, 72);
+          if (!isRecent && allVideos.length > 0) {
+            console.log(`[CRON] Video filtered out (too old): ${video.title} - published: ${video.publishedAt}`);
+          }
+          return isRecent;
+        });
         console.log(`[CRON] ${recentVideos.length} videos from last 72 hours for ${channel.channel_name}`);
 
         if (recentVideos.length === 0) {
