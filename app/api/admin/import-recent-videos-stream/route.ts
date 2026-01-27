@@ -75,6 +75,13 @@ export async function POST(request: NextRequest) {
       };
 
       const startTime = Date.now();
+      // Set safety timeout to 4 minutes (240 seconds) to leave 60 seconds buffer before Vercel's 5-minute timeout
+      const MAX_EXECUTION_TIME_MS = 240 * 1000; // 4 minutes
+
+      const isTimeoutApproaching = () => {
+        const elapsed = Date.now() - startTime;
+        return elapsed > MAX_EXECUTION_TIME_MS;
+      };
 
       // Send job started email
       await sendCronJobStartedEmail();
@@ -116,10 +123,23 @@ export async function POST(request: NextRequest) {
         }
 
         log(`[INFO] Processing ${channels.length} channels`);
+        log(`[INFO] Will stop processing after 4 minutes to avoid timeout`);
         log('');
+
+        let timeoutReached = false;
 
         // Process each channel
         for (const channel of channels) {
+          // Check if we're approaching timeout before starting a new channel
+          if (isTimeoutApproaching()) {
+            log('[WARNING] ========================================');
+            log('[WARNING] Approaching timeout limit (4 minutes)');
+            log('[WARNING] Stopping processing to avoid Vercel timeout');
+            log('[WARNING] Run the job again to continue importing remaining channels');
+            timeoutReached = true;
+            break;
+          }
+
           try {
             log(`[INFO] ========================================`);
             log(`[INFO] Channel: ${channel.channel_name}`);
@@ -205,6 +225,14 @@ export async function POST(request: NextRequest) {
 
             // Import each new video
             for (const video of newVideos) {
+              // Check timeout before each video import
+              if (isTimeoutApproaching()) {
+                log('[WARNING] Timeout approaching, stopping video imports for this channel');
+                log(`[WARNING] ${newVideos.length - importedCount} videos remaining for ${channel.channel_name}`);
+                timeoutReached = true;
+                break;
+              }
+
               try {
                 log(`[INFO] Importing: ${video.title}`);
 
@@ -311,6 +339,11 @@ export async function POST(request: NextRequest) {
 
             log(`[SUCCESS] Finished processing ${channel.channel_name}: ${importedCount} videos imported`);
             log('');
+
+            // If timeout was reached during this channel, break out of channel loop
+            if (timeoutReached) {
+              break;
+            }
           } catch (error) {
             log(`[ERROR] Failed to process channel: ${error instanceof Error ? error.message : 'Unknown error'}`);
             metrics.errors.push(`${channel.channel_name}: ${error instanceof Error ? error.message : 'Unknown error'}`);
@@ -320,13 +353,25 @@ export async function POST(request: NextRequest) {
         metrics.elapsedTimeMs = Date.now() - startTime;
 
         log('[INFO] ========================================');
-        log(`[INFO] Job completed in ${(metrics.elapsedTimeMs / 1000).toFixed(2)}s`);
+
+        if (timeoutReached) {
+          log(`[WARNING] Job stopped early after ${(metrics.elapsedTimeMs / 1000).toFixed(2)}s to avoid timeout`);
+          log('[WARNING] Some channels may not have been processed');
+          log('[WARNING] Run the import again to continue processing remaining videos');
+        } else {
+          log(`[SUCCESS] Job completed in ${(metrics.elapsedTimeMs / 1000).toFixed(2)}s`);
+        }
+
         log(`[INFO] Sending completion email...`);
 
         // Send completion email
         await sendCronJobCompletedEmail(metrics);
 
-        controller.enqueue(encoder.encode(JSON.stringify({ type: 'complete', metrics }) + '\n'));
+        controller.enqueue(encoder.encode(JSON.stringify({
+          type: timeoutReached ? 'partial' : 'complete',
+          metrics,
+          timeoutReached
+        }) + '\n'));
         controller.close();
       } catch (error) {
         log(`[ERROR] Fatal error: ${error instanceof Error ? error.message : 'Unknown error'}`);

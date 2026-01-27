@@ -165,19 +165,30 @@ export default function ManageChannelsPage() {
 
               if (data.type === 'log') {
                 setLogLines(prev => [...prev, data.message]);
-              } else if (data.type === 'complete') {
+              } else if (data.type === 'complete' || data.type === 'partial') {
                 const totalVideos = data.metrics.channels.reduce((sum: number, ch: any) => sum + ch.videosImported, 0);
+                const statusLabel = data.type === 'partial' ? '[WARNING]' : '[SUCCESS]';
+
                 setLogLines(prev => [
                   ...prev,
                   '',
-                  '[SUCCESS] ========================================',
-                  `[SUCCESS] Job completed in ${(data.metrics.elapsedTimeMs / 1000).toFixed(2)}s`,
-                  `[SUCCESS] Total videos imported: ${totalVideos}`,
-                  `[SUCCESS] Channels processed: ${data.metrics.channels.length}`,
+                  `${statusLabel} ========================================`,
+                  `${statusLabel} Job ${data.type === 'partial' ? 'partially completed' : 'completed'} in ${(data.metrics.elapsedTimeMs / 1000).toFixed(2)}s`,
+                  `${statusLabel} Total videos imported: ${totalVideos}`,
+                  `${statusLabel} Channels processed: ${data.metrics.channels.length}`,
                   '',
                   '[METRICS] Per-Channel Results:',
                   ...data.metrics.channels.map((ch: any) => `  - ${ch.channelName}: ${ch.videosImported} video(s)`),
                 ]);
+
+                if (data.type === 'partial') {
+                  setLogLines(prev => [
+                    ...prev,
+                    '',
+                    '[WARNING] Job stopped early to avoid timeout',
+                    '[WARNING] Run the import again to process remaining videos'
+                  ]);
+                }
 
                 if (data.metrics.errors.length > 0) {
                   setLogLines(prev => [
@@ -188,7 +199,11 @@ export default function ManageChannelsPage() {
                   ]);
                 }
 
-                setCronJobResult(`Successfully imported ${totalVideos} videos from ${data.metrics.channels.length} channels. Elapsed time: ${(data.metrics.elapsedTimeMs / 1000).toFixed(2)}s`);
+                const resultMsg = data.type === 'partial'
+                  ? `Partially completed: ${totalVideos} videos from ${data.metrics.channels.length} channels. Run again to continue. (${(data.metrics.elapsedTimeMs / 1000).toFixed(2)}s)`
+                  : `Successfully imported ${totalVideos} videos from ${data.metrics.channels.length} channels. (${(data.metrics.elapsedTimeMs / 1000).toFixed(2)}s)`;
+
+                setCronJobResult(resultMsg);
               } else if (data.type === 'error') {
                 setLogLines(prev => [...prev, `[ERROR] ${data.message}`]);
                 setCronJobResult(`Error: ${data.message}`);
@@ -254,7 +269,11 @@ export default function ManageChannelsPage() {
             </div>
 
             {cronJobResult && (
-              <div className={`mb-4 p-4 rounded-lg ${cronJobResult.startsWith('Error') ? 'bg-red-50 border border-red-200 text-red-800' : 'bg-green-50 border border-green-200 text-green-800'}`}>
+              <div className={`mb-4 p-4 rounded-lg ${
+                cronJobResult.startsWith('Error') ? 'bg-red-50 border border-red-200 text-red-800' :
+                cronJobResult.startsWith('Partially') ? 'bg-yellow-50 border border-yellow-200 text-yellow-800' :
+                'bg-green-50 border border-green-200 text-green-800'
+              }`}>
                 <p className="text-sm">{cronJobResult}</p>
               </div>
             )}
@@ -338,6 +357,7 @@ export default function ManageChannelsPage() {
                   className={`whitespace-pre-wrap ${
                     line.startsWith('[ERROR]') ? 'text-red-400' :
                     line.startsWith('[SUCCESS]') ? 'text-green-400' :
+                    line.startsWith('[WARNING]') ? 'text-yellow-400' :
                     line.startsWith('[METRICS]') ? 'text-blue-400' :
                     line.startsWith('[INFO]') ? 'text-cyan-400' :
                     'text-gray-300'
