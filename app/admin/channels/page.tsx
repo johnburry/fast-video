@@ -21,6 +21,7 @@ export default function ManageChannelsPage() {
     externalLink: '',
     externalLinkName: '',
     tenantId: '',
+    isMusicChannel: false,
   });
   const [tenants, setTenants] = useState<any[]>([]);
   const [submitting, setSubmitting] = useState(false);
@@ -112,6 +113,7 @@ export default function ManageChannelsPage() {
         externalLink: '',
         externalLinkName: '',
         tenantId: '',
+        isMusicChannel: false,
       });
       setShowAddForm(false);
     } catch (err) {
@@ -588,6 +590,25 @@ export default function ManageChannelsPage() {
                   <p className="mt-1 text-sm text-gray-500">
                     Optional: Display name for the external link
                   </p>
+                </div>
+
+                <div className="flex items-start gap-3 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                  <input
+                    type="checkbox"
+                    id="isMusicChannel"
+                    checked={formData.isMusicChannel}
+                    onChange={(e) => setFormData({ ...formData, isMusicChannel: e.target.checked })}
+                    className="mt-1 w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                    disabled={submitting}
+                  />
+                  <div className="flex-1">
+                    <label htmlFor="isMusicChannel" className="block text-sm font-medium text-gray-900">
+                      Music Channel (Skip Transcription)
+                    </label>
+                    <p className="mt-1 text-sm text-gray-600">
+                      Enable this for music channels where transcription is not needed. Videos will be imported without attempting to fetch transcripts.
+                    </p>
+                  </div>
                 </div>
 
                 {formError && (

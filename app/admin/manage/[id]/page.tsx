@@ -24,6 +24,7 @@ interface Channel {
   channelHistory: string | null;
   introVideoPlaybackId: string | null;
   tenantId: string | null;
+  isMusicChannel: boolean;
 }
 
 export default function ManageChannelPage({
@@ -51,6 +52,7 @@ export default function ManageChannelPage({
   const [externalLink, setExternalLink] = useState('');
   const [externalLinkName, setExternalLinkName] = useState('');
   const [isActive, setIsActive] = useState(true);
+  const [isMusicChannel, setIsMusicChannel] = useState(false);
   const [subscriptionType, setSubscriptionType] = useState('trial');
   const [subscriptionStartDate, setSubscriptionStartDate] = useState('');
   const [channelHistory, setChannelHistory] = useState('');
@@ -107,6 +109,7 @@ export default function ManageChannelPage({
       setExternalLink(ch.externalLink || '');
       setExternalLinkName(ch.externalLinkName || '');
       setIsActive(ch.isActive !== false);
+      setIsMusicChannel(ch.isMusicChannel || false);
       setSubscriptionType(ch.subscriptionType || 'trial');
       setSubscriptionStartDate(ch.subscriptionStartDate ? ch.subscriptionStartDate.split('T')[0] : '');
       setChannelHistory(ch.channelHistory || '');
@@ -177,6 +180,7 @@ export default function ManageChannelPage({
           externalLink,
           externalLinkName,
           isActive,
+          isMusicChannel,
           subscriptionType,
           subscriptionStartDate: subscriptionStartDate || null,
           channelHistory: updatedHistory,
@@ -794,6 +798,24 @@ export default function ManageChannelPage({
               <label htmlFor="isActive" className="text-sm font-medium text-gray-700">
                 Channel is active (visible to public)
               </label>
+            </div>
+
+            <div className="flex items-start gap-3 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+              <input
+                type="checkbox"
+                id="isMusicChannel"
+                checked={isMusicChannel}
+                onChange={(e) => setIsMusicChannel(e.target.checked)}
+                className="mt-1 w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+              />
+              <div className="flex-1">
+                <label htmlFor="isMusicChannel" className="block text-sm font-medium text-gray-900">
+                  Music Channel (Skip Transcription)
+                </label>
+                <p className="mt-1 text-sm text-gray-600">
+                  Enable this for music channels where transcription is not needed. Videos will be imported without attempting to fetch transcripts.
+                </p>
+              </div>
             </div>
 
             <button

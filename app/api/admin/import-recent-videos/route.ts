@@ -88,7 +88,7 @@ async function runImportJob(request: NextRequest) {
     // Fetch all channels
     const { data: channels, error: channelsError } = await supabaseAdmin
       .from('channels')
-      .select('id, channel_name, youtube_channel_id, youtube_channel_handle')
+      .select('id, channel_name, youtube_channel_id, youtube_channel_handle, is_music_channel')
       .order('channel_name');
 
     if (channelsError) {
@@ -230,6 +230,13 @@ async function runImportJob(request: NextRequest) {
             }
 
             const videoId = newVideo.id;
+
+            // Skip transcript fetching for music channels
+            if (channel.is_music_channel) {
+              console.log(`[CRON] Skipping transcript fetch for music channel`);
+              importedCount++;
+              continue;
+            }
 
             // Fetch transcript
             console.log(`[CRON] Fetching transcript for ${video.videoId}...`);
