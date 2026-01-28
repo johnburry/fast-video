@@ -111,6 +111,7 @@ export async function GET(
         externalLinkName: channel.external_link_name,
         helloVideoUrl: channel.hello_video_url,
         isActive: channel.is_active,
+        isMusicChannel: channel.is_music_channel,
         subscriptionType: channel.subscription_type,
         subscriptionStartDate: channel.subscription_start_date,
         channelHistory: channel.channel_history,
