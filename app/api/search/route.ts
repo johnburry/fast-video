@@ -31,11 +31,12 @@ export async function GET(request: NextRequest) {
 
     const tenantId = tenantData?.id;
 
-    // Search transcripts - also get video_id for fetching previous segments
+    // Search transcripts using cross-segment search context
+    // This allows finding phrases that span across segment boundaries
     let transcriptSearchQuery = supabase
-      .from('search_results')
+      .from('transcript_search_context')
       .select('*, video_id')
-      .textSearch('text', query, {
+      .textSearch('search_text', query, {
         type: 'websearch',
         config: 'english',
       })
@@ -136,7 +137,7 @@ export async function GET(request: NextRequest) {
       return {
         ...result,
         previousStartTime: playbackStartTime,
-        displayText: result.text, // Just show the matched segment
+        displayText: result.original_text || result.text, // Just show the matched segment
       };
     });
 

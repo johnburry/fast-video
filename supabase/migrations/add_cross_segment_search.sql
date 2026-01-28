@@ -83,7 +83,8 @@ select
   c.id as channel_id,
   c.channel_handle,
   c.channel_name,
-  c.thumbnail_url as channel_thumbnail
+  c.thumbnail_url as channel_thumbnail,
+  c.tenant_id
 from public.transcripts t
 join public.videos v on t.video_id = v.id
 join public.channels c on v.channel_id = c.id

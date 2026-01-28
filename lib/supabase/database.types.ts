@@ -178,6 +178,26 @@ export interface Database {
           channel_thumbnail: string | null
         }
       }
+      transcript_search_context: {
+        Row: {
+          transcript_id: string
+          video_id: string
+          original_text: string
+          start_time: number
+          duration: number
+          search_text: string
+          youtube_video_id: string
+          video_title: string
+          video_thumbnail: string | null
+          published_at: string | null
+          video_duration: number | null
+          channel_id: string
+          channel_handle: string
+          channel_name: string
+          channel_thumbnail: string | null
+          tenant_id: string | null
+        }
+      }
     }
     Functions: {
       [_ in never]: never
