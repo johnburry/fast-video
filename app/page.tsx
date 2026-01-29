@@ -361,7 +361,7 @@ export default function Home() {
                 Share Powerful Quotes
               </h3>
               <p className="text-gray-600">
-                AI generates the top 10 most powerful quotes from each sermon. Each quote is presented in a beautiful, shareable format that links directly to the exact moment in the video.
+                AI generates the top 10 most powerful quotes for each video. Each quote is presented in a beautiful, shareable format that links directly to the exact moment in the video.
               </p>
             </div>
           </div>
@@ -398,40 +398,47 @@ export default function Home() {
           </h2>
 
           <div className="grid md:grid-cols-3 gap-8">
-            {channels && channels.map((channel) => (
-              <a
-                key={channel.id}
-                href={`https://${channel.channel_handle}.playsermons.com`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="bg-white rounded-xl shadow-lg hover:shadow-xl transition-shadow overflow-hidden border-2 border-purple-100 hover:border-purple-300 cursor-pointer group"
-              >
-                <div className="p-6">
-                  <div className="flex items-center space-x-4 mb-4">
-                    {channel.thumbnail_url && (
-                      <img
-                        src={channel.thumbnail_url}
-                        alt={channel.channel_name}
-                        className="w-20 h-20 rounded-full object-cover"
-                      />
+            {channels && channels.map((channel) => {
+              // Use cotr.video for Church on The Ridge
+              const channelUrl = channel.channel_handle === 'churchontheridge'
+                ? 'https://cotr.video'
+                : `https://${channel.channel_handle}.playsermons.com`;
+
+              return (
+                <a
+                  key={channel.id}
+                  href={channelUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="bg-white rounded-xl shadow-lg hover:shadow-xl transition-shadow overflow-hidden border-2 border-purple-100 hover:border-purple-300 cursor-pointer group"
+                >
+                  <div className="p-6">
+                    <div className="flex items-center space-x-4 mb-4">
+                      {channel.thumbnail_url && (
+                        <img
+                          src={channel.thumbnail_url}
+                          alt={channel.channel_name}
+                          className="w-20 h-20 rounded-full object-cover"
+                        />
+                      )}
+                      <div className="flex-1">
+                        <h3 className="text-xl font-bold text-gray-900 group-hover:text-purple-600 transition-colors">
+                          {channel.channel_name}
+                        </h3>
+                      </div>
+                    </div>
+                    {channel.channel_description && (
+                      <p className="text-gray-600 text-sm line-clamp-3">
+                        {channel.channel_description}
+                      </p>
                     )}
-                    <div className="flex-1">
-                      <h3 className="text-xl font-bold text-gray-900 group-hover:text-purple-600 transition-colors">
-                        {channel.channel_name}
-                      </h3>
+                    <div className="mt-4 flex items-center text-purple-600 font-medium text-sm group-hover:translate-x-1 transition-transform">
+                      Try it out →
                     </div>
                   </div>
-                  {channel.channel_description && (
-                    <p className="text-gray-600 text-sm line-clamp-3">
-                      {channel.channel_description}
-                    </p>
-                  )}
-                  <div className="mt-4 flex items-center text-purple-600 font-medium text-sm group-hover:translate-x-1 transition-transform">
-                    Try it out →
-                  </div>
-                </div>
-              </a>
-            ))}
+                </a>
+              );
+            })}
           </div>
         </div>
 
