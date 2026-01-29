@@ -308,7 +308,7 @@ export default function Home() {
             How PlaySermons Works
           </h2>
 
-          <div className="grid md:grid-cols-3 gap-8 mb-8">
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8 mb-8">
             {/* Step 1 */}
             <div className="bg-white rounded-xl shadow-lg p-8 text-center border-2 border-purple-100 relative">
               <div className="absolute -top-5 left-1/2 transform -translate-x-1/2 bg-purple-600 text-white rounded-full w-10 h-10 flex items-center justify-center font-bold text-lg">
@@ -348,6 +348,20 @@ export default function Home() {
               </h3>
               <p className="text-gray-600">
                 Click any result to jump directly to that exact timestamp in the video. No more scrubbing through hours of content.
+              </p>
+            </div>
+
+            {/* Step 4 - AI Quotes */}
+            <div className="bg-white rounded-xl shadow-lg p-8 text-center border-2 border-blue-100 relative">
+              <div className="absolute -top-5 left-1/2 transform -translate-x-1/2 bg-blue-600 text-white rounded-full w-10 h-10 flex items-center justify-center font-bold text-lg">
+                4
+              </div>
+              <div className="text-5xl mb-4">✨</div>
+              <h3 className="text-xl font-bold text-gray-900 mb-3">
+                Share Powerful Quotes
+              </h3>
+              <p className="text-gray-600">
+                AI generates the top 10 most powerful quotes from each sermon. Each quote is presented in a beautiful, shareable format that links directly to the exact moment in the video.
               </p>
             </div>
           </div>
