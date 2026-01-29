@@ -408,8 +408,9 @@ export default function Home() {
               } else if (channel.channel_handle) {
                 channelUrl = `https://${channel.channel_handle}.playsermons.com`;
               } else {
-                // Fallback: use channel ID if no handle exists
-                channelUrl = `https://playsermons.com/${channel.id}`;
+                // Fallback: use tenant domain with channel ID if no handle exists
+                const tenantDomain = channel.tenant_domain || 'playsermons.com';
+                channelUrl = `https://${tenantDomain}/${channel.id}`;
               }
 
               return (
