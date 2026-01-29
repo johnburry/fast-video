@@ -399,14 +399,18 @@ export default function Home() {
 
           <div className="grid md:grid-cols-3 gap-8">
             {channels && channels.map((channel) => {
-              // Special case mappings for channels
+              // Explicit URL mappings for all three featured channels
               let channelUrl;
 
-              // Church on The Ridge - swapped IDs to test
-              if (channel.id === '5213fa50-0dc8-4bb1-8b2b-0d393bdd51ab') {
+              // Calvary Chapel Chino Hills
+              if (channel.id === 'a5c701d0-fd07-44ff-b547-44dc61ac9cc9') {
+                channelUrl = 'https://calvarychapelchinohills.playsermons.com';
+              }
+              // Church on The Ridge
+              else if (channel.id === '5213fa50-0dc8-4bb1-8b2b-0d393bdd51ab') {
                 channelUrl = 'https://cotr.video';
               }
-              // Harvest Church - swapped IDs to test
+              // Harvest Church
               else if (channel.id === '51066ca5-daa2-4056-a88d-210140957793') {
                 channelUrl = 'https://harvest.playsermons.com';
               }
