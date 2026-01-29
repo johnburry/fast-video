@@ -404,11 +404,11 @@ export default function Home() {
 
               // #1 Calvary Chapel Chino Hills
               if (channel.id === 'a5c701d0-fd07-44ff-b547-44dc61ac9cc9') {
-                channelUrl = 'https://ccch.playsermons.com';
+                channelUrl = 'https://cotr.video';
               }
               // #2 Church on the Ridge
               else if (channel.id === '5213fa50-0dc8-4bb1-8b2b-0d393bdd51ab') {
-                channelUrl = 'https://cotr.video';
+                channelUrl = 'https://ccch.playsermons.com';
               }
               // #3 Harvest Church
               else if (channel.id === '51066ca5-daa2-4056-a88d-210140957793') {
