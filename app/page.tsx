@@ -109,19 +109,23 @@ export default function Home() {
           {/* Header with Logo and Name */}
           <div className="text-center mb-12 w-full">
             {tenantConfig.logo.type === 'image' && tenantConfig.logo.imageUrl ? (
-              <img
-                src={tenantConfig.logo.imageUrl}
-                alt={tenantConfig.logo.altText}
-                className="h-32 w-auto mx-auto mb-6"
-              />
+              <>
+                <img
+                  src={tenantConfig.logo.imageUrl}
+                  alt={tenantConfig.logo.altText}
+                  className="h-32 w-auto mx-auto mb-6"
+                />
+              </>
             ) : (
-              <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-6 px-4">
-                {tenantConfig.logo.text || tenantConfig.name}
-              </h1>
+              <>
+                <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-6 px-4">
+                  {tenantConfig.logo.text || tenantConfig.name}
+                </h1>
+                <h2 className="text-base sm:text-lg md:text-xl lg:text-2xl xl:text-3xl font-semibold text-gray-800 mb-2 break-words leading-tight w-full">
+                  {tenantConfig.name}
+                </h2>
+              </>
             )}
-            <h2 className="text-base sm:text-lg md:text-xl lg:text-2xl xl:text-3xl font-semibold text-gray-800 mb-2 break-words leading-tight w-full">
-              {tenantConfig.name}
-            </h2>
             {tenantConfig.tagline && (
               <p className="text-sm sm:text-base md:text-lg text-gray-600 max-w-2xl mx-auto px-4">
                 {tenantConfig.tagline}
