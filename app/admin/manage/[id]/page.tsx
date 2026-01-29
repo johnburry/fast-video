@@ -538,8 +538,8 @@ export default function ManageChannelPage({
                 onChange={(e) => setChannelHandle(e.target.value)}
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 required
-                pattern="[a-z0-9\-]+"
-                title="Only lowercase letters, numbers, and hyphens are allowed"
+                pattern="[a-z0-9.\-]+"
+                title="Only lowercase letters, numbers, periods, and hyphens are allowed"
               />
               <p className="mt-2 text-sm text-gray-500">
                 Used in the URL: {channelHandle}.{tenantDomain}

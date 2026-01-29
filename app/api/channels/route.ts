@@ -3,11 +3,11 @@ import { supabaseAdmin } from '@/lib/supabase/server';
 
 // Sanitize handle for use as subdomain (replace invalid characters with hyphens)
 function sanitizeHandleForSubdomain(handle: string): string {
-  // Subdomains can only contain: a-z, 0-9, and hyphens (-)
+  // Subdomains can only contain: a-z, 0-9, hyphens (-), and periods (.)
   // Cannot start or end with hyphen, cannot have consecutive hyphens
   return handle
     .toLowerCase()
-    .replace(/[^a-z0-9-]/g, '-') // Replace invalid chars with hyphen
+    .replace(/[^a-z0-9.-]/g, '-') // Replace invalid chars with hyphen (allow periods)
     .replace(/^-+|-+$/g, '')      // Remove leading/trailing hyphens
     .replace(/-{2,}/g, '-');       // Replace consecutive hyphens with single hyphen
 }
