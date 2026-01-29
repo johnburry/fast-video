@@ -399,10 +399,20 @@ export default function Home() {
 
           <div className="grid md:grid-cols-3 gap-8">
             {channels && channels.map((channel) => {
-              // Use cotr.video for Church on The Ridge
-              const channelUrl = channel.channel_handle === 'churchontheridge'
-                ? 'https://cotr.video'
-                : `https://${channel.channel_handle}.playsermons.com`;
+              // Use cotr.video for Church on The Ridge (by ID or name check)
+              const isChurchOnTheRidge =
+                channel.id === '51066ca5-daa2-4056-a88d-210140957793' ||
+                channel.channel_name?.toLowerCase().includes('church on the ridge');
+
+              let channelUrl;
+              if (isChurchOnTheRidge) {
+                channelUrl = 'https://cotr.video';
+              } else if (channel.channel_handle) {
+                channelUrl = `https://${channel.channel_handle}.playsermons.com`;
+              } else {
+                // Fallback: use channel ID if no handle exists
+                channelUrl = `https://playsermons.com/${channel.id}`;
+              }
 
               return (
                 <a
