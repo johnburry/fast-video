@@ -399,26 +399,25 @@ export default function Home() {
 
           <div className="grid md:grid-cols-3 gap-8">
             {channels && channels.map((channel) => {
-              // Explicit URL mappings for all three featured channels
+              // Hardcoded URL mappings for the three featured churches
               let channelUrl;
 
-              // Calvary Chapel Chino Hills
+              // #1 Calvary Chapel Chino Hills
               if (channel.id === 'a5c701d0-fd07-44ff-b547-44dc61ac9cc9') {
-                channelUrl = 'https://calvarychapelchinohills.playsermons.com';
+                channelUrl = 'https://ccch.playsermons.com';
               }
-              // Church on The Ridge
+              // #2 Church on the Ridge
               else if (channel.id === '5213fa50-0dc8-4bb1-8b2b-0d393bdd51ab') {
                 channelUrl = 'https://cotr.video';
               }
-              // Harvest Church
+              // #3 Harvest Church
               else if (channel.id === '51066ca5-daa2-4056-a88d-210140957793') {
                 channelUrl = 'https://harvest.playsermons.com';
               }
-              // Channels with handles use subdomain format
+              // Fallback for any other channels
               else if (channel.channel_handle) {
                 channelUrl = `https://${channel.channel_handle}.playsermons.com`;
               }
-              // Fallback: use tenant domain with channel ID if no handle exists
               else {
                 const tenantDomain = channel.tenant_domain || 'playsermons.com';
                 channelUrl = `https://${tenantDomain}/${channel.id}`;
