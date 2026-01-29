@@ -402,12 +402,12 @@ export default function Home() {
               // Special case mappings for channels
               let channelUrl;
 
-              // Church on The Ridge
-              if (channel.id === '51066ca5-daa2-4056-a88d-210140957793') {
+              // Church on The Ridge - swapped IDs to test
+              if (channel.id === '5213fa50-0dc8-4bb1-8b2b-0d393bdd51ab') {
                 channelUrl = 'https://cotr.video';
               }
-              // Harvest Church
-              else if (channel.id === '5213fa50-0dc8-4bb1-8b2b-0d393bdd51ab') {
+              // Harvest Church - swapped IDs to test
+              else if (channel.id === '51066ca5-daa2-4056-a88d-210140957793') {
                 channelUrl = 'https://harvest.playsermons.com';
               }
               // Channels with handles use subdomain format
