@@ -143,15 +143,18 @@ export async function POST(request: NextRequest) {
         // Check if channel already exists (by handle, youtube_channel_handle, or youtube_channel_id)
         const { data: existingChannels } = await supabaseAdmin
       .from('channels')
-      .select('id, channel_handle, youtube_channel_id')
+      .select('id, channel_handle, youtube_channel_id, is_music_channel')
       .or(`channel_handle.eq.${channelInfo.handle},youtube_channel_handle.eq.${channelInfo.handle},youtube_channel_id.eq.${channelInfo.channelId}`)
       .limit(1);
 
     let channelId: string;
+    let isMusicChannel = false;
 
     if (existingChannels && existingChannels.length > 0) {
       // @ts-ignore - Supabase type inference issue
       channelId = existingChannels[0].id;
+      // @ts-ignore - Supabase type inference issue
+      isMusicChannel = existingChannels[0].is_music_channel || false;
       console.log(`Channel @${channelInfo.handle} already exists, updating...`);
 
       // Fetch the existing channel to check if channel_name is empty
@@ -633,8 +636,8 @@ export async function POST(request: NextRequest) {
           ? processedVideoIds.map(id => ({ id }))
           : [];
 
-        // Generate embeddings for all videos with transcripts (if OpenAI API key is available)
-        if (process.env.OPENAI_API_KEY && videosForEmbeddings.length > 0) {
+        // Generate embeddings for all videos with transcripts (if OpenAI API key is available and not a music channel)
+        if (process.env.OPENAI_API_KEY && videosForEmbeddings.length > 0 && !isMusicChannel) {
           const embeddingsStartTime = Date.now();
           sendProgress({ type: 'status', message: 'Generating AI embeddings for semantic search...' });
           console.log(`[EMBEDDINGS] Starting embedding generation for ${videosForEmbeddings.length} newly imported videos (out of ${channelVideos?.length || 0} total)`);
@@ -682,6 +685,12 @@ export async function POST(request: NextRequest) {
           sendProgress({
             type: 'status',
             message: `✓ Generated ${embeddingsGenerated} AI embeddings for semantic search`
+          });
+        } else if (isMusicChannel) {
+          console.log('[EMBEDDINGS] Skipping embedding generation - music channel detected');
+          sendProgress({
+            type: 'status',
+            message: 'Skipped AI embeddings for music channel'
           });
         } else if (!process.env.OPENAI_API_KEY) {
           console.log('[EMBEDDINGS] Skipping embedding generation - OPENAI_API_KEY not configured');

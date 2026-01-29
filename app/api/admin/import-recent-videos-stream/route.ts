@@ -301,8 +301,8 @@ export async function POST(request: NextRequest) {
                       .update({ has_transcript: true })
                       .eq('id', videoId);
 
-                    // Generate embeddings
-                    if (process.env.OPENAI_API_KEY) {
+                    // Generate embeddings (skip for music channels)
+                    if (process.env.OPENAI_API_KEY && !channel.is_music_channel) {
                       log(`[INFO] Generating embeddings...`);
                       try {
                         const response = await fetch(new URL('/api/embeddings/generate', request.url), {
@@ -321,6 +321,8 @@ export async function POST(request: NextRequest) {
                         log(`[ERROR] Error generating embeddings`);
                         metrics.errors.push(`${channel.channel_name}: Error generating embeddings for ${video.title}`);
                       }
+                    } else if (channel.is_music_channel) {
+                      log(`[INFO] Skipping embedding generation for music channel`);
                     }
 
                     log(`[SUCCESS] Video imported successfully`);
