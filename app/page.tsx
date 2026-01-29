@@ -485,7 +485,7 @@ export default function Home() {
                 Your Own Branded Search Portal
               </h3>
               <p className="text-gray-600 leading-relaxed">
-                Get a custom URL (like <strong>yourchurch.playsermons.com</strong>) to share with your congregation. Simple, professional, and always up-to-date.
+                Get a custom URL (like <strong>yourchurch.video</strong>) to share with your congregation. Simple, professional, and always up-to-date.
               </p>
             </div>
           </div>
