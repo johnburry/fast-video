@@ -399,16 +399,23 @@ export default function Home() {
 
           <div className="grid md:grid-cols-3 gap-8">
             {channels && channels.map((channel) => {
-              // Use cotr.video for Church on The Ridge (by specific ID only)
-              const isChurchOnTheRidge = channel.id === '51066ca5-daa2-4056-a88d-210140957793';
-
+              // Special case mappings for channels
               let channelUrl;
-              if (isChurchOnTheRidge) {
+
+              // Church on The Ridge
+              if (channel.id === '51066ca5-daa2-4056-a88d-210140957793') {
                 channelUrl = 'https://cotr.video';
-              } else if (channel.channel_handle) {
+              }
+              // Harvest Church
+              else if (channel.id === '5213fa50-0dc8-4bb1-8b2b-0d393bdd51ab') {
+                channelUrl = 'https://harvest.playsermons.com';
+              }
+              // Channels with handles use subdomain format
+              else if (channel.channel_handle) {
                 channelUrl = `https://${channel.channel_handle}.playsermons.com`;
-              } else {
-                // Fallback: use tenant domain with channel ID if no handle exists
+              }
+              // Fallback: use tenant domain with channel ID if no handle exists
+              else {
                 const tenantDomain = channel.tenant_domain || 'playsermons.com';
                 channelUrl = `https://${tenantDomain}/${channel.id}`;
               }
