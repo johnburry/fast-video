@@ -77,17 +77,19 @@ export function getTenantConfig(hostname?: string): TenantConfig {
     }
   }
 
-  // Remove port if present (e.g., localhost:3000)
-  const domain = hostname.split(':')[0];
+  // Remove port if present (e.g., localhost:3000) and convert to lowercase
+  const domain = hostname.split(':')[0].toLowerCase();
 
-  // Check for exact match
-  if (tenantConfigs[domain]) {
-    return tenantConfigs[domain];
+  // Check for exact match (case insensitive)
+  for (const [configDomain, config] of Object.entries(tenantConfigs)) {
+    if (domain === configDomain.toLowerCase()) {
+      return config;
+    }
   }
 
-  // Check for subdomain matches (e.g., www.playsermons.com)
+  // Check for subdomain matches (e.g., www.playsermons.com, case insensitive)
   for (const [configDomain, config] of Object.entries(tenantConfigs)) {
-    if (domain.endsWith(configDomain)) {
+    if (domain.endsWith(configDomain.toLowerCase())) {
       return config;
     }
   }
@@ -120,7 +122,7 @@ export function transformDbTenant(dbTenant: any): TenantConfig {
 
 // Server-side function to get tenant config from database
 export async function getServerTenantConfig(hostname: string): Promise<TenantConfig> {
-  const cleanDomain = hostname.split(':')[0];
+  const cleanDomain = hostname.split(':')[0].toLowerCase();
 
   try {
     const { createClient } = await import('@supabase/supabase-js');
@@ -128,11 +130,11 @@ export async function getServerTenantConfig(hostname: string): Promise<TenantCon
     const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    // Try exact match first
+    // Try exact match first (case insensitive)
     let { data: tenant, error } = await supabase
       .from('tenants')
       .select('*')
-      .eq('domain', cleanDomain)
+      .ilike('domain', cleanDomain)
       .eq('is_active', true)
       .single();
 
@@ -144,7 +146,7 @@ export async function getServerTenantConfig(hostname: string): Promise<TenantCon
         .eq('is_active', true);
 
       if (!allError && allTenants) {
-        tenant = allTenants.find((t: any) => cleanDomain.endsWith(t.domain)) || null;
+        tenant = allTenants.find((t: any) => cleanDomain.endsWith(t.domain.toLowerCase())) || null;
       }
     }
 

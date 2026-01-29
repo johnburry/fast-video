@@ -18,14 +18,14 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Remove port if present (e.g., localhost:3000)
-    const cleanDomain = domain.split(':')[0];
+    // Remove port if present (e.g., localhost:3000) and convert to lowercase
+    const cleanDomain = domain.split(':')[0].toLowerCase();
 
-    // Try exact match first
+    // Try exact match first (case insensitive)
     let { data: tenant, error } = await supabase
       .from('tenants')
       .select('*')
-      .eq('domain', cleanDomain)
+      .ilike('domain', cleanDomain)
       .eq('is_active', true)
       .single();
 
@@ -37,8 +37,8 @@ export async function GET(request: NextRequest) {
         .eq('is_active', true);
 
       if (!allError && allTenants) {
-        // Find a tenant whose domain matches as a parent domain
-        tenant = allTenants.find((t) => cleanDomain.endsWith(t.domain)) || null;
+        // Find a tenant whose domain matches as a parent domain (case insensitive)
+        tenant = allTenants.find((t) => cleanDomain.endsWith(t.domain.toLowerCase())) || null;
       }
     }
 
