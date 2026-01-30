@@ -10,9 +10,15 @@ export function TenantTitle() {
     if (!tenantConfig.isLoading) {
       // Update document title based on tenant tagline or name
       const title = tenantConfig.tagline || tenantConfig.name;
-      document.title = title;
+
+      // For PlaySermons.com, prepend domain to title
+      const pageTitle = tenantConfig.domain === 'playsermons.com'
+        ? `PlaySermons.com - ${title}`
+        : title;
+
+      document.title = pageTitle;
     }
-  }, [tenantConfig.isLoading, tenantConfig.tagline, tenantConfig.name]);
+  }, [tenantConfig.isLoading, tenantConfig.tagline, tenantConfig.name, tenantConfig.domain]);
 
   return null;
 }
