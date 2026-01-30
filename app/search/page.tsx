@@ -286,10 +286,21 @@ function SearchContent() {
                     className="border-l-4 border-blue-500 pl-3 py-2 bg-gray-50 cursor-pointer hover:bg-gray-100 transition-colors"
                     onClick={() => {
                       if (selectedVideo.youtubeVideoId && selectedVideo.startTime) {
-                        // Reload the iframe with the timestamp and autoplay
-                        const iframe = document.querySelector('iframe[src*="youtube.com/embed"]') as HTMLIFrameElement;
-                        if (iframe) {
-                          iframe.src = `https://www.youtube.com/embed/${selectedVideo.youtubeVideoId}?start=${Math.floor(selectedVideo.startTime)}&autoplay=1`;
+                        const startTime = Math.floor(selectedVideo.startTime);
+
+                        // On iOS, open in YouTube app for better autoplay support
+                        // On desktop, try to update iframe
+                        const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+
+                        if (isIOS) {
+                          // Open in YouTube app/browser on iOS
+                          window.open(`https://www.youtube.com/watch?v=${selectedVideo.youtubeVideoId}&t=${startTime}s`, '_blank');
+                        } else {
+                          // Reload the iframe with the timestamp and autoplay on desktop
+                          const iframe = document.querySelector('iframe[src*="youtube.com/embed"]') as HTMLIFrameElement;
+                          if (iframe) {
+                            iframe.src = `https://www.youtube.com/embed/${selectedVideo.youtubeVideoId}?start=${startTime}&autoplay=1`;
+                          }
                         }
                       }
                     }}
