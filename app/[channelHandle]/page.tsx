@@ -761,16 +761,7 @@ export default function ChannelPage({
                       {videoQuotes.map((quote) => (
                         <div
                           key={quote.index}
-                          className="bg-white rounded-lg p-4 shadow-md hover:shadow-lg transition-shadow cursor-pointer relative"
-                          onClick={() => {
-                            // Reload the iframe with the quote timestamp and autoplay
-                            // Start 3 seconds before the quote to give context
-                            const iframe = document.querySelector('iframe[src*="youtube.com/embed"]') as HTMLIFrameElement;
-                            if (iframe) {
-                              const startTime = Math.max(0, Math.floor(quote.startTime - 3));
-                              iframe.src = `https://www.youtube.com/embed/${selectedVideo.youtubeVideoId}?start=${startTime}&autoplay=1`;
-                            }
-                          }}
+                          className="bg-white rounded-lg p-4 shadow-md hover:shadow-lg transition-shadow relative"
                         >
                           <div className="flex items-start gap-3 mb-12">
                             <div className="flex-shrink-0 w-10 h-10 bg-blue-600 text-white rounded-full flex items-center justify-center font-bold text-base">
@@ -778,7 +769,18 @@ export default function ChannelPage({
                             </div>
                             <div className="flex-1">
                               <p className="text-gray-900 text-base mb-3 leading-relaxed">{quote.text}</p>
-                              <div className="flex items-center gap-2">
+                              <button
+                                onClick={() => {
+                                  // Reload the iframe with the quote timestamp and autoplay
+                                  // Start 3 seconds before the quote to give context
+                                  const iframe = document.querySelector('iframe[src*="youtube.com/embed"]') as HTMLIFrameElement;
+                                  if (iframe) {
+                                    const startTime = Math.max(0, Math.floor(quote.startTime - 3));
+                                    iframe.src = `https://www.youtube.com/embed/${selectedVideo.youtubeVideoId}?start=${startTime}&autoplay=1`;
+                                  }
+                                }}
+                                className="flex items-center gap-2 cursor-pointer hover:opacity-80 transition-opacity"
+                              >
                                 <span className="text-sm font-medium text-blue-600">
                                   {formatTimestamp(quote.startTime)}
                                 </span>
@@ -786,12 +788,12 @@ export default function ChannelPage({
                                   <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
                                 </svg>
                                 <span className="text-sm hover:underline" style={{ color: '#FF0000' }}>Play from here</span>
-                              </div>
+                              </button>
                             </div>
                           </div>
                           {/* Share button positioned at bottom right */}
                           <button
-                            onClick={(e) => {
+                            onClick={(e: React.MouseEvent) => {
                               e.preventDefault();
                               e.stopPropagation();
                               // Generate quote page URL
@@ -803,8 +805,7 @@ export default function ChannelPage({
                                 alert('Failed to copy link');
                               });
                             }}
-                            className="absolute bottom-4 right-4 bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg transition-colors text-sm pointer-events-auto"
-                            style={{ zIndex: 20 }}
+                            className="absolute bottom-4 right-4 bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg transition-colors text-sm"
                           >
                             Share
                           </button>
