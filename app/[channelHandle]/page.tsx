@@ -771,12 +771,22 @@ export default function ChannelPage({
                               <p className="text-gray-900 text-base mb-3 leading-relaxed">{quote.text}</p>
                               <button
                                 onClick={() => {
-                                  // Reload the iframe with the quote timestamp and autoplay
                                   // Start 3 seconds before the quote to give context
-                                  const iframe = document.querySelector('iframe[src*="youtube.com/embed"]') as HTMLIFrameElement;
-                                  if (iframe) {
-                                    const startTime = Math.max(0, Math.floor(quote.startTime - 3));
-                                    iframe.src = `https://www.youtube.com/embed/${selectedVideo.youtubeVideoId}?start=${startTime}&autoplay=1`;
+                                  const startTime = Math.max(0, Math.floor(quote.startTime - 3));
+
+                                  // On iOS, open in YouTube app for better autoplay support
+                                  // On desktop, try to update iframe
+                                  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+
+                                  if (isIOS) {
+                                    // Open in YouTube app/browser on iOS
+                                    window.open(`https://www.youtube.com/watch?v=${selectedVideo.youtubeVideoId}&t=${startTime}s`, '_blank');
+                                  } else {
+                                    // Try to reload iframe on desktop
+                                    const iframe = document.querySelector('iframe[src*="youtube.com/embed"]') as HTMLIFrameElement;
+                                    if (iframe) {
+                                      iframe.src = `https://www.youtube.com/embed/${selectedVideo.youtubeVideoId}?start=${startTime}&autoplay=1`;
+                                    }
                                   }
                                 }}
                                 className="flex items-center gap-2 cursor-pointer hover:opacity-80 transition-opacity"
