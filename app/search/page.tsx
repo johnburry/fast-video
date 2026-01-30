@@ -85,7 +85,16 @@ function SearchContent() {
   };
 
   const openVideo = (youtubeVideoId: string, startTime?: number, matchText?: string, videoTitle?: string) => {
-    setSelectedVideo({ youtubeVideoId, startTime, matchText, videoTitle });
+    // On iOS, open YouTube directly for better autoplay support
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+
+    if (isIOS && startTime) {
+      // Open in YouTube app/browser on iOS with timestamp
+      window.open(`https://www.youtube.com/watch?v=${youtubeVideoId}&t=${Math.floor(startTime)}s`, '_blank');
+    } else {
+      // On desktop, open modal with video
+      setSelectedVideo({ youtubeVideoId, startTime, matchText, videoTitle });
+    }
   };
 
   const toggleExpandMatches = (videoId: string) => {
@@ -324,7 +333,7 @@ function SearchContent() {
                   <iframe
                     src={`https://www.youtube.com/embed/${selectedVideo.youtubeVideoId}${
                       selectedVideo.startTime
-                        ? `?start=${Math.floor(selectedVideo.startTime)}`
+                        ? `?start=${Math.floor(selectedVideo.startTime)}&autoplay=1`
                         : ''
                     }`}
                     className="w-full h-full"
