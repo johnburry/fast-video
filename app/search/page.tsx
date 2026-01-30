@@ -85,16 +85,9 @@ function SearchContent() {
   };
 
   const openVideo = (youtubeVideoId: string, startTime?: number, matchText?: string, videoTitle?: string) => {
-    // On iOS, open YouTube directly for better autoplay support
-    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
-
-    if (isIOS && startTime) {
-      // Open in YouTube app/browser on iOS with timestamp
-      window.open(`https://www.youtube.com/watch?v=${youtubeVideoId}&t=${Math.floor(startTime)}s`, '_blank');
-    } else {
-      // On desktop, open modal with video
-      setSelectedVideo({ youtubeVideoId, startTime, matchText, videoTitle });
-    }
+    // Always open modal with video (on both iOS and desktop)
+    // The "Play from here" button in the sidebar handles iOS/desktop separately
+    setSelectedVideo({ youtubeVideoId, startTime, matchText, videoTitle });
   };
 
   const toggleExpandMatches = (videoId: string) => {
