@@ -76,8 +76,13 @@ export async function generateMetadata(): Promise<Metadata> {
   const ogTitle = tenantConfig.tagline || `${tenantConfig.name}: AI Search for Your Sermon Videos`;
   const description = tenantConfig.tagline || "Unlock your church's sermon library with AI-powered search. Make every sermon instantly searchable across your entire YouTube video library.";
 
+  // For PlaySermons.com, prepend domain to title
+  const pageTitle = tenantConfig.domain === 'playsermons.com'
+    ? `PlaySermons.com - ${ogTitle}`
+    : ogTitle;
+
   return {
-    title: ogTitle,
+    title: pageTitle,
     description: description,
     icons: {
       icon: '/icon',
