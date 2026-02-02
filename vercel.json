@@ -6,7 +6,7 @@
   "crons": [
     {
       "path": "/api/admin/import-recent-videos",
-      "schedule": "*/15 * * * *"
+      "schedule": "0 */4 * * *"
     }
   ]
 }

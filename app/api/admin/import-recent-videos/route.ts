@@ -3,7 +3,7 @@ import { supabaseAdmin } from '@/lib/supabase/server';
 import { getChannelVideos, getChannelLiveVideos, getChannelByHandle } from '@/lib/youtube/client';
 import { getVideoTranscript } from '@/lib/youtube/transcript';
 import { uploadThumbnailToR2 } from '@/lib/r2';
-import { sendCronJobStartedEmail, sendCronJobCompletedEmail } from '@/lib/mailgun';
+import { sendCronJobCompletedEmail } from '@/lib/mailgun';
 
 // Parse relative time strings like "5 days ago" to ISO timestamp
 function parseRelativeTime(relativeTime: string): string | null {
@@ -72,9 +72,6 @@ function isWithinHours(publishedAt: string, hours: number): boolean {
 
 async function runImportJob(request: NextRequest) {
   const startTime = Date.now();
-
-  // Send job started email
-  await sendCronJobStartedEmail();
 
   console.log('[CRON] Starting video import job');
 
@@ -322,8 +319,32 @@ async function runImportJob(request: NextRequest) {
 
     metrics.elapsedTimeMs = Date.now() - startTime;
     console.log(`[CRON] Job completed in ${(metrics.elapsedTimeMs / 1000).toFixed(2)}s`);
-    console.log(`[CRON] Total videos imported: ${metrics.channels.reduce((sum, ch) => sum + ch.videosImported, 0)}`);
+    const totalImported = metrics.channels.reduce((sum, ch) => sum + ch.videosImported, 0);
+    console.log(`[CRON] Total videos imported: ${totalImported}`);
     console.log(`[CRON] Total errors: ${metrics.errors.length}`);
+
+    // Refresh search index if any videos were imported
+    if (totalImported > 0) {
+      console.log('[CRON] Triggering search index refresh...');
+      try {
+        const refreshResponse = await fetch(new URL('/api/admin/refresh-search-index', request.url), {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        });
+
+        if (refreshResponse.ok) {
+          console.log('[CRON] Successfully refreshed search index');
+        } else {
+          console.error('[CRON] Failed to refresh search index:', await refreshResponse.text());
+          metrics.errors.push('Failed to refresh search index');
+        }
+      } catch (error) {
+        console.error('[CRON] Error refreshing search index:', error);
+        metrics.errors.push(`Search index refresh error: ${error instanceof Error ? error.message : 'Unknown'}`);
+      }
+    }
 
     // Send completion email with metrics
     await sendCronJobCompletedEmail(metrics);
