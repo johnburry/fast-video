@@ -34,57 +34,79 @@ function splitIntoSentences(text: string): string[] {
 }
 
 /**
- * Find which sentence(s) contain the search query or matched text
+ * Find the position where the original segment starts in the search text
+ */
+function findSegmentPosition(searchText: string, originalSegment: string): number {
+  const normalizedSearch = searchText.toLowerCase().replace(/\s+/g, ' ');
+  const normalizedSegment = originalSegment.toLowerCase().replace(/\s+/g, ' ').trim();
+
+  // Try to find the exact segment
+  let pos = normalizedSearch.indexOf(normalizedSegment);
+  if (pos !== -1) return pos;
+
+  // If not found exactly, try to find the first few words
+  const words = normalizedSegment.split(' ');
+  for (let wordCount = Math.max(3, words.length); wordCount >= 3; wordCount--) {
+    const phrase = words.slice(0, wordCount).join(' ');
+    pos = normalizedSearch.indexOf(phrase);
+    if (pos !== -1) return pos;
+  }
+
+  return -1;
+}
+
+/**
+ * Find complete sentence(s) that contain the matched segment
+ * This ensures we show the beginning of the sentence AND continue until
+ * we've shown enough context (or the sentence ends)
  */
 function findMatchingSentences(text: string, originalSegment: string): string {
+  // Find where the original segment appears in the text
+  const segmentPos = findSegmentPosition(text, originalSegment);
+  if (segmentPos === -1) {
+    // Couldn't find the segment, return as is
+    return originalSegment;
+  }
+
   const sentences = splitIntoSentences(text);
 
-  // Normalize for comparison (lowercase, remove extra whitespace)
-  const normalizedOriginal = originalSegment.toLowerCase().replace(/\s+/g, ' ').trim();
+  // Find which sentence contains the segment start position
+  let charCount = 0;
+  let startSentenceIdx = -1;
 
-  // Find sentences that contain any part of the original segment
-  const matchingSentences: string[] = [];
-  const words = normalizedOriginal.split(' ');
-
-  // Look for sentences that contain a significant portion of the matched text
   for (let i = 0; i < sentences.length; i++) {
-    const sentence = sentences[i];
-    const normalizedSentence = sentence.toLowerCase().replace(/\s+/g, ' ');
-
-    // Check if this sentence contains a meaningful portion of the original segment
-    // (at least 3 consecutive words, or 50% of words if original is short)
-    let hasMatch = false;
-
-    // Check for consecutive word matches
-    for (let start = 0; start < words.length; start++) {
-      for (let end = start + Math.min(3, words.length); end <= words.length; end++) {
-        const phrase = words.slice(start, end).join(' ');
-        if (normalizedSentence.includes(phrase)) {
-          hasMatch = true;
-          break;
-        }
-      }
-      if (hasMatch) break;
+    const sentenceLength = sentences[i].length + 1; // +1 for space or punctuation
+    if (charCount <= segmentPos && segmentPos < charCount + sentenceLength) {
+      startSentenceIdx = i;
+      break;
     }
+    charCount += sentenceLength;
+  }
 
-    if (hasMatch) {
-      // Include the matched sentence
-      matchingSentences.push(sentence);
+  if (startSentenceIdx === -1) {
+    return originalSegment;
+  }
 
-      // Optionally include the next sentence if current one is very short
-      if (sentence.length < 50 && i + 1 < sentences.length) {
-        matchingSentences.push(sentences[i + 1]);
-      }
+  // Start from the sentence that contains the segment
+  const matchingSentences: string[] = [sentences[startSentenceIdx]];
+
+  // Continue adding sentences until we've shown at least 150 characters
+  // or we've included the next sentence (whichever gives more context)
+  let totalLength = sentences[startSentenceIdx].length;
+  let nextIdx = startSentenceIdx + 1;
+
+  while (nextIdx < sentences.length && (totalLength < 150 || nextIdx === startSentenceIdx + 1)) {
+    matchingSentences.push(sentences[nextIdx]);
+    totalLength += sentences[nextIdx].length;
+    nextIdx++;
+
+    // Don't add more than 2 sentences unless really needed
+    if (nextIdx > startSentenceIdx + 1 && totalLength >= 150) {
+      break;
     }
   }
 
-  // If we found matching sentences, return them joined
-  if (matchingSentences.length > 0) {
-    return matchingSentences.join(' ');
-  }
-
-  // Fallback: return the original segment if we couldn't find a good match
-  return originalSegment;
+  return matchingSentences.join(' ');
 }
 
 /**

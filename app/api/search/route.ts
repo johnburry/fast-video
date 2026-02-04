@@ -149,7 +149,7 @@ export async function GET(request: NextRequest) {
       };
     });
 
-    // Add transcript search results
+    // Add transcript search results with deduplication
     matchesWithTiming.forEach((result) => {
       if (!resultsByVideo.has(result.video_id)) {
         resultsByVideo.set(result.video_id, {
@@ -166,16 +166,28 @@ export async function GET(request: NextRequest) {
             thumbnail: result.channel_thumbnail,
           },
           matches: [],
+          seenTexts: new Set(), // Track unique display texts
         });
       }
 
-      resultsByVideo.get(result.video_id).matches.push({
-        transcriptId: result.transcript_id,
-        text: result.displayText, // Just the matched segment
-        startTime: result.previousStartTime, // Start 3 seconds before matched segment
-        actualStartTime: result.start_time, // Keep original for reference
-        duration: result.duration,
-      });
+      const videoResult = resultsByVideo.get(result.video_id);
+
+      // Only add this match if we haven't seen this exact text before
+      if (!videoResult.seenTexts.has(result.displayText)) {
+        videoResult.seenTexts.add(result.displayText);
+        videoResult.matches.push({
+          transcriptId: result.transcript_id,
+          text: result.displayText,
+          startTime: result.previousStartTime, // Start 3 seconds before matched segment
+          actualStartTime: result.start_time, // Keep original for reference
+          duration: result.duration,
+        });
+      }
+    });
+
+    // Remove the seenTexts Set before returning (it was just for deduplication)
+    resultsByVideo.forEach((video) => {
+      delete video.seenTexts;
     });
 
     // Add videos that match by title (but don't have transcript matches)
