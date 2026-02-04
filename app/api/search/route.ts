@@ -149,7 +149,7 @@ export async function GET(request: NextRequest) {
       };
     });
 
-    // Add transcript search results with deduplication
+    // Add transcript search results with smart deduplication
     matchesWithTiming.forEach((result) => {
       if (!resultsByVideo.has(result.video_id)) {
         resultsByVideo.set(result.video_id, {
@@ -166,28 +166,68 @@ export async function GET(request: NextRequest) {
             thumbnail: result.channel_thumbnail,
           },
           matches: [],
-          seenTexts: new Set(), // Track unique display texts
         });
       }
 
       const videoResult = resultsByVideo.get(result.video_id);
+      const newText = result.displayText;
 
-      // Only add this match if we haven't seen this exact text before
-      if (!videoResult.seenTexts.has(result.displayText)) {
-        videoResult.seenTexts.add(result.displayText);
+      // Check if this text overlaps significantly with any existing match
+      let isDuplicate = false;
+      for (const existingMatch of videoResult.matches) {
+        const existingText = existingMatch.text;
+
+        // If one text is a substring of another, it's a duplicate
+        if (existingText.includes(newText) || newText.includes(existingText)) {
+          isDuplicate = true;
+
+          // Keep the longer version (more context)
+          if (newText.length > existingText.length) {
+            existingMatch.text = newText;
+            existingMatch.transcriptId = result.transcript_id;
+            existingMatch.startTime = result.previousStartTime;
+            existingMatch.actualStartTime = result.start_time;
+            existingMatch.duration = result.duration;
+          }
+          break;
+        }
+
+        // Check if they share significant overlap (80%+ of shorter text)
+        const shorter = newText.length < existingText.length ? newText : existingText;
+        const longer = newText.length >= existingText.length ? newText : existingText;
+
+        // Calculate character overlap
+        let overlapChars = 0;
+        for (let i = 0; i < shorter.length; i++) {
+          if (longer.includes(shorter.substring(i, i + 20))) { // Check 20-char chunks
+            overlapChars += 20;
+          }
+        }
+
+        if (overlapChars / shorter.length > 0.8) {
+          isDuplicate = true;
+          // Keep the longer version
+          if (newText.length > existingText.length) {
+            existingMatch.text = newText;
+            existingMatch.transcriptId = result.transcript_id;
+            existingMatch.startTime = result.previousStartTime;
+            existingMatch.actualStartTime = result.start_time;
+            existingMatch.duration = result.duration;
+          }
+          break;
+        }
+      }
+
+      // Only add if not a duplicate
+      if (!isDuplicate) {
         videoResult.matches.push({
           transcriptId: result.transcript_id,
-          text: result.displayText,
-          startTime: result.previousStartTime, // Start 3 seconds before matched segment
-          actualStartTime: result.start_time, // Keep original for reference
+          text: newText,
+          startTime: result.previousStartTime,
+          actualStartTime: result.start_time,
           duration: result.duration,
         });
       }
-    });
-
-    // Remove the seenTexts Set before returning (it was just for deduplication)
-    resultsByVideo.forEach((video) => {
-      delete video.seenTexts;
     });
 
     // Add videos that match by title (but don't have transcript matches)
