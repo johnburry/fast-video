@@ -11,7 +11,7 @@
  */
 function splitIntoSentences(text: string): string[] {
   // First, protect common abbreviations and titles
-  let protected = text
+  let protectedText = text
     .replace(/Mr\./g, 'Mr<DOT>')
     .replace(/Mrs\./g, 'Mrs<DOT>')
     .replace(/Ms\./g, 'Ms<DOT>')
@@ -25,7 +25,7 @@ function splitIntoSentences(text: string): string[] {
   // Split on sentence-ending punctuation followed by whitespace and capital letter
   // or end of string
   const sentencePattern = /[.!?]+(?:\s+(?=[A-Z])|$)/g;
-  const sentences = protected.split(sentencePattern);
+  const sentences = protectedText.split(sentencePattern);
 
   // Restore the dots and clean up
   return sentences
