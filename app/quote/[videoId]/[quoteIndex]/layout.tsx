@@ -9,7 +9,7 @@ export async function generateMetadata({
   const { videoId, quoteIndex } = await params;
 
   try {
-    // Fetch video data
+    // Fetch video data with channel info
     const { data: video, error: videoError } = await supabaseAdmin
       .from('videos')
       .select(`
@@ -17,7 +17,8 @@ export async function generateMetadata({
         title,
         thumbnail_url,
         channels (
-          channel_name
+          channel_name,
+          thumbnail_url
         )
       `)
       .eq('id', videoId)
@@ -54,10 +55,10 @@ export async function generateMetadata({
     const quoteTitle = quote.quote_text.length > 200
       ? quote.quote_text.substring(0, 197) + '...'
       : quote.quote_text;
-    const ogTitle = `Video Quote: ${quoteTitle}`;
-    const ogDescription = ''; // Empty to avoid redundancy
-    // Use maxresdefault (1920x1080) or hqdefault (480x360) for better quality
-    const ogImage = `https://img.youtube.com/vi/${video.youtube_video_id}/maxresdefault.jpg`;
+    const ogTitle = `Sharing a quote from: ${video.title}`;
+    const ogDescription = quoteTitle;
+    // Use channel thumbnail instead of video thumbnail
+    const ogImage = (video.channels as any)?.thumbnail_url || `https://img.youtube.com/vi/${video.youtube_video_id}/maxresdefault.jpg`;
 
     console.log('[QUOTE METADATA] Generated - Title:', ogTitle.substring(0, 50) + '...', 'Description:', ogDescription || '(empty)');
 
@@ -70,16 +71,14 @@ export async function generateMetadata({
         images: [
           {
             url: ogImage,
-            width: 1920,
-            height: 1080,
             alt: video.title,
           },
         ],
         type: 'article',
-        siteName: video.title,
+        siteName: (video.channels as any)?.channel_name || 'Video Quote',
       },
       twitter: {
-        card: 'summary',
+        card: 'summary_large_image',
         title: ogTitle,
         description: ogDescription,
         images: [ogImage],
