@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase/server';
 import { getServerTenantConfig } from '@/lib/tenant-config';
 import { sendSearchNotification } from '@/lib/mailgun';
+import { extractCompleteSentences } from '@/lib/sentence-extractor';
 import OpenAI from 'openai';
 
 // Initialize OpenAI client
@@ -75,16 +76,41 @@ export async function GET(request: NextRequest) {
     // Group results by video and get previous segments for better context
     const resultsByVideo = new Map<string, any>();
 
-    // Keep it simple: just return the matched segment text
+    // Fetch search context for each result to get complete sentences
+    // First, get all transcript IDs
+    const transcriptIds = (results || []).map((r: any) => r.transcript_id);
+
+    // Fetch search context for these transcripts
+    const { data: contextData } = transcriptIds.length > 0
+      ? await supabaseAdmin
+          .from('transcript_search_context')
+          .select('transcript_id, search_text, original_text')
+          .in('transcript_id', transcriptIds)
+      : { data: [] };
+
+    // Create a map for quick lookup
+    const contextMap = new Map(
+      (contextData || []).map((c: any) => [c.transcript_id, c])
+    );
+
+    // Extract complete sentences from the search context
     // Set playback to start 3 seconds before the matched segment
     const matchesWithTiming = (results || []).map((result: any) => {
       // Start playback 3 seconds before the matched segment
       const playbackStartTime = Math.max(0, result.start_time - 3);
 
+      // Get context for this transcript if available
+      const context = contextMap.get(result.transcript_id);
+      const searchText = context?.search_text || result.text;
+      const originalText = context?.original_text || result.text;
+
+      // Extract complete sentences
+      const completeSentence = extractCompleteSentences(searchText, originalText);
+
       return {
         ...result,
         previousStartTime: playbackStartTime,
-        displayText: result.text, // Just show the matched segment
+        displayText: completeSentence, // Show complete sentence(s) instead of fragments
       };
     });
 

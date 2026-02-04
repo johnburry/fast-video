@@ -3,6 +3,7 @@ import { supabase } from '@/lib/supabase/client';
 import { supabaseAdmin } from '@/lib/supabase/server';
 import { getServerTenantConfig } from '@/lib/tenant-config';
 import { sendSearchNotification } from '@/lib/mailgun';
+import { extractCompleteSentences } from '@/lib/sentence-extractor';
 
 export async function GET(request: NextRequest) {
   try {
@@ -128,16 +129,23 @@ export async function GET(request: NextRequest) {
     // Group results by video
     const resultsByVideo = new Map<string, any>();
 
-    // Keep it simple: just return the matched segment text
+    // Extract complete sentences from the search context
     // Set playback to start 3 seconds before the matched segment
     const matchesWithTiming = (data || []).map((result) => {
       // Start playback 3 seconds before the matched segment
       const playbackStartTime = Math.max(0, result.start_time - 3);
 
+      // Extract complete sentences from the search_text (which includes surrounding context)
+      // using the original_text as the anchor for what was matched
+      const completeSentence = extractCompleteSentences(
+        result.search_text || result.original_text || result.text,
+        result.original_text || result.text
+      );
+
       return {
         ...result,
         previousStartTime: playbackStartTime,
-        displayText: result.original_text || result.text, // Just show the matched segment
+        displayText: completeSentence, // Show complete sentence(s) instead of fragments
       };
     });
 
