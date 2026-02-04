@@ -96,8 +96,8 @@ export function middleware(request: NextRequest) {
       return NextResponse.next()
     }
 
-    // Allow /admin, /api, /record, /update, and /v to pass through without subdomain prefix
-    if (url.pathname.startsWith('/admin') || url.pathname.startsWith('/api') || url.pathname.startsWith('/record') || url.pathname.startsWith('/update') || url.pathname.startsWith('/v')) {
+    // Allow /admin, /api, /record, /update, /v, /quote, and /location to pass through without subdomain prefix
+    if (url.pathname.startsWith('/admin') || url.pathname.startsWith('/api') || url.pathname.startsWith('/record') || url.pathname.startsWith('/update') || url.pathname.startsWith('/v') || url.pathname.startsWith('/quote') || url.pathname.startsWith('/location')) {
       return NextResponse.next()
     }
 
