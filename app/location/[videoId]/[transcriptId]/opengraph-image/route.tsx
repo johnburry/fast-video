@@ -8,7 +8,7 @@ export async function GET(request: Request) {
     const url = new URL(request.url);
     const pathParts = url.pathname.split('/');
     const videoId = pathParts[2];
-    const quoteIndex = parseInt(pathParts[3], 10);
+    const transcriptId = pathParts[3];
 
     // Fetch video data with channel info
     const { data: video } = await supabaseAdmin
@@ -31,7 +31,7 @@ export async function GET(request: Request) {
     const channelData = video.channels as any;
     const thumbnailUrl = channelData?.thumbnail_url || `https://img.youtube.com/vi/${video.youtube_video_id}/maxresdefault.jpg`;
 
-    console.log('[OG IMAGE] Quote OG Image - Video ID:', videoId, 'Using thumbnail:', thumbnailUrl);
+    console.log('[OG IMAGE] Location OG Image - Video ID:', videoId, 'Using thumbnail:', thumbnailUrl);
 
     // Fetch the thumbnail image
     const imageResponse = await fetch(thumbnailUrl);
