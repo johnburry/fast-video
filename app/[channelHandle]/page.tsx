@@ -755,7 +755,7 @@ export default function ChannelPage({
                 {!quotesLoading && !quotesError && videoQuotes.length > 0 && (
                   <div>
                     <h3 className="text-xl font-bold text-white mb-4">
-                      10 Most Powerful Quotes from this Video
+                      Best Quotes from this Video
                     </h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       {videoQuotes.map((quote) => (
