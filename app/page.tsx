@@ -248,26 +248,6 @@ export default function Home() {
                 </h1>
               )}
             </div>
-            {/* Search Box */}
-            <div className="mb-8">
-              <form onSubmit={handleSearch} className="max-w-3xl mx-auto">
-                <div className="flex gap-4">
-                  <input
-                    type="text"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    placeholder={tenantConfig.searchPlaceholder}
-                    className="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-lg bg-white placeholder-gray-500"
-                  />
-                  <button
-                    type="submit"
-                    className="bg-blue-600 text-white px-8 py-3 rounded-lg font-medium hover:bg-blue-700 transition-colors"
-                  >
-                    Search
-                  </button>
-                </div>
-              </form>
-            </div>
           </div>
         </div>
       </div>
