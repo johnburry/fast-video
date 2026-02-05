@@ -697,20 +697,23 @@ export async function POST(request: NextRequest) {
         }
 
         // Refresh search index if transcripts were added
-        if (transcriptCount > 0) {
+        // Use incremental refresh with specific video IDs to avoid timeout
+        if (transcriptCount > 0 && processedVideoIds.length > 0) {
           sendProgress({ type: 'status', message: 'Refreshing search index...' });
-          console.log('[SEARCH INDEX] Triggering background refresh after importing transcripts');
+          console.log(`[SEARCH INDEX] Triggering incremental refresh for ${processedVideoIds.length} videos`);
 
           try {
-            // Call the database function directly instead of making an HTTP request
+            // Use incremental refresh for specific videos (much faster than full refresh)
             const { data, error: refreshError } = await supabaseAdmin
-              .rpc('perform_transcript_search_refresh');
+              .rpc('refresh_transcript_search_for_videos', {
+                p_video_ids: processedVideoIds
+              });
 
             if (refreshError) {
-              console.error('[SEARCH INDEX] Failed to trigger refresh:', refreshError);
+              console.error('[SEARCH INDEX] Failed to trigger incremental refresh:', refreshError);
               sendProgress({ type: 'status', message: '⚠️ Search index refresh failed - videos may not be immediately searchable' });
             } else {
-              console.log('[SEARCH INDEX] Successfully triggered refresh:', data);
+              console.log('[SEARCH INDEX] Successfully refreshed search index:', data);
               sendProgress({ type: 'status', message: '✓ Search index refreshed - new videos are now searchable' });
             }
           } catch (error) {
