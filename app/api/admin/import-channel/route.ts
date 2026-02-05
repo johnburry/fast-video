@@ -696,6 +696,29 @@ export async function POST(request: NextRequest) {
           console.log('[EMBEDDINGS] Skipping embedding generation - OPENAI_API_KEY not configured');
         }
 
+        // Refresh search index if transcripts were added
+        if (transcriptCount > 0) {
+          sendProgress({ type: 'status', message: 'Refreshing search index...' });
+          console.log('[SEARCH INDEX] Triggering background refresh after importing transcripts');
+
+          try {
+            // Call the database function directly instead of making an HTTP request
+            const { data, error: refreshError } = await supabaseAdmin
+              .rpc('perform_transcript_search_refresh');
+
+            if (refreshError) {
+              console.error('[SEARCH INDEX] Failed to trigger refresh:', refreshError);
+              sendProgress({ type: 'status', message: '⚠️ Search index refresh failed - videos may not be immediately searchable' });
+            } else {
+              console.log('[SEARCH INDEX] Successfully triggered refresh:', data);
+              sendProgress({ type: 'status', message: '✓ Search index refreshed - new videos are now searchable' });
+            }
+          } catch (error) {
+            console.error('[SEARCH INDEX] Error triggering refresh:', error);
+            sendProgress({ type: 'status', message: '⚠️ Search index refresh failed - videos may not be immediately searchable' });
+          }
+        }
+
         // Fetch the database channel info to get the channel_handle
         const { data: dbChannel } = await supabaseAdmin
           .from('channels')

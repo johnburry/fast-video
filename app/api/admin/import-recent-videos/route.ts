@@ -327,18 +327,15 @@ async function runImportJob(request: NextRequest) {
     if (totalImported > 0) {
       console.log('[CRON] Triggering search index refresh...');
       try {
-        const refreshResponse = await fetch(new URL('/api/admin/refresh-search-index', request.url), {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-        });
+        // Call the database function directly instead of making an HTTP request
+        const { data, error: refreshError } = await supabaseAdmin
+          .rpc('perform_transcript_search_refresh');
 
-        if (refreshResponse.ok) {
-          console.log('[CRON] Successfully refreshed search index');
-        } else {
-          console.error('[CRON] Failed to refresh search index:', await refreshResponse.text());
+        if (refreshError) {
+          console.error('[CRON] Failed to refresh search index:', refreshError);
           metrics.errors.push('Failed to refresh search index');
+        } else {
+          console.log('[CRON] Successfully refreshed search index:', data);
         }
       } catch (error) {
         console.error('[CRON] Error refreshing search index:', error);
