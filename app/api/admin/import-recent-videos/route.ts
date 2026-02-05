@@ -81,6 +81,9 @@ async function runImportJob(request: NextRequest) {
     elapsedTimeMs: 0,
   };
 
+  // Track all imported video IDs for incremental search index refresh
+  const allImportedVideoIds: string[] = [];
+
   try {
     // Fetch all channels
     const { data: channels, error: channelsError } = await supabaseAdmin
@@ -228,6 +231,9 @@ async function runImportJob(request: NextRequest) {
 
             const videoId = newVideo.id;
 
+            // Track this video ID for search index refresh
+            allImportedVideoIds.push(videoId);
+
             // Skip transcript fetching for music channels
             if (channel.is_music_channel) {
               console.log(`[CRON] Skipping transcript fetch for music channel`);
@@ -324,12 +330,15 @@ async function runImportJob(request: NextRequest) {
     console.log(`[CRON] Total errors: ${metrics.errors.length}`);
 
     // Refresh search index if any videos were imported
-    if (totalImported > 0) {
-      console.log('[CRON] Triggering search index refresh...');
+    // Use incremental refresh with only the videos imported in this run
+    if (totalImported > 0 && allImportedVideoIds.length > 0) {
+      console.log(`[CRON] Triggering incremental search index refresh for ${allImportedVideoIds.length} videos...`);
       try {
-        // Call the database function directly instead of making an HTTP request
+        // Use incremental refresh for specific videos (much faster than full refresh)
         const { data, error: refreshError } = await supabaseAdmin
-          .rpc('perform_transcript_search_refresh');
+          .rpc('refresh_transcript_search_for_videos', {
+            p_video_ids: allImportedVideoIds
+          });
 
         if (refreshError) {
           console.error('[CRON] Failed to refresh search index:', refreshError);
