@@ -1,4 +1,4 @@
-import { S3Client, PutObjectCommand, HeadObjectCommand } from '@aws-sdk/client-s3';
+import { S3Client, PutObjectCommand, HeadObjectCommand, DeleteObjectCommand } from '@aws-sdk/client-s3';
 
 // Initialize R2 client (S3-compatible)
 const r2Client = new S3Client({
@@ -49,6 +49,22 @@ export async function uploadThumbnailToR2(
       }
     } else {
       console.log(`[R2] forceUpdate=true for ${youtubeVideoId}, re-downloading thumbnail`);
+      // Delete the old file first to ensure cache invalidation
+      try {
+        console.log(`[R2] Deleting old thumbnail from R2 for ${youtubeVideoId}`);
+        await r2Client.send(
+          new DeleteObjectCommand({
+            Bucket: BUCKET_NAME,
+            Key: key,
+          })
+        );
+        console.log(`[R2] ✓ Deleted old thumbnail for ${youtubeVideoId}`);
+      } catch (deleteError: any) {
+        // File might not exist, which is fine
+        if (deleteError.name !== 'NotFound' && deleteError.name !== 'NoSuchKey') {
+          console.warn(`[R2] Warning: Could not delete old thumbnail for ${youtubeVideoId}:`, deleteError);
+        }
+      }
     }
 
     // Download the thumbnail from YouTube
@@ -61,7 +77,7 @@ export async function uploadThumbnailToR2(
     const imageBuffer = await response.arrayBuffer();
     console.log(`[R2] Downloaded ${imageBuffer.byteLength} bytes for ${youtubeVideoId}`);
 
-    // Upload to R2
+    // Upload to R2 with cache-control headers to prevent aggressive caching
     console.log(`[R2] Uploading to R2 bucket: ${BUCKET_NAME}, key: ${key}`);
     await r2Client.send(
       new PutObjectCommand({
@@ -69,6 +85,7 @@ export async function uploadThumbnailToR2(
         Key: key,
         Body: Buffer.from(imageBuffer),
         ContentType: 'image/jpeg',
+        CacheControl: 'public, max-age=3600, must-revalidate', // 1 hour cache with revalidation
       })
     );
 
