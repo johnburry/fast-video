@@ -339,14 +339,21 @@ export async function POST(request: NextRequest) {
         thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
         // Get ALL videos from last 30 days (not limited by fetch)
-        const { data: recentVideos } = await supabaseAdmin
+        const { data: recentVideos, error: recentVideosError } = await supabaseAdmin
           .from('videos')
           .select('id, youtube_video_id, title, thumbnail_url, published_at')
           .eq('channel_id', channelId)
           .gte('published_at', thirtyDaysAgo.toISOString());
 
+        console.log(`[METADATA] Checking for videos published after ${thirtyDaysAgo.toISOString()}`);
+
+        if (recentVideosError) {
+          console.error(`[METADATA] Error fetching recent videos:`, recentVideosError);
+        }
+
         if (recentVideos && recentVideos.length > 0) {
           console.log(`[METADATA] Found ${recentVideos.length} videos from last 30 days to check for updates`);
+          console.log(`[METADATA] Sample video IDs:`, recentVideos.slice(0, 3).map(v => ({ id: v.youtube_video_id, published: v.published_at })));
           let metadataUpdates = 0;
 
           // Create a map of YouTube video data for quick lookup from fetched videos
@@ -395,11 +402,15 @@ export async function POST(request: NextRequest) {
                 // Always update thumbnail (in case creator changed it - URL stays the same but image changes)
                 // Use forceUpdate=true to re-download even if file exists in R2
                 if (thumbnailUrl) {
+                  console.log(`[METADATA] Updating thumbnail for ${youtubeVideo.videoId} with forceUpdate=true`);
+                  console.log(`[METADATA]   Current DB thumbnail: ${dbVideo.thumbnail_url}`);
+                  console.log(`[METADATA]   YouTube thumbnail URL: ${thumbnailUrl}`);
                   const r2ThumbnailUrl = await uploadThumbnailToR2(
                     youtubeVideo.videoId,
                     thumbnailUrl,
                     true  // forceUpdate: true - re-download to catch thumbnail changes
                   );
+                  console.log(`[METADATA]   New R2 thumbnail: ${r2ThumbnailUrl}`);
                   updateData.thumbnail_url = r2ThumbnailUrl;
                 }
 
@@ -410,12 +421,18 @@ export async function POST(request: NextRequest) {
                 }
 
                 if (Object.keys(updateData).length > 0) {
-                  await supabaseAdmin
+                  console.log(`[METADATA] Updating database for ${youtubeVideo.videoId}, fields:`, Object.keys(updateData));
+                  const { error: updateError } = await supabaseAdmin
                     .from('videos')
                     .update(updateData)
                     .eq('id', dbVideo.id);
 
-                  metadataUpdates++;
+                  if (updateError) {
+                    console.error(`[METADATA] Error updating video ${youtubeVideo.videoId}:`, updateError);
+                  } else {
+                    console.log(`[METADATA] ✓ Successfully updated ${youtubeVideo.videoId}`);
+                    metadataUpdates++;
+                  }
                 }
               } catch (error) {
                 console.error(`[METADATA] Error updating metadata for ${dbVideo.youtube_video_id}:`, error);

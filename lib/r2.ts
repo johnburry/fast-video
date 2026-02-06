@@ -39,6 +39,7 @@ export async function uploadThumbnailToR2(
         );
         // If no error, file exists - return the URL (no double slashes)
         const baseUrl = PUBLIC_URL.endsWith('/') ? PUBLIC_URL.slice(0, -1) : PUBLIC_URL;
+        console.log(`[R2] Thumbnail exists for ${youtubeVideoId}, returning cached URL`);
         return `${baseUrl}/${key}`;
       } catch (headError: any) {
         // File doesn't exist, proceed with upload
@@ -46,17 +47,22 @@ export async function uploadThumbnailToR2(
           throw headError;
         }
       }
+    } else {
+      console.log(`[R2] forceUpdate=true for ${youtubeVideoId}, re-downloading thumbnail`);
     }
 
     // Download the thumbnail from YouTube
+    console.log(`[R2] Downloading thumbnail from YouTube for ${youtubeVideoId}: ${thumbnailUrl}`);
     const response = await fetch(thumbnailUrl);
     if (!response.ok) {
       throw new Error(`Failed to download thumbnail: ${response.statusText}`);
     }
 
     const imageBuffer = await response.arrayBuffer();
+    console.log(`[R2] Downloaded ${imageBuffer.byteLength} bytes for ${youtubeVideoId}`);
 
     // Upload to R2
+    console.log(`[R2] Uploading to R2 bucket: ${BUCKET_NAME}, key: ${key}`);
     await r2Client.send(
       new PutObjectCommand({
         Bucket: BUCKET_NAME,
@@ -69,7 +75,7 @@ export async function uploadThumbnailToR2(
     // Ensure no double slashes in URL
     const baseUrl = PUBLIC_URL.endsWith('/') ? PUBLIC_URL.slice(0, -1) : PUBLIC_URL;
     const r2Url = `${baseUrl}/${key}`;
-    console.log(`Uploaded thumbnail for ${youtubeVideoId} to R2: ${r2Url}`);
+    console.log(`[R2] ✓ Uploaded thumbnail for ${youtubeVideoId} to R2: ${r2Url}`);
     return r2Url;
   } catch (error) {
     console.error(`Error uploading thumbnail to R2 for ${youtubeVideoId}:`, error);
