@@ -91,8 +91,17 @@ export async function uploadThumbnailToR2(
 
     // Ensure no double slashes in URL
     const baseUrl = PUBLIC_URL.endsWith('/') ? PUBLIC_URL.slice(0, -1) : PUBLIC_URL;
-    const r2Url = `${baseUrl}/${key}`;
-    console.log(`[R2] ✓ Uploaded thumbnail for ${youtubeVideoId} to R2: ${r2Url}`);
+    let r2Url = `${baseUrl}/${key}`;
+
+    // Add cache-busting timestamp when force updating to bypass CDN cache
+    if (forceUpdate) {
+      const timestamp = Date.now();
+      r2Url = `${r2Url}?v=${timestamp}`;
+      console.log(`[R2] ✓ Uploaded thumbnail for ${youtubeVideoId} to R2 with cache-busting: ${r2Url}`);
+    } else {
+      console.log(`[R2] ✓ Uploaded thumbnail for ${youtubeVideoId} to R2: ${r2Url}`);
+    }
+
     return r2Url;
   } catch (error) {
     console.error(`Error uploading thumbnail to R2 for ${youtubeVideoId}:`, error);
