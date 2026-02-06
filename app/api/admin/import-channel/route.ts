@@ -330,18 +330,19 @@ export async function POST(request: NextRequest) {
         console.log(`  - Existing videos without transcripts: ${existingVideosWithoutTranscripts.length}`);
         console.log(`  - Skip transcripts mode: ${shouldSkipTranscripts}`);
 
-        // Refresh metadata (title, thumbnail) for videos from the last 30 days
-        // This catches any changes creators made to existing videos
-        sendProgress({ type: 'status', message: 'Checking for metadata updates on recent videos...' });
-        const thirtyDaysAgo = new Date();
-        thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+        // Refresh metadata (title, thumbnail) for ALL videos fetched from YouTube
+        // This catches any changes creators made to existing videos (title or thumbnail)
+        // We check all videos in the fetch, not just recent ones, since creators
+        // often update thumbnails/titles on older popular videos
+        sendProgress({ type: 'status', message: 'Checking for metadata updates on all fetched videos...' });
 
-        // Get existing videos from the last 30 days
+        // Get ALL existing videos that match the YouTube video IDs we just fetched
+        const youtubeVideoIds = combinedVideos.map(v => v.videoId);
         const { data: recentVideos } = await supabaseAdmin
           .from('videos')
           .select('id, youtube_video_id, title, thumbnail_url')
           .eq('channel_id', channelId)
-          .gte('published_at', thirtyDaysAgo.toISOString());
+          .in('youtube_video_id', youtubeVideoIds);
 
         if (recentVideos && recentVideos.length > 0) {
           console.log(`[METADATA] Found ${recentVideos.length} videos from last 30 days to check for updates`);
@@ -363,10 +364,12 @@ export async function POST(request: NextRequest) {
                 const updateData: any = {};
 
                 // Always update thumbnail (in case creator changed it - URL stays the same but image changes)
+                // Use forceUpdate=true to re-download even if file exists in R2
                 if (thumbnailUrl) {
                   const r2ThumbnailUrl = await uploadThumbnailToR2(
                     youtubeVideo.videoId,
-                    thumbnailUrl
+                    thumbnailUrl,
+                    true  // forceUpdate: true - re-download to catch thumbnail changes
                   );
                   updateData.thumbnail_url = r2ThumbnailUrl;
                 }

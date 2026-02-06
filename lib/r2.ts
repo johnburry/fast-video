@@ -17,30 +17,34 @@ const PUBLIC_URL = process.env.R2_PUBLIC_URL!;
  * Download a YouTube thumbnail and upload it to R2
  * @param youtubeVideoId - YouTube video ID
  * @param thumbnailUrl - Original YouTube thumbnail URL
+ * @param forceUpdate - If true, re-download and re-upload even if file exists (for catching thumbnail changes)
  * @returns R2 public URL for the thumbnail
  */
 export async function uploadThumbnailToR2(
   youtubeVideoId: string,
-  thumbnailUrl: string
+  thumbnailUrl: string,
+  forceUpdate: boolean = false
 ): Promise<string> {
   const key = `fast-video-thumbnails/${youtubeVideoId}.jpg`;
 
   try {
-    // Check if thumbnail already exists in R2
-    try {
-      await r2Client.send(
-        new HeadObjectCommand({
-          Bucket: BUCKET_NAME,
-          Key: key,
-        })
-      );
-      // If no error, file exists - return the URL (no double slashes)
-      const baseUrl = PUBLIC_URL.endsWith('/') ? PUBLIC_URL.slice(0, -1) : PUBLIC_URL;
-      return `${baseUrl}/${key}`;
-    } catch (headError: any) {
-      // File doesn't exist, proceed with upload
-      if (headError.name !== 'NotFound') {
-        throw headError;
+    // Check if thumbnail already exists in R2 (unless force update)
+    if (!forceUpdate) {
+      try {
+        await r2Client.send(
+          new HeadObjectCommand({
+            Bucket: BUCKET_NAME,
+            Key: key,
+          })
+        );
+        // If no error, file exists - return the URL (no double slashes)
+        const baseUrl = PUBLIC_URL.endsWith('/') ? PUBLIC_URL.slice(0, -1) : PUBLIC_URL;
+        return `${baseUrl}/${key}`;
+      } catch (headError: any) {
+        // File doesn't exist, proceed with upload
+        if (headError.name !== 'NotFound') {
+          throw headError;
+        }
       }
     }
 
