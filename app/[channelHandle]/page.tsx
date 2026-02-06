@@ -598,7 +598,7 @@ export default function ChannelPage({
                             Transcript Available
                           </span>
                           <span className="inline-block text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">
-                            Quote sharing available
+                            Quote Sharing Available
                           </span>
                         </div>
                       )}
