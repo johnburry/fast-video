@@ -15,6 +15,55 @@ interface Quote {
 }
 
 /**
+ * DELETE endpoint to remove existing quotes for a video
+ * This allows regeneration of quotes by deleting the cached ones
+ */
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: Promise<{ videoId: string }> }
+) {
+  try {
+    const { videoId } = await params;
+
+    if (!videoId) {
+      return NextResponse.json(
+        { error: 'Video ID is required' },
+        { status: 400 }
+      );
+    }
+
+    console.log(`[VIDEO QUOTES] Deleting quotes for video ${videoId}`);
+
+    const { error: deleteError } = await supabaseAdmin
+      .from('video_quotes')
+      .delete()
+      .eq('video_id', videoId);
+
+    if (deleteError) {
+      console.error('[VIDEO QUOTES] Error deleting quotes:', deleteError);
+      return NextResponse.json(
+        { error: 'Failed to delete quotes' },
+        { status: 500 }
+      );
+    }
+
+    console.log(`[VIDEO QUOTES] Successfully deleted quotes for video ${videoId}`);
+
+    return NextResponse.json({
+      success: true,
+      message: 'Quotes deleted. Fetch again to regenerate.',
+    });
+
+  } catch (error) {
+    console.error('[VIDEO QUOTES] Error:', error);
+    return NextResponse.json(
+      { error: error instanceof Error ? error.message : 'Internal server error' },
+      { status: 500 }
+    );
+  }
+}
+
+/**
  * GET endpoint to fetch or generate quotes for a video
  *
  * This endpoint:
@@ -126,11 +175,16 @@ A powerful quote should be:
 - Self-contained and understandable on its own
 - Memorable and shareable
 - Relevant to the video's core message
-- Between 10-100 words in length
+- At least 5 words in length (minimum)
+- Between 10-100 words in length (ideal)
+- UNIQUE - no duplicates or near-duplicates
+- Substantive - avoid single words, fragments, or filler phrases
+
+IMPORTANT: Each quote must be completely different from the others. Do not return similar or repetitive quotes.
 
 You will receive a transcript with timestamps in the format [HH:MM:SS] or [MM:SS].
 
-Return ONLY a valid JSON array of exactly 10 quotes, with no additional text or formatting. Each quote must have:
+Return ONLY a valid JSON array of exactly 10 UNIQUE quotes, with no additional text or formatting. Each quote must have:
 - "text": the exact quote text from the transcript
 - "timestamp": the timestamp where the quote appears (e.g., "1:23:45" or "5:32")
 
@@ -169,6 +223,51 @@ Example format:
     if (!Array.isArray(quotesData) || quotesData.length === 0) {
       throw new Error('ChatGPT did not return valid quotes array');
     }
+
+    // Deduplicate quotes - remove similar or identical quotes
+    const uniqueQuotes: Array<{ text: string; timestamp: string }> = [];
+    const seenTexts = new Set<string>();
+
+    for (const quote of quotesData) {
+      const normalizedText = quote.text.toLowerCase().trim();
+
+      // Skip if too short (less than 5 words)
+      const wordCount = normalizedText.split(/\s+/).length;
+      if (wordCount < 5) {
+        console.log(`[VIDEO QUOTES] Skipping short quote: "${quote.text}"`);
+        continue;
+      }
+
+      // Check for exact duplicates
+      if (seenTexts.has(normalizedText)) {
+        console.log(`[VIDEO QUOTES] Skipping duplicate quote: "${quote.text}"`);
+        continue;
+      }
+
+      // Check for near-duplicates (quotes that are very similar)
+      let isSimilar = false;
+      for (const seenText of seenTexts) {
+        if (areSimilarQuotes(normalizedText, seenText)) {
+          console.log(`[VIDEO QUOTES] Skipping similar quote: "${quote.text}"`);
+          isSimilar = true;
+          break;
+        }
+      }
+
+      if (!isSimilar) {
+        seenTexts.add(normalizedText);
+        uniqueQuotes.push(quote);
+      }
+    }
+
+    if (uniqueQuotes.length === 0) {
+      throw new Error('No valid unique quotes after deduplication');
+    }
+
+    console.log(`[VIDEO QUOTES] After deduplication: ${uniqueQuotes.length} unique quotes from ${quotesData.length} original`);
+
+    // Use the deduplicated quotes
+    quotesData = uniqueQuotes;
 
     // Match quotes to transcript segments to get precise timing
     const quotes: Quote[] = [];
@@ -357,4 +456,28 @@ function formatTimestamp(seconds: number): string {
   } else {
     return `${minutes}:${secs.toString().padStart(2, '0')}`;
   }
+}
+
+/**
+ * Check if two quotes are similar (likely duplicates)
+ * Returns true if quotes share more than 70% of their words
+ */
+function areSimilarQuotes(text1: string, text2: string): boolean {
+  const words1 = new Set(text1.toLowerCase().split(/\s+/));
+  const words2 = new Set(text2.toLowerCase().split(/\s+/));
+
+  // Count common words
+  let commonWords = 0;
+  for (const word of words1) {
+    if (word.length > 2 && words2.has(word)) {
+      commonWords++;
+    }
+  }
+
+  // Calculate similarity percentage
+  const minWords = Math.min(words1.size, words2.size);
+  const similarity = commonWords / minWords;
+
+  // Consider similar if more than 70% of words are the same
+  return similarity > 0.7;
 }
