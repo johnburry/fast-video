@@ -147,12 +147,25 @@ export async function POST(request: NextRequest) {
             log(`[INFO] YouTube ID: ${channel.youtube_channel_id || 'Not set'}`);
             log(`[INFO] YouTube Handle: ${channel.youtube_channel_handle || 'Not set'}`);
 
-            // Resolve YouTube channel ID from handle if not present
+            // Resolve YouTube channel ID from handle if not present or if ID looks like a handle
             let youtubeChannelId = channel.youtube_channel_id;
 
-            if (!youtubeChannelId && channel.youtube_channel_handle) {
-              log(`[INFO] Resolving channel ID from handle: ${channel.youtube_channel_handle}`);
-              const channelInfo = await getChannelByHandle(channel.youtube_channel_handle);
+            // Check if we need to resolve the handle
+            // A proper channel ID starts with "UC", if it doesn't, it's likely a handle
+            const needsResolution = !youtubeChannelId ||
+                                   (youtubeChannelId && !youtubeChannelId.startsWith('UC'));
+
+            if (needsResolution) {
+              const handleToResolve = channel.youtube_channel_handle || youtubeChannelId;
+
+              if (!handleToResolve) {
+                log(`[ERROR] Skipping - no YouTube channel ID or handle configured`);
+                metrics.errors.push(`${channel.channel_name}: No YouTube channel ID or handle configured`);
+                continue;
+              }
+
+              log(`[INFO] Resolving channel ID from handle: ${handleToResolve}`);
+              const channelInfo = await getChannelByHandle(handleToResolve);
 
               if (channelInfo) {
                 youtubeChannelId = channelInfo.channelId;
@@ -161,7 +174,10 @@ export async function POST(request: NextRequest) {
                 // Update the database with the resolved channel ID
                 await supabaseAdmin
                   .from('channels')
-                  .update({ youtube_channel_id: youtubeChannelId })
+                  .update({
+                    youtube_channel_id: youtubeChannelId,
+                    youtube_channel_handle: channelInfo.handle
+                  })
                   .eq('id', channel.id);
                 log(`[INFO] Updated database with resolved channel ID`);
               } else {
