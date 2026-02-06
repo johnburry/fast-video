@@ -113,12 +113,25 @@ async function runImportJob(request: NextRequest) {
       try {
         console.log(`[CRON] Processing channel: ${channel.channel_name} (ID: ${channel.id}, YT ID: ${channel.youtube_channel_id}, Handle: ${channel.youtube_channel_handle})`);
 
-        // Resolve YouTube channel ID from handle if not present
+        // Resolve YouTube channel ID from handle if not present or if ID looks like a handle
         let youtubeChannelId = channel.youtube_channel_id;
 
-        if (!youtubeChannelId && channel.youtube_channel_handle) {
-          console.log(`[CRON] No youtube_channel_id, resolving from handle: ${channel.youtube_channel_handle}`);
-          const channelInfo = await getChannelByHandle(channel.youtube_channel_handle);
+        // Check if we need to resolve the handle
+        // A proper channel ID starts with "UC", if it doesn't, it's likely a handle
+        const needsResolution = !youtubeChannelId ||
+                               (youtubeChannelId && !youtubeChannelId.startsWith('UC'));
+
+        if (needsResolution) {
+          const handleToResolve = channel.youtube_channel_handle || youtubeChannelId;
+
+          if (!handleToResolve) {
+            console.log(`[CRON] Skipping ${channel.channel_name} - no youtube_channel_id or youtube_channel_handle`);
+            metrics.errors.push(`${channel.channel_name}: No YouTube channel ID or handle configured`);
+            continue;
+          }
+
+          console.log(`[CRON] Resolving channel from handle: ${handleToResolve}`);
+          const channelInfo = await getChannelByHandle(handleToResolve);
 
           if (channelInfo) {
             youtubeChannelId = channelInfo.channelId;
@@ -127,10 +140,13 @@ async function runImportJob(request: NextRequest) {
             // Update the database with the resolved channel ID for future use
             await supabaseAdmin
               .from('channels')
-              .update({ youtube_channel_id: youtubeChannelId })
+              .update({
+                youtube_channel_id: youtubeChannelId,
+                youtube_channel_handle: channelInfo.handle
+              })
               .eq('id', channel.id);
           } else {
-            console.log(`[CRON] Failed to resolve channel ID from handle ${channel.youtube_channel_handle}`);
+            console.log(`[CRON] Failed to resolve channel ID from handle ${handleToResolve}`);
             metrics.errors.push(`${channel.channel_name}: Could not resolve YouTube channel from handle`);
             continue;
           }
