@@ -39,6 +39,7 @@ export default function ManageChannelPage({
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [deletingQuotes, setDeletingQuotes] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [tenants, setTenants] = useState<any[]>([]);
@@ -260,6 +261,67 @@ export default function ManageChannelPage({
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to delete channel');
       setDeleting(false);
+    }
+  };
+
+  const handleDeleteQuotes = async () => {
+    if (!channel) return;
+
+    const confirmDelete = window.confirm(
+      `Are you sure you want to delete ALL quotes for all videos in ${channel.name}? This will allow quotes to be regenerated when videos are viewed again. This action cannot be undone.`
+    );
+
+    if (!confirmDelete) return;
+
+    setDeletingQuotes(true);
+    setError(null);
+    setSuccess(null);
+
+    try {
+      // Fetch all videos for this channel
+      const videosResponse = await fetch(`/api/videos?channelId=${channel.id}`);
+      if (!videosResponse.ok) {
+        throw new Error('Failed to fetch videos');
+      }
+
+      const { videos } = await videosResponse.json();
+
+      if (!videos || videos.length === 0) {
+        setSuccess('No videos found for this channel');
+        setDeletingQuotes(false);
+        return;
+      }
+
+      // Delete quotes for each video
+      let deletedCount = 0;
+      let errorCount = 0;
+
+      for (const video of videos) {
+        try {
+          const deleteResponse = await fetch(`/api/quotes/${video.id}`, {
+            method: 'DELETE',
+          });
+
+          if (deleteResponse.ok) {
+            deletedCount++;
+          } else {
+            errorCount++;
+          }
+        } catch (err) {
+          errorCount++;
+          console.error(`Failed to delete quotes for video ${video.id}:`, err);
+        }
+      }
+
+      if (errorCount > 0) {
+        setSuccess(`Deleted quotes for ${deletedCount} videos. ${errorCount} videos had errors.`);
+      } else {
+        setSuccess(`Successfully deleted quotes for all ${deletedCount} videos!`);
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to delete quotes');
+    } finally {
+      setDeletingQuotes(false);
     }
   };
 
@@ -829,16 +891,34 @@ export default function ManageChannelPage({
 
           <div className="mt-8 pt-8 border-t border-gray-200">
             <h2 className="text-lg font-bold text-gray-900 mb-4">Danger Zone</h2>
-            <button
-              onClick={handleDelete}
-              disabled={deleting}
-              className="w-full bg-red-600 text-white py-3 px-6 rounded-lg font-medium hover:bg-red-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
-            >
-              {deleting ? 'Deleting...' : 'Delete Channel'}
-            </button>
-            <p className="text-sm text-gray-500 mt-2">
-              This will permanently delete the channel, all videos, and transcripts. This action cannot be undone.
-            </p>
+
+            <div className="space-y-4">
+              <div>
+                <button
+                  onClick={handleDeleteQuotes}
+                  disabled={deletingQuotes}
+                  className="w-full bg-orange-600 text-white py-3 px-6 rounded-lg font-medium hover:bg-orange-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
+                >
+                  {deletingQuotes ? 'Deleting Quotes...' : 'Delete All Quotes'}
+                </button>
+                <p className="text-sm text-gray-500 mt-2">
+                  This will delete all cached quotes for all videos in this channel. Quotes will be regenerated when videos are viewed again. Useful for fixing low-quality or duplicate quotes.
+                </p>
+              </div>
+
+              <div>
+                <button
+                  onClick={handleDelete}
+                  disabled={deleting}
+                  className="w-full bg-red-600 text-white py-3 px-6 rounded-lg font-medium hover:bg-red-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
+                >
+                  {deleting ? 'Deleting...' : 'Delete Channel'}
+                </button>
+                <p className="text-sm text-gray-500 mt-2">
+                  This will permanently delete the channel, all videos, and transcripts. This action cannot be undone.
+                </p>
+              </div>
+            </div>
           </div>
         </div>
       </div>
