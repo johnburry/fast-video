@@ -330,6 +330,75 @@ export async function POST(request: NextRequest) {
         console.log(`  - Existing videos without transcripts: ${existingVideosWithoutTranscripts.length}`);
         console.log(`  - Skip transcripts mode: ${shouldSkipTranscripts}`);
 
+        // Refresh metadata (title, thumbnail) for videos from the last 30 days
+        // This catches any changes creators made to existing videos
+        sendProgress({ type: 'status', message: 'Checking for metadata updates on recent videos...' });
+        const thirtyDaysAgo = new Date();
+        thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
+        // Get existing videos from the last 30 days
+        const { data: recentVideos } = await supabaseAdmin
+          .from('videos')
+          .select('id, youtube_video_id, title, thumbnail_url')
+          .eq('channel_id', channelId)
+          .gte('published_at', thirtyDaysAgo.toISOString());
+
+        if (recentVideos && recentVideos.length > 0) {
+          console.log(`[METADATA] Found ${recentVideos.length} videos from last 30 days to check for updates`);
+          let metadataUpdates = 0;
+
+          // Create a map of YouTube video data for quick lookup
+          const youtubeVideoMap = new Map(combinedVideos.map(v => [v.videoId, v]));
+
+          for (const dbVideo of recentVideos) {
+            const youtubeVideo = youtubeVideoMap.get(dbVideo.youtube_video_id);
+            if (!youtubeVideo) continue;
+
+            // Check if title or thumbnail changed
+            const titleChanged = youtubeVideo.title !== dbVideo.title;
+            const thumbnailUrl = youtubeVideo.thumbnailUrl || '';
+
+            if (titleChanged || thumbnailUrl) {
+              try {
+                const updateData: any = {};
+
+                // Always update thumbnail (in case creator changed it - URL stays the same but image changes)
+                if (thumbnailUrl) {
+                  const r2ThumbnailUrl = await uploadThumbnailToR2(
+                    youtubeVideo.videoId,
+                    thumbnailUrl
+                  );
+                  updateData.thumbnail_url = r2ThumbnailUrl;
+                }
+
+                // Update title if changed
+                if (titleChanged) {
+                  updateData.title = youtubeVideo.title;
+                  console.log(`[METADATA] Title changed for ${youtubeVideo.videoId}: "${dbVideo.title}" → "${youtubeVideo.title}"`);
+                }
+
+                if (Object.keys(updateData).length > 0) {
+                  await supabaseAdmin
+                    .from('videos')
+                    .update(updateData)
+                    .eq('id', dbVideo.id);
+
+                  metadataUpdates++;
+                }
+              } catch (error) {
+                console.error(`[METADATA] Error updating metadata for ${dbVideo.youtube_video_id}:`, error);
+              }
+            }
+          }
+
+          if (metadataUpdates > 0) {
+            console.log(`[METADATA] Updated metadata for ${metadataUpdates} videos`);
+            sendProgress({ type: 'status', message: `✓ Refreshed metadata for ${metadataUpdates} recent videos` });
+          } else {
+            console.log(`[METADATA] No metadata changes detected`);
+          }
+        }
+
         // Send early progress update so user can see what's happening
         const needsTranscriptDownload = !shouldSkipTranscripts && existingVideosWithoutTranscripts.length > 0;
         sendProgress({
