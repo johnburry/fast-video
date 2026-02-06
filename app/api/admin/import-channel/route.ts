@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase/server';
-import { getChannelByHandle, getChannelVideos, getChannelLiveVideos } from '@/lib/youtube/client';
+import { getChannelByHandle, getChannelVideos, getChannelLiveVideos, getYouTubeClient } from '@/lib/youtube/client';
 import { getVideoTranscript } from '@/lib/youtube/transcript';
 import { uploadThumbnailToR2, uploadChannelThumbnailToR2, uploadChannelBannerToR2 } from '@/lib/r2';
 import type { Database } from '@/lib/supabase/database.types';
@@ -330,29 +330,58 @@ export async function POST(request: NextRequest) {
         console.log(`  - Existing videos without transcripts: ${existingVideosWithoutTranscripts.length}`);
         console.log(`  - Skip transcripts mode: ${shouldSkipTranscripts}`);
 
-        // Refresh metadata (title, thumbnail) for ALL videos fetched from YouTube
+        // Refresh metadata (title, thumbnail) for videos from the last 30 days
         // This catches any changes creators made to existing videos (title or thumbnail)
-        // We check all videos in the fetch, not just recent ones, since creators
-        // often update thumbnails/titles on older popular videos
-        sendProgress({ type: 'status', message: 'Checking for metadata updates on all fetched videos...' });
+        // We check by published date, not by what we fetched, so all recent videos get refreshed
+        sendProgress({ type: 'status', message: 'Checking for metadata updates on recent videos...' });
 
-        // Get ALL existing videos that match the YouTube video IDs we just fetched
-        const youtubeVideoIds = combinedVideos.map(v => v.videoId);
+        const thirtyDaysAgo = new Date();
+        thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
+        // Get ALL videos from last 30 days (not limited by fetch)
         const { data: recentVideos } = await supabaseAdmin
           .from('videos')
-          .select('id, youtube_video_id, title, thumbnail_url')
+          .select('id, youtube_video_id, title, thumbnail_url, published_at')
           .eq('channel_id', channelId)
-          .in('youtube_video_id', youtubeVideoIds);
+          .gte('published_at', thirtyDaysAgo.toISOString());
 
         if (recentVideos && recentVideos.length > 0) {
           console.log(`[METADATA] Found ${recentVideos.length} videos from last 30 days to check for updates`);
           let metadataUpdates = 0;
 
-          // Create a map of YouTube video data for quick lookup
+          // Create a map of YouTube video data for quick lookup from fetched videos
           const youtubeVideoMap = new Map(combinedVideos.map(v => [v.videoId, v]));
 
           for (const dbVideo of recentVideos) {
-            const youtubeVideo = youtubeVideoMap.get(dbVideo.youtube_video_id);
+            // Try to get from fetched videos first (most efficient)
+            let youtubeVideo = youtubeVideoMap.get(dbVideo.youtube_video_id);
+
+            // If not in fetched videos, we need to fetch it individually from YouTube
+            // This handles cases where the video isn't in the current import batch
+            if (!youtubeVideo) {
+              console.log(`[METADATA] Video ${dbVideo.youtube_video_id} not in current fetch, fetching individually...`);
+              try {
+                const youtube = await getYouTubeClient();
+                const video = await youtube.getInfo(dbVideo.youtube_video_id);
+                if (video && video.basic_info) {
+                  youtubeVideo = {
+                    videoId: dbVideo.youtube_video_id,
+                    title: video.basic_info.title || '',
+                    thumbnailUrl: video.basic_info.thumbnail?.[0]?.url || '',
+                    description: video.basic_info.short_description || '',
+                    durationSeconds: video.basic_info.duration || 0,
+                    publishedAt: '',
+                    viewCount: 0,
+                    likeCount: 0,
+                    commentCount: 0,
+                  };
+                }
+              } catch (error) {
+                console.error(`[METADATA] Error fetching video ${dbVideo.youtube_video_id} from YouTube:`, error);
+                continue;
+              }
+            }
+
             if (!youtubeVideo) continue;
 
             // Check if title or thumbnail changed
