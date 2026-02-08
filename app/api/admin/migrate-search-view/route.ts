@@ -32,30 +32,48 @@ export async function POST(request: NextRequest) {
 
       console.log('[MIGRATE] Starting batch migration...');
 
-      // Get the last transcript_id that was inserted (for cursor-based pagination)
-      const { data: lastInserted } = await supabaseAdmin
-        .from('transcript_search_context_temp')
-        .select('transcript_id')
-        .order('transcript_id', { ascending: false })
-        .limit(1);
+      // Get counts to check progress
+      const [sourceCountResult, destCountResult] = await Promise.all([
+        supabaseAdmin
+          .from('transcript_search_context_new')
+          .select('transcript_id', { count: 'exact', head: true }),
+        supabaseAdmin
+          .from('transcript_search_context_temp')
+          .select('transcript_id', { count: 'exact', head: true })
+      ]);
 
-      const lastId = lastInserted?.[0]?.transcript_id;
-      console.log(`[MIGRATE] Last inserted ID: ${lastId || 'none'}`);
+      const sourceCount = sourceCountResult.count || 0;
+      const destCount = destCountResult.count || 0;
+      const remaining = sourceCount - destCount;
 
-      // Fetch next batch from source view using cursor-based pagination
-      // This is much faster than offset-based pagination on large datasets
-      let fetchQuery = supabaseAdmin
-        .from('transcript_search_context_new')
-        .select('*')
-        .order('transcript_id', { ascending: true })
-        .limit(BATCH_SIZE);
+      console.log(`[MIGRATE] Source: ${sourceCount}, Dest: ${destCount}, Remaining: ${remaining}`);
 
-      // If we have a last ID, get rows after it
-      if (lastId) {
-        fetchQuery = fetchQuery.gt('transcript_id', lastId);
+      // If counts match, we're done
+      if (remaining <= 0) {
+        console.log('[MIGRATE] Migration complete - counts match');
+        return NextResponse.json({
+          completed: true,
+          message: 'Migration complete!',
+          rows_migrated: 0,
+          total_rows: destCount,
+        });
       }
 
-      const { data: batch, error: fetchError } = await fetchQuery;
+      // Get a sample of IDs that are already in destination (for filtering)
+      const { data: existingIdsSample } = await supabaseAdmin
+        .from('transcript_search_context_temp')
+        .select('transcript_id')
+        .limit(10000); // Sample to check against
+
+      const existingIds = new Set((existingIdsSample || []).map(r => r.transcript_id));
+
+      console.log(`[MIGRATE] Loaded ${existingIds.size} existing IDs for filtering`);
+
+      // Fetch a larger batch from source and filter out existing
+      const { data: sourceBatch, error: fetchError } = await supabaseAdmin
+        .from('transcript_search_context_new')
+        .select('*')
+        .limit(BATCH_SIZE * 3); // Get more to account for filtering
 
       if (fetchError) {
         console.error('[MIGRATE] Error fetching batch:', fetchError);
@@ -65,19 +83,33 @@ export async function POST(request: NextRequest) {
         }, { status: 500 });
       }
 
-      if (!batch || batch.length === 0) {
-        console.log('[MIGRATE] No more rows to migrate');
+      // Filter to only new rows
+      const batch = (sourceBatch || [])
+        .filter(row => !existingIds.has(row.transcript_id))
+        .slice(0, BATCH_SIZE);
 
-        // Get final count for confirmation
-        const { count: finalCount } = await supabaseAdmin
-          .from('transcript_search_context_temp')
-          .select('*', { count: 'exact', head: true });
+      console.log(`[MIGRATE] Filtered ${sourceBatch?.length || 0} rows down to ${batch.length} new rows`);
+
+      if (!batch || batch.length === 0) {
+        console.log('[MIGRATE] No new rows found in this batch, but ${remaining} rows remain');
+        console.log('[MIGRATE] This might mean we need to fetch from a different offset');
+
+        // If we still have remaining rows but found no new ones in this batch,
+        // it means our sample didn't cover them. Force completion check.
+        if (remaining > 0) {
+          return NextResponse.json({
+            completed: false,
+            rows_migrated: 0,
+            total_migrated: destCount,
+            message: 'No new rows in this batch - may need larger sample size'
+          });
+        }
 
         return NextResponse.json({
           completed: true,
           message: 'Migration complete!',
           rows_migrated: 0,
-          total_rows: finalCount || 0,
+          total_rows: destCount,
         });
       }
 
