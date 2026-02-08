@@ -172,9 +172,22 @@ export async function GET(
 
     console.log(`[VIDEO QUOTES] Transcript analysis: ${totalWords} words, ${fillerCount} filler words (${(fillerPercentage * 100).toFixed(1)}%)`);
 
-    // If more than 50% of the transcript is filler words, don't generate quotes
-    if (fillerPercentage > 0.5) {
-      console.log(`[VIDEO QUOTES] Transcript is mostly music/filler (${(fillerPercentage * 100).toFixed(1)}%). Skipping quote generation.`);
+    // Determine appropriate filler threshold based on transcript length
+    // Short transcripts need stricter thresholds (must have some real content)
+    // Long transcripts can tolerate more filler
+    let fillerThreshold = 0.5; // Default: 50%
+
+    if (totalWords < 50) {
+      // Very short transcript: require at least 70% real content
+      fillerThreshold = 0.3;
+    } else if (totalWords < 100) {
+      // Short transcript: require at least 60% real content
+      fillerThreshold = 0.4;
+    }
+
+    // If transcript exceeds filler threshold, don't generate quotes
+    if (fillerPercentage > fillerThreshold) {
+      console.log(`[VIDEO QUOTES] Transcript is mostly music/filler (${(fillerPercentage * 100).toFixed(1)}% > ${(fillerThreshold * 100).toFixed(0)}% threshold). Skipping quote generation.`);
       return NextResponse.json({
         quotes: [],
         cached: false,
@@ -231,7 +244,7 @@ If the transcript does not contain meaningful quotes (e.g., only music, applause
         },
         {
           role: 'user',
-          content: `Video Title: ${video.title}\n\nTranscript:\n${fullTranscript}\n\nAnalyze this transcript and return exactly 10 powerful quotes in JSON format.`
+          content: `Video Title: ${video.title}\n\nTranscript:\n${fullTranscript}\n\nAnalyze this transcript and extract the most powerful quotes (up to 10). If the transcript is short, extract fewer high-quality quotes rather than padding with low-quality content. Return quotes in JSON format.`
         }
       ],
       temperature: 0.7,
