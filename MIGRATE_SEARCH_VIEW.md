@@ -9,10 +9,13 @@ The original migration times out because it tries to rebuild the entire material
 
 ### Step 1: Run the Optimized Migration
 Run this SQL file in Supabase SQL Editor:
-**File**: `supabase/migrations/20260208_filter_search_by_quality_transcript_v2.sql`
+**File**: `supabase/migrations/20260208_filter_search_by_quality_transcript_v3.sql`
+
+**Note**: Use v3, not v2. V3 fixes the "function name is not unique" error by explicitly dropping all existing function signatures first.
 
 This will:
-- ✅ Update the semantic search function (fast, no timeout)
+- ✅ Drop all existing versions of the semantic search function
+- ✅ Create new version with quality transcript filter (fast, no timeout)
 - ✅ Create a new regular view `transcript_search_context_new` with the quality filter
 - ❌ Does NOT rebuild the materialized view yet (to avoid timeout)
 
