@@ -210,6 +210,50 @@ export default function MigrateSearchViewPage() {
             </div>
           )}
 
+          {/* Large remaining count warning */}
+          {stats && stats.remaining > 100000 && !migrating && (
+            <div className="bg-yellow-50 border-2 border-yellow-400 rounded-lg p-5 mb-4">
+              <h3 className="font-bold text-yellow-900 mb-2 flex items-center gap-2">
+                <span className="text-2xl">⚠️</span>
+                Large Number of Remaining Rows - Use SQL Instead
+              </h3>
+              <p className="text-yellow-800 mb-3">
+                You have <strong>{stats.remaining.toLocaleString()} rows</strong> remaining.
+                The API-based migration is too slow for this volume. Complete the migration instantly with SQL:
+              </p>
+              <div className="bg-yellow-900 p-4 rounded font-mono text-xs text-yellow-50 mb-3 overflow-x-auto">
+{`INSERT INTO transcript_search_context_temp
+SELECT src.*
+FROM transcript_search_context_new src
+WHERE NOT EXISTS (
+  SELECT 1 FROM transcript_search_context_temp dest
+  WHERE dest.transcript_id = src.transcript_id
+)
+ON CONFLICT (transcript_id) DO NOTHING;`}
+              </div>
+              <button
+                onClick={() => {
+                  const sql = `INSERT INTO transcript_search_context_temp
+SELECT src.*
+FROM transcript_search_context_new src
+WHERE NOT EXISTS (
+  SELECT 1 FROM transcript_search_context_temp dest
+  WHERE dest.transcript_id = src.transcript_id
+)
+ON CONFLICT (transcript_id) DO NOTHING;`;
+                  navigator.clipboard.writeText(sql);
+                  setMessage('SQL copied! Paste it into Supabase SQL Editor.');
+                }}
+                className="px-4 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 font-semibold"
+              >
+                Copy SQL to Clipboard
+              </button>
+              <p className="text-yellow-800 text-sm mt-3">
+                Run this in <strong>Supabase SQL Editor</strong>. It will complete in 5-15 minutes instead of hours.
+              </p>
+            </div>
+          )}
+
           {/* Messages */}
           {message && (
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
