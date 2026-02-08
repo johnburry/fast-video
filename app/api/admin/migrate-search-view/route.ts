@@ -32,31 +32,52 @@ export async function POST(request: NextRequest) {
 
       console.log('[MIGRATE] Starting batch migration...');
 
-      // Get current count in destination
-      const { count: currentCount } = await supabaseAdmin
+      // Get the last transcript_id that was inserted (for cursor-based pagination)
+      const { data: lastInserted } = await supabaseAdmin
         .from('transcript_search_context_temp')
-        .select('*', { count: 'exact', head: true });
+        .select('transcript_id')
+        .order('transcript_id', { ascending: false })
+        .limit(1);
 
-      const offset = currentCount || 0;
-      console.log(`[MIGRATE] Current destination count: ${offset}`);
+      const lastId = lastInserted?.[0]?.transcript_id;
+      console.log(`[MIGRATE] Last inserted ID: ${lastId || 'none'}`);
 
-      // Fetch next batch from source view
-      const { data: batch, error: fetchError } = await supabaseAdmin
+      // Fetch next batch from source view using cursor-based pagination
+      // This is much faster than offset-based pagination on large datasets
+      let fetchQuery = supabaseAdmin
         .from('transcript_search_context_new')
         .select('*')
-        .range(offset, offset + BATCH_SIZE - 1);
+        .order('transcript_id', { ascending: true })
+        .limit(BATCH_SIZE);
+
+      // If we have a last ID, get rows after it
+      if (lastId) {
+        fetchQuery = fetchQuery.gt('transcript_id', lastId);
+      }
+
+      const { data: batch, error: fetchError } = await fetchQuery;
 
       if (fetchError) {
         console.error('[MIGRATE] Error fetching batch:', fetchError);
-        return NextResponse.json({ error: 'Failed to fetch batch' }, { status: 500 });
+        return NextResponse.json({
+          error: `Failed to fetch batch: ${fetchError.message}`,
+          code: fetchError.code
+        }, { status: 500 });
       }
 
       if (!batch || batch.length === 0) {
         console.log('[MIGRATE] No more rows to migrate');
+
+        // Get final count for confirmation
+        const { count: finalCount } = await supabaseAdmin
+          .from('transcript_search_context_temp')
+          .select('*', { count: 'exact', head: true });
+
         return NextResponse.json({
           completed: true,
           message: 'Migration complete!',
           rows_migrated: 0,
+          total_rows: finalCount || 0,
         });
       }
 
@@ -74,16 +95,24 @@ export async function POST(request: NextRequest) {
 
       if (insertError) {
         console.error('[MIGRATE] Error inserting batch:', insertError);
-        return NextResponse.json({ error: 'Failed to insert batch' }, { status: 500 });
+        return NextResponse.json({
+          error: `Failed to insert batch: ${insertError.message}`,
+          code: insertError.code
+        }, { status: 500 });
       }
 
       const actualInserted = insertedData?.length || 0;
       console.log(`[MIGRATE] Successfully inserted ${actualInserted} new rows (${batch.length - actualInserted} were duplicates)`);
 
+      // Get updated count
+      const { count: currentCount } = await supabaseAdmin
+        .from('transcript_search_context_temp')
+        .select('*', { count: 'exact', head: true });
+
       return NextResponse.json({
         completed: false,
         rows_migrated: actualInserted,
-        total_migrated: offset + actualInserted,
+        total_migrated: currentCount || 0,
       });
     }
 
