@@ -221,35 +221,79 @@ export default function MigrateSearchViewPage() {
                 You have <strong>{stats.remaining.toLocaleString()} rows</strong> remaining.
                 The API-based migration is too slow for this volume. Complete the migration instantly with SQL:
               </p>
-              <div className="bg-yellow-900 p-4 rounded font-mono text-xs text-yellow-50 mb-3 overflow-x-auto">
-{`INSERT INTO transcript_search_context_temp
-SELECT src.*
-FROM transcript_search_context_new src
-WHERE NOT EXISTS (
-  SELECT 1 FROM transcript_search_context_temp dest
-  WHERE dest.transcript_id = src.transcript_id
-)
-ON CONFLICT (transcript_id) DO NOTHING;`}
+              <div className="bg-yellow-900 p-4 rounded font-mono text-2xs text-yellow-50 mb-3 overflow-x-auto whitespace-pre" style={{fontSize: '10px'}}>
+{`DO $$
+DECLARE
+  batch_size INT := 50000;
+  rows_inserted INT;
+  total_inserted INT := 0;
+  batch_num INT := 0;
+BEGIN
+  LOOP
+    batch_num := batch_num + 1;
+    RAISE NOTICE 'Processing batch %, batch_num;
+    WITH rows_to_insert AS (
+      SELECT src.* FROM transcript_search_context_new src
+      WHERE NOT EXISTS (
+        SELECT 1 FROM transcript_search_context_temp dest
+        WHERE dest.transcript_id = src.transcript_id
+      )
+      LIMIT batch_size
+    )
+    INSERT INTO transcript_search_context_temp
+    SELECT * FROM rows_to_insert
+    ON CONFLICT (transcript_id) DO NOTHING;
+    GET DIAGNOSTICS rows_inserted = ROW_COUNT;
+    total_inserted := total_inserted + rows_inserted;
+    RAISE NOTICE 'Batch %: inserted % rows (total: %)',
+      batch_num, rows_inserted, total_inserted;
+    EXIT WHEN rows_inserted = 0;
+    PERFORM pg_sleep(0.1);
+  END LOOP;
+  RAISE NOTICE 'Complete! Total inserted: %', total_inserted;
+END $$;`}
               </div>
               <button
                 onClick={() => {
-                  const sql = `INSERT INTO transcript_search_context_temp
-SELECT src.*
-FROM transcript_search_context_new src
-WHERE NOT EXISTS (
-  SELECT 1 FROM transcript_search_context_temp dest
-  WHERE dest.transcript_id = src.transcript_id
-)
-ON CONFLICT (transcript_id) DO NOTHING;`;
+                  const sql = `DO $$
+DECLARE
+  batch_size INT := 50000;
+  rows_inserted INT;
+  total_inserted INT := 0;
+  batch_num INT := 0;
+BEGIN
+  LOOP
+    batch_num := batch_num + 1;
+    RAISE NOTICE 'Processing batch %', batch_num;
+    WITH rows_to_insert AS (
+      SELECT src.* FROM transcript_search_context_new src
+      WHERE NOT EXISTS (
+        SELECT 1 FROM transcript_search_context_temp dest
+        WHERE dest.transcript_id = src.transcript_id
+      )
+      LIMIT batch_size
+    )
+    INSERT INTO transcript_search_context_temp
+    SELECT * FROM rows_to_insert
+    ON CONFLICT (transcript_id) DO NOTHING;
+    GET DIAGNOSTICS rows_inserted = ROW_COUNT;
+    total_inserted := total_inserted + rows_inserted;
+    RAISE NOTICE 'Batch %: inserted % rows (total: %)', batch_num, rows_inserted, total_inserted;
+    EXIT WHEN rows_inserted = 0;
+    PERFORM pg_sleep(0.1);
+  END LOOP;
+  RAISE NOTICE 'Migration complete! Total inserted: %', total_inserted;
+END $$;`;
                   navigator.clipboard.writeText(sql);
-                  setMessage('SQL copied! Paste it into Supabase SQL Editor.');
+                  setMessage('Batched SQL copied! Paste into Supabase SQL Editor. Watch NOTICE messages for progress.');
                 }}
                 className="px-4 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 font-semibold"
               >
-                Copy SQL to Clipboard
+                Copy Batched SQL (Avoids Timeout)
               </button>
               <p className="text-yellow-800 text-sm mt-3">
-                Run this in <strong>Supabase SQL Editor</strong>. It will complete in 5-15 minutes instead of hours.
+                Run this in <strong>Supabase SQL Editor</strong>. Processes 50k rows at a time to avoid timeouts.
+                Watch the <strong>NOTICE</strong> messages for real-time progress updates.
               </p>
             </div>
           )}
