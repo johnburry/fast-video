@@ -592,7 +592,7 @@ export default function ChannelPage({
                       <p className="text-sm text-gray-500">
                         {new Date(video.published_at).toLocaleDateString()}
                       </p>
-                      {video.has_transcript && (
+                      {video.has_quality_transcript && (
                         <div className="flex flex-wrap gap-2 mt-2">
                           <span className="inline-block text-xs bg-green-100 text-green-800 px-2 py-1 rounded">
                             Transcript Available

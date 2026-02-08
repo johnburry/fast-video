@@ -3,6 +3,7 @@ import { supabaseAdmin } from '@/lib/supabase/server';
 import { getChannelByHandle, getChannelVideos, getChannelLiveVideos, getYouTubeClient } from '@/lib/youtube/client';
 import { getVideoTranscript } from '@/lib/youtube/transcript';
 import { uploadThumbnailToR2, uploadChannelThumbnailToR2, uploadChannelBannerToR2 } from '@/lib/r2';
+import { isQualityTranscript } from '@/lib/transcriptQuality';
 import type { Database } from '@/lib/supabase/database.types';
 
 // Sanitize handle for use as subdomain (replace invalid characters with hyphens)
@@ -602,22 +603,28 @@ export async function POST(request: NextRequest) {
             console.error(`[IMPORT] Error saving transcript for video ${video.videoId}:`, transcriptError);
           } else {
             console.log(`[IMPORT] Successfully saved transcript for video ${video.videoId}`);
+
+            // Validate transcript quality
+            const hasQualityTranscript = isQualityTranscript(transcript);
+            console.log(`[IMPORT] Transcript quality check for ${video.videoId}: ${hasQualityTranscript ? 'QUALITY' : 'LOW QUALITY (music/filler)'}`);
+
             // Update video to mark transcript as available
-            console.log(`[IMPORT] Updating has_transcript flag for database video ID: ${videoId}, YouTube ID: ${video.videoId}`);
+            console.log(`[IMPORT] Updating transcript flags for database video ID: ${videoId}, YouTube ID: ${video.videoId}`);
             const { data: updateData, error: updateError, count } = await supabaseAdmin
               .from('videos')
               .update({
                 has_transcript: true,
+                has_quality_transcript: hasQualityTranscript,
               })
               .eq('id', videoId)
               .select();
 
             if (updateError) {
-              console.error(`[IMPORT] ERROR updating has_transcript flag for video ${video.videoId} (DB ID: ${videoId}):`, updateError);
+              console.error(`[IMPORT] ERROR updating transcript flags for video ${video.videoId} (DB ID: ${videoId}):`, updateError);
             } else if (!updateData || updateData.length === 0) {
               console.error(`[IMPORT] WARNING: Update returned no rows for video ${video.videoId} (DB ID: ${videoId}). This means the video was not found or RLS policy blocked the update.`);
             } else {
-              console.log(`[IMPORT] ✓ Successfully updated has_transcript=true for video ${video.videoId} (DB ID: ${videoId})`);
+              console.log(`[IMPORT] ✓ Successfully updated transcript flags for video ${video.videoId} (DB ID: ${videoId})`);
               console.log(`[IMPORT] Updated row:`, updateData[0]);
             }
 
@@ -697,9 +704,17 @@ export async function POST(request: NextRequest) {
                 console.error(`[IMPORT] Error saving transcript for video ${video.videoId}:`, transcriptError);
               } else {
                 console.log(`[IMPORT] Successfully saved transcript for video ${video.videoId}`);
+
+                // Validate transcript quality
+                const hasQualityTranscript = isQualityTranscript(transcript);
+                console.log(`[IMPORT] Transcript quality check for ${video.videoId}: ${hasQualityTranscript ? 'QUALITY' : 'LOW QUALITY (music/filler)'}`);
+
                 await supabaseAdmin
                   .from('videos')
-                  .update({ has_transcript: true })
+                  .update({
+                    has_transcript: true,
+                    has_quality_transcript: hasQualityTranscript,
+                  })
                   .eq('id', videoId);
 
                 transcriptCount++;
