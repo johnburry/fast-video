@@ -9,12 +9,12 @@ The original migration times out because it tries to rebuild the entire material
 
 ### Step 1: Run the Optimized Migration
 Run this SQL file in Supabase SQL Editor:
-**File**: `supabase/migrations/20260208_filter_search_by_quality_transcript_v4.sql`
+**File**: `supabase/migrations/20260208_filter_search_by_quality_transcript_v5.sql`
 
-**Note**: Use v4, not v2 or v3. V4 uses a PL/pgSQL block to dynamically drop ALL versions of the function regardless of signature.
+**Note**: Use v5. V5 uses `oid::regprocedure::text` to get the correct DROP signature format.
 
 This will:
-- ✅ Drop all existing versions of the semantic search function (using dynamic SQL)
+- ✅ Drop all existing versions of the semantic search function (using corrected dynamic SQL)
 - ✅ Create new version with quality transcript filter (fast, no timeout)
 - ✅ Create a new regular view `transcript_search_context_new` with the quality filter
 - ❌ Does NOT rebuild the materialized view yet (to avoid timeout)
