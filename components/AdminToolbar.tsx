@@ -63,6 +63,16 @@ export function AdminToolbar() {
             >
               Search Analytics
             </Link>
+            <Link
+              href="/admin/migrations"
+              className={`text-sm font-medium transition-colors ${
+                pathname?.startsWith('/admin/migrate') || pathname === '/admin/migrations' || pathname === '/admin/check-migration'
+                  ? 'text-white'
+                  : 'text-gray-400 hover:text-white'
+              }`}
+            >
+              Migrations
+            </Link>
           </div>
           <button
             onClick={signOut}
