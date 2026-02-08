@@ -13,6 +13,8 @@ export default function MigrateSearchViewPage() {
   const [message, setMessage] = useState<string>('');
   const [error, setError] = useState<string>('');
   const [finalizeSql, setFinalizeSql] = useState<string>('');
+  const [lastUpdate, setLastUpdate] = useState<Date | null>(null);
+  const [batchesProcessed, setBatchesProcessed] = useState(0);
 
   const fetchStats = async () => {
     try {
@@ -25,6 +27,7 @@ export default function MigrateSearchViewPage() {
       if (response.ok) {
         const data = await response.json();
         setStats(data);
+        setLastUpdate(new Date());
       }
     } catch (err) {
       console.error('Error fetching stats:', err);
@@ -74,15 +77,24 @@ export default function MigrateSearchViewPage() {
     setMigrating(true);
     setError('');
     setMessage('Starting migration...');
+    setBatchesProcessed(0);
 
     let shouldContinue = true;
-    while (shouldContinue && migrating) {
+    let batchCount = 0;
+
+    while (shouldContinue) {
+      batchCount++;
+      setBatchesProcessed(batchCount);
+      console.log(`[MIGRATION] Processing batch ${batchCount}...`);
       shouldContinue = await migrateBatch();
+
       if (shouldContinue) {
-        // Small delay between batches
-        await new Promise(resolve => setTimeout(resolve, 100));
+        // Small delay between batches to allow UI updates
+        await new Promise(resolve => setTimeout(resolve, 500));
       }
     }
+
+    console.log(`[MIGRATION] Complete after ${batchCount} batches`);
   };
 
   const finalizeMigration = async () => {
@@ -147,7 +159,22 @@ export default function MigrateSearchViewPage() {
           {/* Stats */}
           {stats && (
             <div className="bg-gray-50 rounded-lg p-4 mb-6">
-              <h2 className="font-semibold text-gray-900 mb-3">Migration Progress</h2>
+              <div className="flex items-center justify-between mb-3">
+                <h2 className="font-semibold text-gray-900">Migration Progress</h2>
+                {lastUpdate && (
+                  <span className="text-sm text-gray-500">
+                    Last updated: {lastUpdate.toLocaleTimeString()}
+                  </span>
+                )}
+              </div>
+              {migrating && (
+                <div className="mb-3 flex items-center gap-2">
+                  <div className="animate-spin h-4 w-4 border-2 border-blue-600 border-t-transparent rounded-full"></div>
+                  <span className="text-sm text-blue-600 font-medium">
+                    Processing batch {batchesProcessed}...
+                  </span>
+                </div>
+              )}
               <div className="grid grid-cols-3 gap-4 mb-4">
                 <div>
                   <div className="text-sm text-gray-600">Source Rows</div>
