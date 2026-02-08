@@ -81,12 +81,24 @@ export async function GET(request: NextRequest) {
     const transcriptIds = (results || []).map((r: any) => r.transcript_id);
 
     // Fetch search context for these transcripts
-    const { data: contextData } = transcriptIds.length > 0
+    // Try main table first, fallback to _new if migration incomplete
+    let contextResult = transcriptIds.length > 0
       ? await supabaseAdmin
           .from('transcript_search_context')
           .select('transcript_id, search_text, original_text')
           .in('transcript_id', transcriptIds)
-      : { data: [] };
+      : { data: [], error: null };
+
+    // If table doesn't exist, try fallback
+    if (contextResult.error && contextResult.error.code === 'PGRST205' && transcriptIds.length > 0) {
+      console.log('[SEMANTIC SEARCH] Main table not found, falling back to transcript_search_context_new');
+      contextResult = await supabaseAdmin
+        .from('transcript_search_context_new')
+        .select('transcript_id, search_text, original_text')
+        .in('transcript_id', transcriptIds);
+    }
+
+    const { data: contextData } = contextResult;
 
     // Create a map for quick lookup
     const contextMap = new Map(

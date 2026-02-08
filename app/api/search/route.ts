@@ -34,6 +34,7 @@ export async function GET(request: NextRequest) {
 
     // Search transcripts using cross-segment search context
     // This allows finding phrases that span across segment boundaries
+    // Try the main table first, fallback to _new if migration incomplete
     let transcriptSearchQuery = supabase
       .from('transcript_search_context')
       .select('*, video_id')
@@ -59,7 +60,38 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    const { data: transcriptData, error: transcriptError } = await transcriptSearchQuery;
+    let { data: transcriptData, error: transcriptError } = await transcriptSearchQuery;
+
+    // If main table doesn't exist (migration incomplete), try the _new view
+    if (transcriptError && transcriptError.code === 'PGRST205') {
+      console.log('[SEARCH] Main table not found, falling back to transcript_search_context_new');
+
+      let fallbackQuery = supabase
+        .from('transcript_search_context_new')
+        .select('*, video_id')
+        .textSearch('search_text', query, {
+          type: 'websearch',
+          config: 'english',
+        })
+        .order('start_time', { ascending: true });
+
+      if (tenantId) {
+        fallbackQuery = fallbackQuery.eq('tenant_id', tenantId);
+      }
+
+      if (channelHandle) {
+        const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(channelHandle);
+        if (isUUID) {
+          fallbackQuery = fallbackQuery.eq('channel_id', channelHandle);
+        } else {
+          fallbackQuery = fallbackQuery.eq('channel_handle', channelHandle);
+        }
+      }
+
+      const fallbackResult = await fallbackQuery;
+      transcriptData = fallbackResult.data;
+      transcriptError = fallbackResult.error;
+    }
 
     if (transcriptError) {
       console.error('Transcript search error:', transcriptError);
