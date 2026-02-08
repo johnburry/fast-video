@@ -19,35 +19,46 @@ This will:
 - ✅ Create a new regular view `transcript_search_context_new` with the quality filter
 - ❌ Does NOT rebuild the materialized view yet (to avoid timeout)
 
-### Step 2: Drop and Recreate the Materialized View
+### Step 2: Drop and Recreate the Materialized View (Background Approach)
 
-Instead of trying to refresh the existing view, we'll drop it and create a new one.
+The direct CREATE with data times out for large databases. Instead, we'll create it empty first, then populate in the background.
 
-**IMPORTANT**: This will cause search to be unavailable for a few minutes while rebuilding.
+**Run each query separately** in Supabase SQL Editor:
 
-Run these commands in Supabase SQL Editor:
-
+#### Query 1: Drop old view and create empty structure
 ```sql
 -- Drop the old materialized view and its indexes
 DROP MATERIALIZED VIEW IF EXISTS public.transcript_search_context CASCADE;
 
--- Create the new materialized view from our updated definition
+-- Create the new materialized view WITHOUT DATA (instant - no timeout)
 CREATE MATERIALIZED VIEW public.transcript_search_context AS
-SELECT * FROM transcript_search_context_new;
+SELECT * FROM transcript_search_context_new
+WITH NO DATA;  -- Creates structure only, no data yet
 
--- Recreate all indexes (this happens on the already-built view, so it's faster)
-CREATE INDEX idx_transcript_search_context_fts
-  ON public.transcript_search_context
-  USING gin(to_tsvector('english', search_text));
+-- Add the unique index first (required for CONCURRENTLY refresh)
+CREATE UNIQUE INDEX idx_transcript_search_context_unique
+  ON public.transcript_search_context (transcript_id);
+```
 
+#### Query 2: Populate the view in background (run this separately)
+```sql
+-- This populates the view concurrently (won't block other queries)
+-- It may take several minutes but won't timeout the SQL editor
+REFRESH MATERIALIZED VIEW CONCURRENTLY public.transcript_search_context;
+```
+
+#### Query 3: Add remaining indexes (run after Query 2 completes)
+```sql
+-- Add other indexes after data is populated
 CREATE INDEX idx_transcript_search_context_video_id
   ON public.transcript_search_context(video_id);
 
 CREATE INDEX idx_transcript_search_context_channel
   ON public.transcript_search_context(channel_handle);
 
-CREATE UNIQUE INDEX idx_transcript_search_context_unique
-  ON public.transcript_search_context (transcript_id);
+CREATE INDEX idx_transcript_search_context_fts
+  ON public.transcript_search_context
+  USING gin(to_tsvector('english', search_text));
 
 -- Grant access
 GRANT SELECT ON public.transcript_search_context TO anon, authenticated;
@@ -75,44 +86,30 @@ SELECT
 FROM public.transcript_search_context;
 ```
 
-### Alternative: If Step 2 Still Times Out
+### Monitoring Query 2 Progress
 
-If the DROP and CREATE still times out, you can use this background approach:
+While Query 2 (REFRESH MATERIALIZED VIEW CONCURRENTLY) is running, you can monitor progress with:
 
 ```sql
--- Option A: Create with NO DATA (instant), then refresh in background
-DROP MATERIALIZED VIEW IF EXISTS public.transcript_search_context CASCADE;
+-- Check if the refresh is still running
+SELECT
+  pid,
+  state,
+  query_start,
+  now() - query_start as duration,
+  query
+FROM pg_stat_activity
+WHERE query LIKE '%transcript_search_context%'
+  AND state != 'idle';
 
-CREATE MATERIALIZED VIEW public.transcript_search_context AS
-SELECT * FROM transcript_search_context_new
-WITH NO DATA;  -- Creates structure only, no data yet
+-- Check current row count (will grow as refresh progresses)
+SELECT COUNT(*) FROM public.transcript_search_context;
 
--- Add indexes before populating (can be faster)
-CREATE UNIQUE INDEX idx_transcript_search_context_unique
-  ON public.transcript_search_context (transcript_id);
-
-CREATE INDEX idx_transcript_search_context_video_id
-  ON public.transcript_search_context(video_id);
-
-CREATE INDEX idx_transcript_search_context_channel
-  ON public.transcript_search_context(channel_handle);
-
--- Now populate it (this might still take time, but won't timeout the SQL editor)
--- Run this as a separate query:
-REFRESH MATERIALIZED VIEW CONCURRENTLY public.transcript_search_context;
-
--- Add the full-text search index after data is populated
--- Run this as another separate query:
-CREATE INDEX idx_transcript_search_context_fts
-  ON public.transcript_search_context
-  USING gin(to_tsvector('english', search_text));
-
--- Grant access
-GRANT SELECT ON public.transcript_search_context TO anon, authenticated;
-
--- Clean up
-DROP VIEW IF EXISTS transcript_search_context_new;
+-- Compare to expected total (from the source view)
+SELECT COUNT(*) FROM transcript_search_context_new;
 ```
+
+**Note**: The CONCURRENT refresh allows other queries to continue working, so your application will remain functional during the migration. Search will just return empty results until the refresh completes.
 
 ## Why This Works
 
