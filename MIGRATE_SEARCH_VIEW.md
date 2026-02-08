@@ -19,37 +19,26 @@ This will:
 - ✅ Create a new regular view `transcript_search_context_new` with the quality filter
 - ❌ Does NOT rebuild the materialized view yet (to avoid timeout)
 
-### Step 2: Drop and Recreate the Materialized View (Background Approach)
+### Step 2: Drop and Recreate the Materialized View
 
-The direct CREATE with data times out for large databases. Instead, we'll create it empty first, then populate in the background.
+The CREATE with data may timeout for very large databases. Here's the simplest approach:
 
-**Run each query separately** in Supabase SQL Editor:
+**Run this single query** in Supabase SQL Editor:
 
-#### Query 1: Drop old view and create empty structure
 ```sql
 -- Drop the old materialized view and its indexes
 DROP MATERIALIZED VIEW IF EXISTS public.transcript_search_context CASCADE;
 
--- Create the new materialized view WITHOUT DATA (instant - no timeout)
+-- Create the new materialized view WITH data
+-- This may take 1-5 minutes but should complete without timeout
 CREATE MATERIALIZED VIEW public.transcript_search_context AS
-SELECT * FROM transcript_search_context_new
-WITH NO DATA;  -- Creates structure only, no data yet
+SELECT * FROM transcript_search_context_new;
 
--- Add the unique index first (required for CONCURRENTLY refresh)
+-- Add the unique index first (fastest to create)
 CREATE UNIQUE INDEX idx_transcript_search_context_unique
   ON public.transcript_search_context (transcript_id);
-```
 
-#### Query 2: Populate the view in background (run this separately)
-```sql
--- This populates the view concurrently (won't block other queries)
--- It may take several minutes but won't timeout the SQL editor
-REFRESH MATERIALIZED VIEW CONCURRENTLY public.transcript_search_context;
-```
-
-#### Query 3: Add remaining indexes (run after Query 2 completes)
-```sql
--- Add other indexes after data is populated
+-- Add other indexes
 CREATE INDEX idx_transcript_search_context_video_id
   ON public.transcript_search_context(video_id);
 
@@ -70,6 +59,79 @@ COMMENT ON MATERIALIZED VIEW public.transcript_search_context IS
 -- Clean up the temporary view
 DROP VIEW IF EXISTS transcript_search_context_new;
 ```
+
+**If this times out**, see the "Alternative Approach" section below.
+
+### Alternative Approach: If Step 2 Still Times Out
+
+If the single-query approach times out, you'll need to use a manual INSERT approach. This bypasses the timeout by using the regular table INSERT mechanism:
+
+#### Step 2A: Create an empty table with the same structure
+```sql
+-- Drop the old materialized view
+DROP MATERIALIZED VIEW IF EXISTS public.transcript_search_context CASCADE;
+
+-- Create a regular table with the same structure (instant)
+CREATE TABLE public.transcript_search_context_temp AS
+SELECT * FROM transcript_search_context_new
+LIMIT 0;  -- No data, just structure
+
+-- Add the unique index
+CREATE UNIQUE INDEX idx_temp_unique ON transcript_search_context_temp (transcript_id);
+```
+
+#### Step 2B: Insert data in batches (run via API or background job)
+Since Supabase SQL Editor has timeouts, you'll need to use one of these methods:
+
+**Option A - Use the Supabase API from your app:**
+Create a temporary API route that runs:
+```typescript
+const { data, error } = await supabaseAdmin
+  .from('transcript_search_context_new')
+  .select('*');
+
+// Insert in batches of 1000
+for (let i = 0; i < data.length; i += 1000) {
+  const batch = data.slice(i, i + 1000);
+  await supabaseAdmin
+    .from('transcript_search_context_temp')
+    .insert(batch);
+}
+```
+
+**Option B - Use psql command line** (if you have database credentials):
+```bash
+psql "your-connection-string" -c "INSERT INTO transcript_search_context_temp SELECT * FROM transcript_search_context_new;"
+```
+
+#### Step 2C: Convert table to materialized view
+```sql
+-- Rename temp table to final name
+ALTER TABLE transcript_search_context_temp RENAME TO transcript_search_context;
+
+-- Convert to materialized view by creating one from the table
+-- (PostgreSQL doesn't allow direct table->view conversion, so we'll keep it as a table)
+-- This works fine - searches will still work
+
+-- Add remaining indexes
+CREATE INDEX idx_transcript_search_context_video_id
+  ON public.transcript_search_context(video_id);
+
+CREATE INDEX idx_transcript_search_context_channel
+  ON public.transcript_search_context(channel_handle);
+
+CREATE INDEX idx_transcript_search_context_fts
+  ON public.transcript_search_context
+  USING gin(to_tsvector('english', search_text));
+
+-- Grant access
+GRANT SELECT ON public.transcript_search_context TO anon, authenticated;
+
+-- Clean up
+DROP VIEW IF EXISTS transcript_search_context_new;
+```
+
+**Note**: This alternative keeps it as a regular table instead of a materialized view, which actually works fine for your use case since the data is read-only and manually refreshed anyway.
 
 ### Step 3: Verify It Worked
 
