@@ -38,7 +38,7 @@ export async function POST(request: NextRequest) {
         .select('*', { count: 'exact', head: true });
 
       const offset = currentCount || 0;
-      console.log(`[MIGRATE] Current offset: ${offset}`);
+      console.log(`[MIGRATE] Current destination count: ${offset}`);
 
       // Fetch next batch from source view
       const { data: batch, error: fetchError } = await supabaseAdmin
@@ -60,24 +60,30 @@ export async function POST(request: NextRequest) {
         });
       }
 
-      console.log(`[MIGRATE] Inserting ${batch.length} rows...`);
+      console.log(`[MIGRATE] Inserting ${batch.length} rows with ON CONFLICT handling...`);
 
-      // Insert batch into temp table
-      const { error: insertError } = await supabaseAdmin
+      // Insert batch into temp table with upsert to handle duplicates
+      // Using ignoreDuplicates to skip rows that already exist
+      const { data: insertedData, error: insertError } = await supabaseAdmin
         .from('transcript_search_context_temp')
-        .insert(batch);
+        .upsert(batch, {
+          onConflict: 'transcript_id',
+          ignoreDuplicates: true, // Skip duplicates instead of updating
+        })
+        .select();
 
       if (insertError) {
         console.error('[MIGRATE] Error inserting batch:', insertError);
         return NextResponse.json({ error: 'Failed to insert batch' }, { status: 500 });
       }
 
-      console.log(`[MIGRATE] Successfully inserted ${batch.length} rows`);
+      const actualInserted = insertedData?.length || 0;
+      console.log(`[MIGRATE] Successfully inserted ${actualInserted} new rows (${batch.length - actualInserted} were duplicates)`);
 
       return NextResponse.json({
         completed: false,
-        rows_migrated: batch.length,
-        total_migrated: offset + batch.length,
+        rows_migrated: actualInserted,
+        total_migrated: offset + actualInserted,
       });
     }
 
