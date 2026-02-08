@@ -154,6 +154,34 @@ export async function GET(
 
     console.log(`[VIDEO QUOTES] Found ${transcripts.length} transcript segments`);
 
+    // Validate transcript content quality
+    // Check if transcript is mostly music/applause/filler words
+    const allText = transcripts.map(t => t.text.toLowerCase()).join(' ');
+    const words = allText.split(/\s+/);
+    const totalWords = words.length;
+
+    // Common filler words in music/low-content videos
+    const fillerWords = ['music', 'applause', 'laughter', 'cheering', '[music]', '[applause]',
+                         '[laughter]', 'instrumental', 'singing', 'oh', 'ah', 'yeah', 'ooh'];
+
+    const fillerCount = words.filter(word =>
+      fillerWords.some(filler => word.includes(filler))
+    ).length;
+
+    const fillerPercentage = totalWords > 0 ? (fillerCount / totalWords) : 0;
+
+    console.log(`[VIDEO QUOTES] Transcript analysis: ${totalWords} words, ${fillerCount} filler words (${(fillerPercentage * 100).toFixed(1)}%)`);
+
+    // If more than 50% of the transcript is filler words, don't generate quotes
+    if (fillerPercentage > 0.5) {
+      console.log(`[VIDEO QUOTES] Transcript is mostly music/filler (${(fillerPercentage * 100).toFixed(1)}%). Skipping quote generation.`);
+      return NextResponse.json({
+        quotes: [],
+        cached: false,
+        error: 'This video appears to be primarily music or non-verbal content. Quotes cannot be extracted.',
+      });
+    }
+
     // Build the full transcript with timestamps
     const fullTranscript = transcripts.map((t, idx) => {
       const timestamp = formatTimestamp(t.start_time);
@@ -180,19 +208,26 @@ A powerful quote should be:
 - UNIQUE - no duplicates or near-duplicates
 - Substantive - avoid single words, fragments, or filler phrases
 
-IMPORTANT: Each quote must be completely different from the others. Do not return similar or repetitive quotes.
+CRITICAL RULES:
+1. Each quote must be EXACTLY as it appears in the transcript - do not paraphrase, modify, or make up quotes
+2. Only extract quotes that actually exist in the provided transcript
+3. If you cannot find 10 high-quality quotes, return fewer quotes rather than inventing content
+4. Do not hallucinate or create quotes based on assumptions about the video content
+5. Each quote must be completely different from the others
 
 You will receive a transcript with timestamps in the format [HH:MM:SS] or [MM:SS].
 
-Return ONLY a valid JSON array of exactly 10 UNIQUE quotes, with no additional text or formatting. Each quote must have:
-- "text": the exact quote text from the transcript
+Return ONLY a valid JSON array of UNIQUE quotes (up to 10), with no additional text or formatting. Each quote must have:
+- "text": the EXACT quote text from the transcript (word-for-word)
 - "timestamp": the timestamp where the quote appears (e.g., "1:23:45" or "5:32")
 
 Example format:
 [
   {"text": "The most powerful quote text here", "timestamp": "1:23"},
   {"text": "Another impactful quote", "timestamp": "5:47"}
-]`
+]
+
+If the transcript does not contain meaningful quotes (e.g., only music, applause, or repetitive filler), return an empty array: []`
         },
         {
           role: 'user',
@@ -220,8 +255,18 @@ Example format:
       throw new Error('Invalid JSON response from ChatGPT');
     }
 
-    if (!Array.isArray(quotesData) || quotesData.length === 0) {
+    if (!Array.isArray(quotesData)) {
       throw new Error('ChatGPT did not return valid quotes array');
+    }
+
+    // If ChatGPT returned an empty array (no quotes found), return empty result
+    if (quotesData.length === 0) {
+      console.log(`[VIDEO QUOTES] ChatGPT returned no quotes - transcript likely has no quotable content`);
+      return NextResponse.json({
+        quotes: [],
+        cached: false,
+        error: 'No meaningful quotes could be extracted from this video.',
+      });
     }
 
     // Deduplicate quotes - remove similar or identical quotes
