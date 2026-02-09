@@ -356,14 +356,16 @@ END $$;`;
 
             <button
               onClick={finalizeMigration}
-              disabled={finalizing || stats?.remaining !== 0}
+              disabled={finalizing}
               className={`px-6 py-3 rounded-lg font-semibold ${
-                finalizing || stats?.remaining !== 0
+                finalizing
                   ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                  : 'bg-green-600 text-white hover:bg-green-700'
+                  : stats?.remaining === 0 || (stats?.remaining && stats.remaining < 1000)
+                  ? 'bg-green-600 text-white hover:bg-green-700'
+                  : 'bg-orange-600 text-white hover:bg-orange-700'
               }`}
             >
-              {finalizing ? 'Finalizing...' : 'Finalize Migration'}
+              {finalizing ? 'Finalizing...' : stats?.remaining === 0 ? 'Finalize Migration' : 'Finalize Migration (Force)'}
             </button>
           </div>
 
