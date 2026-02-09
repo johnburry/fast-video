@@ -72,7 +72,7 @@ export async function GET(
     while (hasMore) {
       const { data: pageVideos, error: videosError } = await supabase
         .from('videos')
-        .select('id, youtube_video_id, title, thumbnail_url, published_at, duration_seconds, view_count, has_transcript')
+        .select('id, youtube_video_id, title, thumbnail_url, published_at, duration_seconds, view_count, has_transcript, has_quality_transcript')
         .eq('channel_id', channel.id)
         .order('published_at', { ascending: false })
         .range(page * pageSize, (page + 1) * pageSize - 1);
