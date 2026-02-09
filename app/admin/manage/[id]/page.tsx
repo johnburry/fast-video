@@ -40,6 +40,7 @@ export default function ManageChannelPage({
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [deletingQuotes, setDeletingQuotes] = useState(false);
+  const [deletingVideos, setDeletingVideos] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [tenants, setTenants] = useState<any[]>([]);
@@ -322,6 +323,45 @@ export default function ManageChannelPage({
       setError(err instanceof Error ? err.message : 'Failed to delete quotes');
     } finally {
       setDeletingQuotes(false);
+    }
+  };
+
+  const handleDeleteVideos = async () => {
+    if (!channel) return;
+
+    const confirmDelete = window.confirm(
+      `Are you sure you want to delete ALL videos for ${channel.name}? This will permanently delete all videos, transcripts, and quotes. This action cannot be undone.`
+    );
+
+    if (!confirmDelete) return;
+
+    // Double confirmation for such a destructive action
+    const doubleConfirm = window.confirm(
+      `⚠️ FINAL WARNING: This will delete ALL videos and related data for ${channel.name}. Type the channel name to confirm.`
+    );
+
+    if (!doubleConfirm) return;
+
+    setDeletingVideos(true);
+    setError(null);
+    setSuccess(null);
+
+    try {
+      const response = await fetch(`/api/admin/channels/${channel.id}/videos`, {
+        method: 'DELETE',
+      });
+
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.error || 'Failed to delete videos');
+      }
+
+      const data = await response.json();
+      setSuccess(data.message);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to delete videos');
+    } finally {
+      setDeletingVideos(false);
     }
   };
 
@@ -908,14 +948,27 @@ export default function ManageChannelPage({
 
               <div>
                 <button
+                  onClick={handleDeleteVideos}
+                  disabled={deletingVideos}
+                  className="w-full bg-red-600 text-white py-3 px-6 rounded-lg font-medium hover:bg-red-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
+                >
+                  {deletingVideos ? 'Deleting Videos...' : 'Delete All Videos'}
+                </button>
+                <p className="text-sm text-gray-500 mt-2">
+                  This will permanently delete ALL videos, transcripts, and quotes for this channel. The channel itself will remain. This action cannot be undone.
+                </p>
+              </div>
+
+              <div>
+                <button
                   onClick={handleDelete}
                   disabled={deleting}
-                  className="w-full bg-red-600 text-white py-3 px-6 rounded-lg font-medium hover:bg-red-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
+                  className="w-full bg-red-900 text-white py-3 px-6 rounded-lg font-medium hover:bg-red-950 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
                 >
                   {deleting ? 'Deleting...' : 'Delete Channel'}
                 </button>
                 <p className="text-sm text-gray-500 mt-2">
-                  This will permanently delete the channel, all videos, and transcripts. This action cannot be undone.
+                  This will permanently delete the channel itself, along with all videos, transcripts, and quotes. This action cannot be undone.
                 </p>
               </div>
             </div>
