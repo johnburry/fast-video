@@ -221,78 +221,107 @@ export default function MigrateSearchViewPage() {
                 You have <strong>{stats.remaining.toLocaleString()} rows</strong> remaining.
                 The API-based migration is too slow for this volume. Complete the migration instantly with SQL:
               </p>
-              <div className="bg-yellow-900 p-4 rounded font-mono text-2xs text-yellow-50 mb-3 overflow-x-auto whitespace-pre" style={{fontSize: '10px'}}>
+              <div className="bg-yellow-900 p-4 rounded font-mono text-yellow-50 mb-3 overflow-x-auto whitespace-pre" style={{fontSize: '9px', lineHeight: '1.3'}}>
 {`DO $$
 DECLARE
-  batch_size INT := 50000;
+  batch_size INT := 100000;
   rows_inserted INT;
   total_inserted INT := 0;
   batch_num INT := 0;
 BEGIN
+  CREATE TEMP TABLE missing_ids AS
+  SELECT transcript_id FROM transcript_search_context_new
+  EXCEPT
+  SELECT transcript_id FROM transcript_search_context_temp;
+
+  RAISE NOTICE 'Found % missing IDs', (SELECT COUNT(*) FROM missing_ids);
+  CREATE INDEX idx_missing_ids ON missing_ids(transcript_id);
+
   LOOP
     batch_num := batch_num + 1;
-    RAISE NOTICE 'Processing batch %, batch_num;
-    WITH rows_to_insert AS (
+    RAISE NOTICE 'Batch %', batch_num;
+
+    WITH batch_to_insert AS (
       SELECT src.* FROM transcript_search_context_new src
-      WHERE NOT EXISTS (
-        SELECT 1 FROM transcript_search_context_temp dest
-        WHERE dest.transcript_id = src.transcript_id
-      )
+      INNER JOIN missing_ids m ON m.transcript_id = src.transcript_id
       LIMIT batch_size
     )
     INSERT INTO transcript_search_context_temp
-    SELECT * FROM rows_to_insert
+    SELECT * FROM batch_to_insert
     ON CONFLICT (transcript_id) DO NOTHING;
+
     GET DIAGNOSTICS rows_inserted = ROW_COUNT;
     total_inserted := total_inserted + rows_inserted;
-    RAISE NOTICE 'Batch %: inserted % rows (total: %)',
-      batch_num, rows_inserted, total_inserted;
-    EXIT WHEN rows_inserted = 0;
+    RAISE NOTICE 'Batch %: % rows (total: %)', batch_num, rows_inserted, total_inserted;
+
+    DELETE FROM missing_ids WHERE transcript_id IN (
+      SELECT transcript_id FROM transcript_search_context_temp
+      ORDER BY transcript_id DESC LIMIT batch_size
+    );
+
+    EXIT WHEN rows_inserted = 0 OR (SELECT COUNT(*) FROM missing_ids) = 0;
     PERFORM pg_sleep(0.1);
   END LOOP;
-  RAISE NOTICE 'Complete! Total inserted: %', total_inserted;
+
+  DROP TABLE missing_ids;
+  RAISE NOTICE 'Complete! Total: %', total_inserted;
 END $$;`}
               </div>
               <button
                 onClick={() => {
                   const sql = `DO $$
 DECLARE
-  batch_size INT := 50000;
+  batch_size INT := 100000;
   rows_inserted INT;
   total_inserted INT := 0;
   batch_num INT := 0;
 BEGIN
+  CREATE TEMP TABLE missing_ids AS
+  SELECT transcript_id FROM transcript_search_context_new
+  EXCEPT
+  SELECT transcript_id FROM transcript_search_context_temp;
+
+  RAISE NOTICE 'Found % missing IDs', (SELECT COUNT(*) FROM missing_ids);
+  CREATE INDEX idx_missing_ids ON missing_ids(transcript_id);
+
   LOOP
     batch_num := batch_num + 1;
-    RAISE NOTICE 'Processing batch %', batch_num;
-    WITH rows_to_insert AS (
+    RAISE NOTICE 'Batch %', batch_num;
+
+    WITH batch_to_insert AS (
       SELECT src.* FROM transcript_search_context_new src
-      WHERE NOT EXISTS (
-        SELECT 1 FROM transcript_search_context_temp dest
-        WHERE dest.transcript_id = src.transcript_id
-      )
+      INNER JOIN missing_ids m ON m.transcript_id = src.transcript_id
       LIMIT batch_size
     )
     INSERT INTO transcript_search_context_temp
-    SELECT * FROM rows_to_insert
+    SELECT * FROM batch_to_insert
     ON CONFLICT (transcript_id) DO NOTHING;
+
     GET DIAGNOSTICS rows_inserted = ROW_COUNT;
     total_inserted := total_inserted + rows_inserted;
-    RAISE NOTICE 'Batch %: inserted % rows (total: %)', batch_num, rows_inserted, total_inserted;
-    EXIT WHEN rows_inserted = 0;
+    RAISE NOTICE 'Batch %: % rows (total: %)', batch_num, rows_inserted, total_inserted;
+
+    DELETE FROM missing_ids WHERE transcript_id IN (
+      SELECT transcript_id FROM transcript_search_context_temp
+      ORDER BY transcript_id DESC LIMIT batch_size
+    );
+
+    EXIT WHEN rows_inserted = 0 OR (SELECT COUNT(*) FROM missing_ids) = 0;
     PERFORM pg_sleep(0.1);
   END LOOP;
-  RAISE NOTICE 'Migration complete! Total inserted: %', total_inserted;
+
+  DROP TABLE missing_ids;
+  RAISE NOTICE 'Complete! Total: %', total_inserted;
 END $$;`;
                   navigator.clipboard.writeText(sql);
-                  setMessage('Batched SQL copied! Paste into Supabase SQL Editor. Watch NOTICE messages for progress.');
+                  setMessage('Efficient SQL copied! Uses EXCEPT to pre-compute missing IDs and avoid timeout. Paste into Supabase SQL Editor. Watch NOTICE messages for progress.');
                 }}
                 className="px-4 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 font-semibold"
               >
-                Copy Batched SQL (Avoids Timeout)
+                Copy Efficient SQL (Uses EXCEPT)
               </button>
               <p className="text-yellow-800 text-sm mt-3">
-                Run this in <strong>Supabase SQL Editor</strong>. Processes 50k rows at a time to avoid timeouts.
+                Run this in <strong>Supabase SQL Editor</strong>. Uses EXCEPT to pre-compute missing IDs (fast), then processes 100k rows at a time.
                 Watch the <strong>NOTICE</strong> messages for real-time progress updates.
               </p>
             </div>
