@@ -865,9 +865,6 @@ export default function ChannelPage({
                 {/* Full Transcript Section - Black text on black background (visible only when highlighted) */}
                 {!transcriptsLoading && videoTranscripts.length > 0 && (
                   <div className="mt-8">
-                    <h3 className="text-xl font-bold text-white mb-4">
-                      Full Transcript
-                    </h3>
                     <div className="bg-black rounded-lg p-6">
                       <div className="space-y-2">
                         {videoTranscripts.map((transcript) => (
