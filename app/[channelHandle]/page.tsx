@@ -100,6 +100,8 @@ export default function ChannelPage({
   const [videoQuotes, setVideoQuotes] = useState<VideoQuote[]>([]);
   const [quotesLoading, setQuotesLoading] = useState(false);
   const [quotesError, setQuotesError] = useState<string | null>(null);
+  const [videoTranscripts, setVideoTranscripts] = useState<Array<{ id: string; text: string; startTime: number; duration: number }>>([]);
+  const [transcriptsLoading, setTranscriptsLoading] = useState(false);
 
   useEffect(() => {
     fetchChannelData();
@@ -233,6 +235,36 @@ export default function ChannelPage({
     };
 
     fetchVideoQuotes();
+  }, [selectedVideo?.videoId]);
+
+  // Fetch video transcripts when a video is selected
+  useEffect(() => {
+    const fetchVideoTranscripts = async () => {
+      if (!selectedVideo || !selectedVideo.videoId) {
+        setVideoTranscripts([]);
+        return;
+      }
+
+      setTranscriptsLoading(true);
+
+      try {
+        const response = await fetch(`/api/transcripts/video/${selectedVideo.videoId}`);
+
+        if (!response.ok) {
+          throw new Error('Failed to fetch transcripts');
+        }
+
+        const data = await response.json();
+        setVideoTranscripts(data.transcripts || []);
+      } catch (err) {
+        console.error('Error fetching video transcripts:', err);
+        setVideoTranscripts([]);
+      } finally {
+        setTranscriptsLoading(false);
+      }
+    };
+
+    fetchVideoTranscripts();
   }, [selectedVideo?.videoId]);
 
   const resetSearch = () => {
@@ -826,6 +858,28 @@ export default function ChannelPage({
                           </button>
                         </div>
                       ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Full Transcript Section - Black text on black background (visible only when highlighted) */}
+                {!transcriptsLoading && videoTranscripts.length > 0 && (
+                  <div className="mt-8">
+                    <h3 className="text-xl font-bold text-white mb-4">
+                      Full Transcript
+                    </h3>
+                    <div className="bg-black rounded-lg p-6">
+                      <div className="space-y-2">
+                        {videoTranscripts.map((transcript) => (
+                          <p
+                            key={transcript.id}
+                            className="text-black leading-relaxed"
+                            style={{ color: '#000000' }}
+                          >
+                            <span className="font-medium">[{formatTimestamp(transcript.startTime)}]</span> {transcript.text}
+                          </p>
+                        ))}
+                      </div>
                     </div>
                   </div>
                 )}
