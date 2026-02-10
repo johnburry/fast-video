@@ -47,6 +47,9 @@ export default function ManageChannelPage({
   // Import status state
   const [importJob, setImportJob] = useState<any>(null);
   const [startingImport, setStartingImport] = useState(false);
+  const [showImportModal, setShowImportModal] = useState(false);
+  const [importLimit, setImportLimit] = useState(50);
+  const [transcriptsOnly, setTranscriptsOnly] = useState(false);
   const [tenants, setTenants] = useState<any[]>([]);
 
   // Channel metrics state
@@ -171,14 +174,12 @@ export default function ManageChannelPage({
   const handleStartImport = async () => {
     if (!channel) return;
 
-    const limit = prompt('How many videos to import? (default: 50, max: 5000)', '50');
-    if (!limit) return;
-
-    const videoLimit = Math.min(Math.max(1, parseInt(limit) || 50), 5000);
+    const videoLimit = Math.min(Math.max(1, importLimit), 5000);
 
     setStartingImport(true);
     setError(null);
     setSuccess(null);
+    setShowImportModal(false);
 
     try {
       const response = await fetch(`/api/admin/channels/${channel.id}/import`, {
@@ -190,6 +191,7 @@ export default function ManageChannelPage({
           limit: videoLimit,
           includeLiveVideos: true, // Always include live videos
           skipTranscripts: channel.isMusicChannel,
+          transcriptsOnly: transcriptsOnly,
         }),
       });
 
@@ -688,7 +690,7 @@ export default function ManageChannelPage({
                   View Channel
                 </a>
                 <button
-                  onClick={handleStartImport}
+                  onClick={() => setShowImportModal(true)}
                   disabled={startingImport || (importJob && (importJob.status === 'pending' || importJob.status === 'running'))}
                   className="inline-flex items-center px-4 py-2 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors text-sm"
                 >
@@ -1245,6 +1247,68 @@ export default function ManageChannelPage({
             </div>
           </div>
         </div>
+
+        {/* Import Modal */}
+        {showImportModal && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
+              <h2 className="text-xl font-bold text-gray-900 mb-4">Configure Import</h2>
+
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Maximum Videos to Process
+                  </label>
+                  <input
+                    type="number"
+                    min="1"
+                    max="5000"
+                    value={importLimit}
+                    onChange={(e) => setImportLimit(parseInt(e.target.value) || 50)}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                  <p className="mt-1 text-xs text-gray-500">Maximum: 5,000 videos</p>
+                </div>
+
+                <div className="p-4 bg-gray-50 border border-gray-200 rounded-lg">
+                  <div className="flex items-start gap-3">
+                    <input
+                      type="checkbox"
+                      id="transcriptsOnly"
+                      checked={transcriptsOnly}
+                      onChange={(e) => setTranscriptsOnly(e.target.checked)}
+                      className="mt-1 w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                    />
+                    <div className="flex-1">
+                      <label htmlFor="transcriptsOnly" className="block text-sm font-medium text-gray-900">
+                        Transcripts Only
+                      </label>
+                      <p className="mt-1 text-xs text-gray-600">
+                        Only fetch missing transcripts for already-imported videos (most recent first). Does not import new videos.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="mt-6 flex gap-3">
+                <button
+                  onClick={() => setShowImportModal(false)}
+                  className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg font-medium hover:bg-gray-50 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleStartImport}
+                  disabled={startingImport}
+                  className="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
+                >
+                  {startingImport ? 'Starting...' : 'Start Import'}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
     </div>

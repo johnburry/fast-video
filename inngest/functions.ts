@@ -12,7 +12,7 @@ export const importChannelJob = inngest.createFunction(
   },
   { event: 'channel/import.requested' },
   async ({ event, step }) => {
-    const { jobId, channelHandle, limit, includeLiveVideos, skipTranscripts, tenantId } = event.data;
+    const { jobId, channelHandle, limit, includeLiveVideos, skipTranscripts, transcriptsOnly, tenantId } = event.data;
 
     // Update job status to 'running'
     await step.run('mark-job-as-running', async () => {
@@ -33,6 +33,7 @@ export const importChannelJob = inngest.createFunction(
           limit,
           includeLiveVideos,
           skipTranscripts,
+          transcriptsOnly,
           tenantId,
           jobId,
           onProgress: async (progress: ImportProgress) => {

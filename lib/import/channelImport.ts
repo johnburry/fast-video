@@ -67,6 +67,7 @@ export interface ImportOptions {
   limit?: number;
   includeLiveVideos?: boolean;
   skipTranscripts?: boolean;
+  transcriptsOnly?: boolean; // Only fetch missing transcripts, don't import new videos
   tenantId?: string;
   jobId?: string; // For tracking in database
   onProgress?: (progress: ImportProgress) => void | Promise<void>;
@@ -82,6 +83,7 @@ export async function importChannel(options: ImportOptions): Promise<void> {
     limit = 50,
     includeLiveVideos = false,
     skipTranscripts = false,
+    transcriptsOnly = false,
     tenantId,
     jobId,
     onProgress = () => {},
@@ -261,26 +263,35 @@ export async function importChannel(options: ImportOptions): Promise<void> {
     });
 
     // Determine which videos to import
-    // Strategy:
-    // 1. Import up to videoLimit NEW videos (priority)
-    // 2. If fewer than videoLimit new videos, fill remaining slots with existing videos needing transcripts
-    // 3. Total processed should be up to videoLimit (or less if not enough videos available)
     let videosToImport: any[];
     let videosForTranscripts: any[] = [];
 
-    if (includeLiveVideos && liveVideos.length > 0) {
-      const liveVideoIdsSet = new Set(liveVideos.map(v => v.videoId));
-      const liveVideosToImport = newVideos.filter(v => liveVideoIdsSet.has(v.videoId));
-      const regularVideosToImport = newVideos.filter(v => !liveVideoIdsSet.has(v.videoId));
-      videosToImport = [...liveVideosToImport, ...regularVideosToImport].slice(0, videoLimit);
+    if (transcriptsOnly) {
+      // Transcripts Only mode: Only fetch missing transcripts, don't import new videos
+      // Sort existing videos without transcripts by publish date (most recent first)
+      videosToImport = [];
+      videosForTranscripts = existingVideosWithoutTranscripts.slice(0, videoLimit);
     } else {
-      videosToImport = newVideos.slice(0, videoLimit);
-    }
+      // Normal mode: Import new videos, then fill remaining slots with transcript-only
+      // Strategy:
+      // 1. Import up to videoLimit NEW videos (priority)
+      // 2. If fewer than videoLimit new videos, fill remaining slots with existing videos needing transcripts
+      // 3. Total processed should be up to videoLimit (or less if not enough videos available)
 
-    // Fill remaining slots (if any) with existing videos that need transcripts
-    if (!skipTranscripts && videosToImport.length < videoLimit) {
-      const remainingSlots = videoLimit - videosToImport.length;
-      videosForTranscripts = existingVideosWithoutTranscripts.slice(0, remainingSlots);
+      if (includeLiveVideos && liveVideos.length > 0) {
+        const liveVideoIdsSet = new Set(liveVideos.map(v => v.videoId));
+        const liveVideosToImport = newVideos.filter(v => liveVideoIdsSet.has(v.videoId));
+        const regularVideosToImport = newVideos.filter(v => !liveVideoIdsSet.has(v.videoId));
+        videosToImport = [...liveVideosToImport, ...regularVideosToImport].slice(0, videoLimit);
+      } else {
+        videosToImport = newVideos.slice(0, videoLimit);
+      }
+
+      // Fill remaining slots (if any) with existing videos that need transcripts
+      if (!skipTranscripts && videosToImport.length < videoLimit) {
+        const remainingSlots = videoLimit - videosToImport.length;
+        videosForTranscripts = existingVideosWithoutTranscripts.slice(0, remainingSlots);
+      }
     }
 
     const totalToProcess = videosToImport.length + videosForTranscripts.length;

@@ -13,7 +13,7 @@ export async function POST(
   try {
     const { id: channelId } = await params;
     const body = await request.json();
-    const { limit = 50, includeLiveVideos = false, skipTranscripts = false } = body;
+    const { limit = 50, includeLiveVideos = false, skipTranscripts = false, transcriptsOnly = false } = body;
 
     // Get channel info
     const { data: channel, error: channelError } = await supabaseAdmin
@@ -57,6 +57,7 @@ export async function POST(
         video_limit: limit,
         include_live_videos: includeLiveVideos,
         skip_transcripts: skipTranscripts,
+        transcripts_only: transcriptsOnly,
         progress: { message: 'Initializing...' },
       })
       .select('id')
@@ -79,6 +80,7 @@ export async function POST(
         limit,
         includeLiveVideos,
         skipTranscripts,
+        transcriptsOnly,
         tenantId: channel.tenant_id,
       },
     });
