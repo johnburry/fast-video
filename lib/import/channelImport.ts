@@ -192,8 +192,10 @@ export async function importChannel(options: ImportOptions): Promise<void> {
     }
 
     // Fetch videos from YouTube
+    // Note: We fetch up to 10000 videos to get an accurate count and ensure we have enough
+    // to select from, even if we only import a subset
     await onProgress({ type: 'status', message: 'Fetching videos from YouTube...' });
-    const allVideos = await getChannelVideos(channelInfo.channelId, videoLimit);
+    const allVideos = await getChannelVideos(channelInfo.channelId, 10000);
 
     let liveVideos: any[] = [];
     let combinedVideos = allVideos;
