@@ -173,93 +173,74 @@ export async function getChannelLiveVideos(channelId: string, limit: number = 5)
     const channel = await youtube.getChannel(channelId);
 
     const videos: YouTubeVideoInfo[] = [];
+    let pageCount = 0;
 
-    console.log(`[YOUTUBE] Attempting to fetch live videos for channel ${channelId}...`);
+    console.log(`[YOUTUBE] Starting to fetch live videos for channel ${channelId}, limit: ${limit}`);
 
     // Get live videos from the channel's live tab
-    let liveVideos: any;
+    let liveStreams: any;
     try {
-      liveVideos = await channel.getLiveStreams();
-      console.log(`[YOUTUBE] Successfully got live streams tab, found ${liveVideos?.videos?.length || 0} videos`);
+      liveStreams = await channel.getLiveStreams();
+      console.log(`[YOUTUBE] Successfully got live streams tab, initial videos: ${liveStreams?.videos?.length || 0}`);
     } catch (error) {
       console.log(`[YOUTUBE] getLiveStreams() failed:`, error);
-      console.log(`[YOUTUBE] Trying alternative: getVideos() with live filter...`);
-
-      // Alternative approach: Get all videos and filter for live/completed live streams
-      try {
-        const allVideos = await channel.getVideos();
-
-        // Process all videos and look for live/was live indicators
-        const potentialLiveVideos = [];
-        for (const video of allVideos.videos) {
-          const v = video as any;
-
-          // Check for live badges or indicators
-          const isLive = v.badges?.some((badge: any) =>
-            badge?.label?.toLowerCase().includes('live') ||
-            badge?.label?.toLowerCase().includes('streamed')
-          );
-
-          const hasLiveIndicator = v.title?.text?.toLowerCase().includes('live') ||
-                                  v.description?.toLowerCase().includes('live stream');
-
-          if (isLive || hasLiveIndicator) {
-            potentialLiveVideos.push(v);
-          }
-
-          if (potentialLiveVideos.length >= limit) break;
-        }
-
-        console.log(`[YOUTUBE] Found ${potentialLiveVideos.length} potential live videos from getVideos()`);
-        liveVideos = { videos: potentialLiveVideos };
-      } catch (videosError) {
-        console.error('[YOUTUBE] Error getting videos with live filter:', videosError);
-        return [];
-      }
+      return [];
     }
 
-    if (!liveVideos || !liveVideos.videos || liveVideos.videos.length === 0) {
+    if (!liveStreams || !liveStreams.videos || liveStreams.videos.length === 0) {
       console.log(`[YOUTUBE] No live videos found for channel ${channelId}`);
       return [];
     }
 
-    // Process live videos
-    for (const video of liveVideos.videos) {
-      const v = video as any;
-      if (!v.id) continue;
+    // Fetch live videos with pagination until we reach the limit or run out
+    while (videos.length < limit) {
+      pageCount++;
+      const pageVideoCount = liveStreams.videos?.length || 0;
+      console.log(`[YOUTUBE LIVE] Page ${pageCount}: Processing ${pageVideoCount} videos, total so far: ${videos.length}`);
 
-      // Filter out upcoming/scheduled live streams
-      const isUpcoming = v.upcoming !== undefined && v.upcoming !== null;
-      const hasUpcomingBadge = v.badges?.some((badge: any) =>
-        badge?.label?.toLowerCase().includes('upcoming') ||
-        badge?.label?.toLowerCase().includes('premiere')
-      );
+      for (const video of liveStreams.videos) {
+        const v = video as any;
+        if (!v.id) continue;
 
-      if (isUpcoming || hasUpcomingBadge) {
-        console.log(`[YOUTUBE] Skipping upcoming live stream: ${v.title?.text} (${v.id})`);
-        continue;
+        // Filter out upcoming/scheduled live streams
+        const isUpcoming = v.upcoming !== undefined && v.upcoming !== null;
+        const hasUpcomingBadge = v.badges?.some((badge: any) =>
+          badge?.label?.toLowerCase().includes('upcoming') ||
+          badge?.label?.toLowerCase().includes('premiere')
+        );
+
+        if (isUpcoming || hasUpcomingBadge) {
+          console.log(`[YOUTUBE LIVE] Skipping upcoming live stream: ${v.title?.text} (${v.id})`);
+          continue;
+        }
+
+        videos.push({
+          videoId: v.id,
+          title: v.title?.text || '',
+          description: v.description || '',
+          thumbnailUrl: v.best_thumbnail?.url || '',
+          durationSeconds: v.duration?.seconds || 0,
+          publishedAt: v.published?.text || '',
+          viewCount: v.view_count?.value || 0,
+          likeCount: 0,
+          commentCount: 0,
+        });
+
+        // Stop if we've reached the limit
+        if (videos.length >= limit) break;
       }
 
-      const videoInfo = {
-        videoId: v.id,
-        title: v.title?.text || '',
-        description: v.description || '',
-        thumbnailUrl: v.best_thumbnail?.url || '',
-        durationSeconds: v.duration?.seconds || 0,
-        publishedAt: v.published?.text || '',
-        viewCount: v.view_count?.value || 0,
-        likeCount: 0,
-        commentCount: 0,
-      };
-
-      console.log(`[YOUTUBE] Adding live video: ${videoInfo.title} (${videoInfo.videoId})`);
-      videos.push(videoInfo);
-
-      // Stop if we've reached the limit
-      if (videos.length >= limit) break;
+      // Check if there are more videos to fetch
+      if (videos.length < limit && liveStreams.has_continuation) {
+        console.log(`[YOUTUBE LIVE] Has continuation, fetching more... (current: ${videos.length}/${limit})`);
+        liveStreams = await liveStreams.getContinuation();
+      } else {
+        console.log(`[YOUTUBE LIVE] Stopping: has_continuation=${liveStreams.has_continuation}, videos=${videos.length}/${limit}`);
+        break;
+      }
     }
 
-    console.log(`[YOUTUBE] Successfully fetched ${videos.length} live videos for channel ${channelId}`);
+    console.log(`[YOUTUBE LIVE] Finished fetching ${videos.length} live videos for channel ${channelId} (${pageCount} pages)`);
     return videos;
   } catch (error) {
     console.error('[YOUTUBE] Error fetching live videos:', error);
