@@ -498,8 +498,30 @@ export async function importChannel(options: ImportOptions): Promise<void> {
       }
     }
 
-    // TODO: Add embeddings generation and search index refresh here
-    // (This would be similar to the existing code)
+    // Refresh the search index if we imported/updated any transcripts
+    if (transcriptCount > 0) {
+      await onProgress({
+        type: 'status',
+        message: 'Refreshing search index...'
+      });
+
+      console.log('[IMPORT] Refreshing search index after importing transcripts...');
+
+      try {
+        const { error: refreshError } = await supabaseAdmin
+          .rpc('perform_transcript_search_refresh');
+
+        if (refreshError) {
+          console.error('[IMPORT] Error refreshing search index:', refreshError);
+          // Don't fail the import if search refresh fails, just log it
+        } else {
+          console.log('[IMPORT] Search index refreshed successfully');
+        }
+      } catch (error) {
+        console.error('[IMPORT] Fatal error refreshing search index:', error);
+        // Don't fail the import if search refresh fails
+      }
+    }
 
     await onProgress({
       type: 'complete',
