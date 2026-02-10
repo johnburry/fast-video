@@ -1264,7 +1264,20 @@ export default function ManageChannelPage({
                     min="1"
                     max="5000"
                     value={importLimit}
-                    onChange={(e) => setImportLimit(parseInt(e.target.value) || 50)}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      if (val === '') {
+                        setImportLimit(0); // Allow empty field temporarily
+                      } else {
+                        setImportLimit(parseInt(val) || 0);
+                      }
+                    }}
+                    onBlur={(e) => {
+                      // On blur, ensure we have a valid value
+                      if (importLimit < 1) {
+                        setImportLimit(50);
+                      }
+                    }}
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   />
                   <p className="mt-1 text-xs text-gray-500">Maximum: 5,000 videos</p>
