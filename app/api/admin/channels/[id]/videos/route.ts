@@ -36,47 +36,63 @@ export async function DELETE(
 
     const videoIds = videos.map(v => v.id);
 
-    // Delete related data in order (most dependent first)
-    // 1. Delete video quotes
-    const { error: quotesError } = await supabaseAdmin
-      .from('video_quotes')
-      .delete()
-      .in('video_id', videoIds);
+    // Delete related data in batches to avoid hitting query limits
+    // Supabase has limits on the number of items in .in() clause
+    const batchSize = 100;
+    const batches = [];
 
-    if (quotesError) {
-      console.error('Error deleting video quotes:', quotesError);
-      return NextResponse.json(
-        { error: 'Failed to delete video quotes' },
-        { status: 500 }
-      );
+    for (let i = 0; i < videoIds.length; i += batchSize) {
+      batches.push(videoIds.slice(i, i + batchSize));
     }
 
-    // 2. Delete transcripts
-    const { error: transcriptsError } = await supabaseAdmin
-      .from('transcripts')
-      .delete()
-      .in('video_id', videoIds);
+    console.log(`Deleting ${videoIds.length} videos in ${batches.length} batches`);
 
-    if (transcriptsError) {
-      console.error('Error deleting transcripts:', transcriptsError);
-      return NextResponse.json(
-        { error: 'Failed to delete transcripts' },
-        { status: 500 }
-      );
+    // 1. Delete video quotes in batches
+    for (const batch of batches) {
+      const { error: quotesError } = await supabaseAdmin
+        .from('video_quotes')
+        .delete()
+        .in('video_id', batch);
+
+      if (quotesError) {
+        console.error('Error deleting video quotes batch:', quotesError);
+        return NextResponse.json(
+          { error: 'Failed to delete video quotes' },
+          { status: 500 }
+        );
+      }
     }
 
-    // 3. Delete videos
-    const { error: videosError } = await supabaseAdmin
-      .from('videos')
-      .delete()
-      .in('id', videoIds);
+    // 2. Delete transcripts in batches
+    for (const batch of batches) {
+      const { error: transcriptsError } = await supabaseAdmin
+        .from('transcripts')
+        .delete()
+        .in('video_id', batch);
 
-    if (videosError) {
-      console.error('Error deleting videos:', videosError);
-      return NextResponse.json(
-        { error: 'Failed to delete videos' },
-        { status: 500 }
-      );
+      if (transcriptsError) {
+        console.error('Error deleting transcripts batch:', transcriptsError);
+        return NextResponse.json(
+          { error: 'Failed to delete transcripts' },
+          { status: 500 }
+        );
+      }
+    }
+
+    // 3. Delete videos in batches
+    for (const batch of batches) {
+      const { error: videosError } = await supabaseAdmin
+        .from('videos')
+        .delete()
+        .in('id', batch);
+
+      if (videosError) {
+        console.error('Error deleting videos batch:', videosError);
+        return NextResponse.json(
+          { error: 'Failed to delete videos' },
+          { status: 500 }
+        );
+      }
     }
 
     return NextResponse.json({
