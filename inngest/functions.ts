@@ -7,8 +7,8 @@ export const importChannelJob = inngest.createFunction(
   {
     id: 'import-channel',
     name: 'Import YouTube Channel',
-    // Increase retries for reliability
-    retries: 3,
+    // No retries - imports should only run once per request
+    retries: 0,
   },
   { event: 'channel/import.requested' },
   async ({ event, step }) => {
