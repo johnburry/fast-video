@@ -48,6 +48,10 @@ export default function ManageChannelPage({
   const [importJob, setImportJob] = useState<any>(null);
   const [startingImport, setStartingImport] = useState(false);
   const [tenants, setTenants] = useState<any[]>([]);
+
+  // Channel metrics state
+  const [metrics, setMetrics] = useState<any>(null);
+  const [loadingMetrics, setLoadingMetrics] = useState(false);
   const [tenantDomain, setTenantDomain] = useState<string>('playsermons.com');
 
   // Form fields
@@ -82,6 +86,7 @@ export default function ManageChannelPage({
     fetchChannel();
     fetchTenants();
     fetchImportStatus();
+    fetchMetrics();
   }, [id]);
 
   // Poll for import status every 5 seconds if there's an active job
@@ -92,6 +97,8 @@ export default function ManageChannelPage({
 
     const interval = setInterval(() => {
       fetchImportStatus();
+      // Also refresh metrics while import is running
+      fetchMetrics();
     }, 5000);
 
     return () => clearInterval(interval);
@@ -124,6 +131,23 @@ export default function ManageChannelPage({
       }
     } catch (err) {
       console.error('Error fetching import status:', err);
+    }
+  };
+
+  const fetchMetrics = async () => {
+    if (!id) return;
+
+    setLoadingMetrics(true);
+    try {
+      const response = await fetch(`/api/admin/channels/${id}/metrics`);
+      if (response.ok) {
+        const data = await response.json();
+        setMetrics(data.metrics);
+      }
+    } catch (err) {
+      console.error('Error fetching metrics:', err);
+    } finally {
+      setLoadingMetrics(false);
     }
   };
 
@@ -673,6 +697,38 @@ export default function ManageChannelPage({
           {success && (
             <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg">
               <p className="text-green-800">{success}</p>
+            </div>
+          )}
+
+          {/* Channel Metrics Widget */}
+          {metrics && (
+            <div className="mb-6 p-6 bg-gray-50 border border-gray-200 rounded-lg">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">YouTube Channel Metrics</h3>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div className="bg-white rounded-lg p-4 border border-gray-200">
+                  <div className="text-sm text-gray-600 mb-1">Videos on YouTube</div>
+                  <div className="text-2xl font-bold text-gray-900">{metrics.totalOnYouTube.toLocaleString()}</div>
+                </div>
+                <div className="bg-white rounded-lg p-4 border border-gray-200">
+                  <div className="text-sm text-gray-600 mb-1">Videos Imported</div>
+                  <div className="text-2xl font-bold text-green-600">{metrics.totalImported.toLocaleString()}</div>
+                </div>
+                <div className="bg-white rounded-lg p-4 border border-gray-200">
+                  <div className="text-sm text-gray-600 mb-1">Need to Import</div>
+                  <div className="text-2xl font-bold text-orange-600">{metrics.notImported.toLocaleString()}</div>
+                </div>
+                <div className="bg-white rounded-lg p-4 border border-gray-200">
+                  <div className="text-sm text-gray-600 mb-1">Need Transcripts</div>
+                  <div className="text-2xl font-bold text-blue-600">{metrics.needTranscripts.toLocaleString()}</div>
+                </div>
+              </div>
+              <button
+                onClick={fetchMetrics}
+                disabled={loadingMetrics}
+                className="mt-4 text-sm text-blue-600 hover:text-blue-700 font-medium disabled:text-gray-400"
+              >
+                {loadingMetrics ? 'Refreshing...' : '↻ Refresh Metrics'}
+              </button>
             </div>
           )}
 
