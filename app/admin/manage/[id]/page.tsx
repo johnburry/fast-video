@@ -52,6 +52,8 @@ export default function ManageChannelPage({
   // Channel metrics state
   const [metrics, setMetrics] = useState<any>(null);
   const [loadingMetrics, setLoadingMetrics] = useState(false);
+  const [metricsLastUpdated, setMetricsLastUpdated] = useState<Date | null>(null);
+  const [metricsError, setMetricsError] = useState<string | null>(null);
   const [tenantDomain, setTenantDomain] = useState<string>('playsermons.com');
 
   // Form fields
@@ -96,9 +98,7 @@ export default function ManageChannelPage({
     }
 
     const interval = setInterval(() => {
-      fetchImportStatus();
-      // Also refresh metrics while import is running
-      fetchMetrics();
+      fetchImportStatus(); // This already calls fetchMetrics() inside
     }, 5000);
 
     return () => clearInterval(interval);
@@ -139,15 +139,30 @@ export default function ManageChannelPage({
   const fetchMetrics = async () => {
     if (!id) return;
 
+    console.log('[METRICS] Fetching metrics at', new Date().toLocaleTimeString());
     setLoadingMetrics(true);
+    setMetricsError(null);
+
     try {
+      const startTime = Date.now();
       const response = await fetch(`/api/admin/channels/${id}/metrics`);
+      const endTime = Date.now();
+
+      console.log(`[METRICS] API responded in ${endTime - startTime}ms, status: ${response.status}`);
+
       if (response.ok) {
         const data = await response.json();
+        console.log('[METRICS] Received data:', data.metrics);
         setMetrics(data.metrics);
+        setMetricsLastUpdated(new Date());
+      } else {
+        const errorText = await response.text();
+        console.error('[METRICS] API error:', response.status, errorText);
+        setMetricsError(`Failed to fetch metrics: ${response.status}`);
       }
     } catch (err) {
-      console.error('Error fetching metrics:', err);
+      console.error('[METRICS] Error fetching metrics:', err);
+      setMetricsError(err instanceof Error ? err.message : 'Unknown error');
     } finally {
       setLoadingMetrics(false);
     }
@@ -705,7 +720,21 @@ export default function ManageChannelPage({
           {/* Channel Metrics Widget */}
           {metrics && (
             <div className="mb-6 p-6 bg-gray-50 border border-gray-200 rounded-lg">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">YouTube Channel Metrics</h3>
+              <div className="flex items-start justify-between mb-4">
+                <h3 className="text-lg font-semibold text-gray-900">YouTube Channel Metrics</h3>
+                {metricsLastUpdated && (
+                  <div className="text-xs text-gray-500">
+                    Last updated: {metricsLastUpdated.toLocaleTimeString()}
+                  </div>
+                )}
+              </div>
+
+              {metricsError && (
+                <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+                  <p className="text-sm text-red-800">{metricsError}</p>
+                </div>
+              )}
+
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 <div className="bg-white rounded-lg p-4 border border-gray-200">
                   <div className="text-sm text-gray-600 mb-1">Videos on YouTube</div>
@@ -724,13 +753,21 @@ export default function ManageChannelPage({
                   <div className="text-2xl font-bold text-blue-600">{metrics.needTranscripts.toLocaleString()}</div>
                 </div>
               </div>
-              <button
-                onClick={fetchMetrics}
-                disabled={loadingMetrics}
-                className="mt-4 text-sm text-blue-600 hover:text-blue-700 font-medium disabled:text-gray-400"
-              >
-                {loadingMetrics ? 'Refreshing...' : '↻ Refresh Metrics'}
-              </button>
+
+              <div className="mt-4 flex items-center gap-3">
+                <button
+                  onClick={fetchMetrics}
+                  disabled={loadingMetrics}
+                  className="text-sm text-blue-600 hover:text-blue-700 font-medium disabled:text-gray-400"
+                >
+                  {loadingMetrics ? 'Refreshing...' : '↻ Refresh Metrics'}
+                </button>
+                {loadingMetrics && (
+                  <div className="text-xs text-gray-500 animate-pulse">
+                    Fetching latest metrics...
+                  </div>
+                )}
+              </div>
             </div>
           )}
 
