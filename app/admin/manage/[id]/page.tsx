@@ -48,7 +48,7 @@ export default function ManageChannelPage({
   const [importJob, setImportJob] = useState<any>(null);
   const [startingImport, setStartingImport] = useState(false);
   const [showImportModal, setShowImportModal] = useState(false);
-  const [importLimit, setImportLimit] = useState(50);
+  const [importLimit, setImportLimit] = useState('50');
   const [transcriptsOnly, setTranscriptsOnly] = useState(false);
   const [tenants, setTenants] = useState<any[]>([]);
 
@@ -174,7 +174,7 @@ export default function ManageChannelPage({
   const handleStartImport = async () => {
     if (!channel) return;
 
-    const videoLimit = Math.min(Math.max(1, importLimit), 5000);
+    const videoLimit = Math.min(Math.max(1, parseInt(importLimit) || 50), 5000);
 
     setStartingImport(true);
     setError(null);
@@ -1264,18 +1264,14 @@ export default function ManageChannelPage({
                     min="1"
                     max="5000"
                     value={importLimit}
-                    onChange={(e) => {
-                      const val = e.target.value;
-                      if (val === '') {
-                        setImportLimit(0); // Allow empty field temporarily
-                      } else {
-                        setImportLimit(parseInt(val) || 0);
-                      }
-                    }}
-                    onBlur={(e) => {
+                    onChange={(e) => setImportLimit(e.target.value)}
+                    onBlur={() => {
                       // On blur, ensure we have a valid value
-                      if (importLimit < 1) {
-                        setImportLimit(50);
+                      const num = parseInt(importLimit);
+                      if (isNaN(num) || num < 1) {
+                        setImportLimit('50');
+                      } else if (num > 5000) {
+                        setImportLimit('5000');
                       }
                     }}
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
