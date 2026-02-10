@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase/server';
-import { getChannelVideos } from '@/lib/youtube/client';
+import { getChannelVideos, getChannelLiveVideos } from '@/lib/youtube/client';
 
 /**
  * GET /api/admin/channels/[id]/metrics
@@ -27,9 +27,13 @@ export async function GET(
       );
     }
 
-    // Fetch total videos from YouTube (get a high number to count all)
-    const youtubeVideos = await getChannelVideos(channel.youtube_channel_id, 5000);
-    const totalOnYouTube = youtubeVideos.length;
+    // Fetch total videos from YouTube (both regular and live videos)
+    const [regularVideos, liveVideos] = await Promise.all([
+      getChannelVideos(channel.youtube_channel_id, 5000),
+      getChannelLiveVideos(channel.youtube_channel_id, 5000),
+    ]);
+
+    const totalOnYouTube = regularVideos.length + liveVideos.length;
 
     // Get imported video stats from database
     const { data: importedVideos, error: videosError } = await supabaseAdmin

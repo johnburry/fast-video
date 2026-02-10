@@ -188,7 +188,7 @@ export default function ManageChannelPage({
         },
         body: JSON.stringify({
           limit: videoLimit,
-          includeLiveVideos: false,
+          includeLiveVideos: true, // Always include live videos
           skipTranscripts: channel.isMusicChannel,
         }),
       });
