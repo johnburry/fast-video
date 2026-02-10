@@ -43,6 +43,10 @@ export default function ManageChannelPage({
   const [deletingVideos, setDeletingVideos] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+
+  // Import status state
+  const [importJob, setImportJob] = useState<any>(null);
+  const [startingImport, setStartingImport] = useState(false);
   const [tenants, setTenants] = useState<any[]>([]);
   const [tenantDomain, setTenantDomain] = useState<string>('playsermons.com');
 
@@ -77,7 +81,21 @@ export default function ManageChannelPage({
   useEffect(() => {
     fetchChannel();
     fetchTenants();
+    fetchImportStatus();
   }, [id]);
+
+  // Poll for import status every 5 seconds if there's an active job
+  useEffect(() => {
+    if (!importJob || (importJob.status !== 'pending' && importJob.status !== 'running')) {
+      return;
+    }
+
+    const interval = setInterval(() => {
+      fetchImportStatus();
+    }, 5000);
+
+    return () => clearInterval(interval);
+  }, [importJob?.status]);
 
   const fetchTenants = async () => {
     try {
@@ -88,6 +106,86 @@ export default function ManageChannelPage({
       }
     } catch (err) {
       console.error('Error fetching tenants:', err);
+    }
+  };
+
+  const fetchImportStatus = async () => {
+    if (!id) return;
+
+    try {
+      const response = await fetch(`/api/admin/channels/${id}/import/status`);
+      if (response.ok) {
+        const data = await response.json();
+        if (data.hasJob) {
+          setImportJob(data.job);
+        } else {
+          setImportJob(null);
+        }
+      }
+    } catch (err) {
+      console.error('Error fetching import status:', err);
+    }
+  };
+
+  const handleStartImport = async () => {
+    if (!channel) return;
+
+    const limit = prompt('How many videos to import? (default: 50, max: 5000)', '50');
+    if (!limit) return;
+
+    const videoLimit = Math.min(Math.max(1, parseInt(limit) || 50), 5000);
+
+    setStartingImport(true);
+    setError(null);
+    setSuccess(null);
+
+    try {
+      const response = await fetch(`/api/admin/channels/${channel.id}/import`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          limit: videoLimit,
+          includeLiveVideos: false,
+          skipTranscripts: channel.isMusicChannel,
+        }),
+      });
+
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.error || 'Failed to start import');
+      }
+
+      const data = await response.json();
+      setSuccess('Background import started! You can close this page and it will continue running.');
+      fetchImportStatus();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to start import');
+    } finally {
+      setStartingImport(false);
+    }
+  };
+
+  const handleCancelImport = async () => {
+    if (!channel || !importJob) return;
+
+    const confirmCancel = window.confirm('Are you sure you want to cancel the import?');
+    if (!confirmCancel) return;
+
+    try {
+      const response = await fetch(`/api/admin/channels/${channel.id}/import/status`, {
+        method: 'DELETE',
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to cancel import');
+      }
+
+      setSuccess('Import cancelled');
+      fetchImportStatus();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to cancel import');
     }
   };
 
@@ -548,14 +646,13 @@ export default function ManageChannelPage({
                 >
                   View Channel
                 </a>
-                <a
-                  href={`https://playsermons.com/admin?channel=${channel.youtubeHandle || '@' + channel.handle}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center px-4 py-2 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700 transition-colors text-sm"
+                <button
+                  onClick={handleStartImport}
+                  disabled={startingImport || (importJob && (importJob.status === 'pending' || importJob.status === 'running'))}
+                  className="inline-flex items-center px-4 py-2 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors text-sm"
                 >
-                  Import Channel
-                </a>
+                  {startingImport ? 'Starting...' : (importJob && (importJob.status === 'pending' || importJob.status === 'running')) ? 'Import Running...' : 'Start Background Import'}
+                </button>
               </div>
             </div>
             <button
@@ -576,6 +673,85 @@ export default function ManageChannelPage({
           {success && (
             <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg">
               <p className="text-green-800">{success}</p>
+            </div>
+          )}
+
+          {/* Import Status Widget */}
+          {importJob && (
+            <div className="mb-6 p-6 bg-blue-50 border border-blue-200 rounded-lg">
+              <div className="flex items-start justify-between mb-4">
+                <div>
+                  <h3 className="text-lg font-semibold text-blue-900">Background Import Status</h3>
+                  <p className="text-sm text-blue-700 mt-1">
+                    {importJob.status === 'pending' && 'Waiting to start...'}
+                    {importJob.status === 'running' && 'Import in progress'}
+                    {importJob.status === 'completed' && 'Import completed successfully!'}
+                    {importJob.status === 'failed' && 'Import failed'}
+                  </p>
+                </div>
+                {(importJob.status === 'pending' || importJob.status === 'running') && (
+                  <button
+                    onClick={handleCancelImport}
+                    className="px-4 py-2 bg-red-600 text-white rounded-lg text-sm font-medium hover:bg-red-700 transition-colors"
+                  >
+                    Cancel Import
+                  </button>
+                )}
+              </div>
+
+              {importJob.status === 'running' && importJob.videosTotal > 0 && (
+                <div className="space-y-3">
+                  {/* Progress Bar */}
+                  <div>
+                    <div className="flex justify-between text-sm text-blue-900 mb-1">
+                      <span>Progress</span>
+                      <span>{importJob.videosProcessed || 0} / {importJob.videosTotal} videos</span>
+                    </div>
+                    <div className="w-full bg-blue-200 rounded-full h-3">
+                      <div
+                        className="bg-blue-600 h-3 rounded-full transition-all duration-300"
+                        style={{ width: `${((importJob.videosProcessed || 0) / importJob.videosTotal) * 100}%` }}
+                      ></div>
+                    </div>
+                  </div>
+
+                  {/* Current Video */}
+                  {importJob.currentVideoTitle && (
+                    <div className="text-sm">
+                      <span className="font-medium text-blue-900">Currently processing:</span>
+                      <span className="text-blue-700 ml-2">{importJob.currentVideoTitle}</span>
+                    </div>
+                  )}
+
+                  {/* Stats */}
+                  <div className="grid grid-cols-2 gap-3 text-sm">
+                    <div className="bg-white rounded p-2">
+                      <span className="text-gray-600">Transcripts Downloaded:</span>
+                      <span className="font-semibold text-gray-900 ml-2">{importJob.transcriptsDownloaded || 0}</span>
+                    </div>
+                    {importJob.embeddingsGenerated > 0 && (
+                      <div className="bg-white rounded p-2">
+                        <span className="text-gray-600">Embeddings Generated:</span>
+                        <span className="font-semibold text-gray-900 ml-2">{importJob.embeddingsGenerated}</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {importJob.status === 'failed' && importJob.errorMessage && (
+                <div className="mt-3 p-3 bg-red-50 border border-red-200 rounded">
+                  <p className="text-sm text-red-800">
+                    <strong>Error:</strong> {importJob.errorMessage}
+                  </p>
+                </div>
+              )}
+
+              {importJob.status === 'completed' && (
+                <div className="text-sm text-blue-700">
+                  Completed on {new Date(importJob.completedAt).toLocaleString()}
+                </div>
+              )}
             </div>
           )}
 
