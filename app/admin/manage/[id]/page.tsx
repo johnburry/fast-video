@@ -125,6 +125,8 @@ export default function ManageChannelPage({
         const data = await response.json();
         if (data.hasJob) {
           setImportJob(data.job);
+          // Refresh metrics when status updates
+          fetchMetrics();
         } else {
           setImportJob(null);
         }

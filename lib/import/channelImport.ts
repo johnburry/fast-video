@@ -252,6 +252,10 @@ export async function importChannel(options: ImportOptions): Promise<void> {
     });
 
     // Determine which videos to import
+    // Strategy:
+    // 1. Import up to videoLimit NEW videos (priority)
+    // 2. If fewer than videoLimit new videos, fill remaining slots with existing videos needing transcripts
+    // 3. Total processed should be up to videoLimit (or less if not enough videos available)
     let videosToImport: any[];
     let videosForTranscripts: any[] = [];
 
@@ -264,8 +268,10 @@ export async function importChannel(options: ImportOptions): Promise<void> {
       videosToImport = newVideos.slice(0, videoLimit);
     }
 
-    if (!skipTranscripts) {
-      videosForTranscripts = existingVideosWithoutTranscripts.slice(0, videoLimit - videosToImport.length);
+    // Fill remaining slots (if any) with existing videos that need transcripts
+    if (!skipTranscripts && videosToImport.length < videoLimit) {
+      const remainingSlots = videoLimit - videosToImport.length;
+      videosForTranscripts = existingVideosWithoutTranscripts.slice(0, remainingSlots);
     }
 
     const totalToProcess = videosToImport.length + videosForTranscripts.length;
