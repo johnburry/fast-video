@@ -243,6 +243,13 @@ export async function importChannel(options: ImportOptions): Promise<void> {
       return existingVideoMap.has(v.videoId) && hasTranscript === false;
     });
 
+    console.log('[IMPORT] Video analysis:', {
+      totalFromYouTube: combinedVideos.length,
+      existingInDB: allExistingVideos.length,
+      newVideos: newVideos.length,
+      existingNeedingTranscripts: existingVideosWithoutTranscripts.length,
+    });
+
     // Sort new videos by publish date
     newVideos.sort((a, b) => {
       const dateA = parseRelativeTime(a.publishedAt);
@@ -275,6 +282,13 @@ export async function importChannel(options: ImportOptions): Promise<void> {
     }
 
     const totalToProcess = videosToImport.length + videosForTranscripts.length;
+
+    console.log('[IMPORT] Final processing plan:', {
+      newVideosToImport: videosToImport.length,
+      existingNeedingTranscripts: videosForTranscripts.length,
+      totalToProcess,
+      videoLimit,
+    });
 
     // Update job with total count
     if (jobId) {
