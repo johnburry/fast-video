@@ -105,9 +105,16 @@ export async function getChannelVideos(channelId: string, limit: number = 50): P
 
     // Get videos from the channel's uploads
     let uploads: any = await channel.getVideos();
+    let pageCount = 0;
+
+    console.log(`[YOUTUBE] Starting to fetch videos for channel ${channelId}, limit: ${limit}`);
 
     // Fetch videos until we reach the limit or run out of videos
     while (videos.length < limit) {
+      pageCount++;
+      const pageVideoCount = uploads.videos?.length || 0;
+      console.log(`[YOUTUBE] Page ${pageCount}: Processing ${pageVideoCount} videos, total so far: ${videos.length}`);
+
       for (const video of uploads.videos) {
         // Type guard for video object
         const v = video as any;
@@ -144,13 +151,15 @@ export async function getChannelVideos(channelId: string, limit: number = 50): P
 
       // Check if there are more videos to fetch
       if (videos.length < limit && uploads.has_continuation) {
+        console.log(`[YOUTUBE] Has continuation, fetching more... (current: ${videos.length}/${limit})`);
         uploads = await uploads.getContinuation();
       } else {
+        console.log(`[YOUTUBE] Stopping: has_continuation=${uploads.has_continuation}, videos=${videos.length}/${limit}`);
         break;
       }
     }
 
-    console.log(`[YOUTUBE] Fetched ${videos.length} videos for channel ${channelId}`);
+    console.log(`[YOUTUBE] Finished fetching ${videos.length} videos for channel ${channelId} (${pageCount} pages)`);
     return videos;
   } catch (error) {
     console.error('Error fetching channel videos:', error);
