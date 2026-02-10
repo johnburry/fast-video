@@ -1,13 +1,15 @@
 import { inngest } from '@/lib/inngest/client';
 import { supabaseAdmin } from '@/lib/supabase/server';
-import { getChannelByHandle, getChannelVideos, getChannelLiveVideos, getYouTubeClient } from '@/lib/youtube/client';
-import { getVideoTranscript } from '@/lib/youtube/transcript';
-import { uploadThumbnailToR2, uploadChannelThumbnailToR2, uploadChannelBannerToR2 } from '@/lib/r2';
-import { isQualityTranscript } from '@/lib/transcriptQuality';
+import { importChannel, ImportProgress } from '@/lib/import/channelImport';
 
 // This is a background job that can run for hours without timing out
 export const importChannelJob = inngest.createFunction(
-  { id: 'import-channel', name: 'Import YouTube Channel' },
+  {
+    id: 'import-channel',
+    name: 'Import YouTube Channel',
+    // Increase retries for reliability
+    retries: 3,
+  },
   { event: 'channel/import.requested' },
   async ({ event, step }) => {
     const { jobId, channelHandle, limit, includeLiveVideos, skipTranscripts, tenantId } = event.data;
@@ -24,20 +26,51 @@ export const importChannelJob = inngest.createFunction(
     });
 
     try {
-      // The import logic will go here - we'll extract it from the existing route
-      // For now, let's just mark it as a placeholder
+      // Run the import with progress tracking
+      await step.run('import-channel-data', async () => {
+        await importChannel({
+          channelHandle,
+          limit,
+          includeLiveVideos,
+          skipTranscripts,
+          tenantId,
+          jobId,
+          onProgress: async (progress: ImportProgress) => {
+            // Update job progress in database
+            const updateData: any = {
+              progress: {
+                type: progress.type,
+                message: progress.message,
+                current: progress.current,
+                total: progress.total,
+                videoTitle: progress.videoTitle,
+              }
+            };
 
-      await step.run('update-progress', async () => {
-        await supabaseAdmin
-          .from('channel_import_jobs')
-          .update({
-            progress: { message: 'Starting import...' },
-          })
-          .eq('id', jobId);
+            // Update specific fields if available
+            if (progress.current !== undefined) {
+              updateData.videos_processed = progress.current;
+            }
+            if (progress.total !== undefined) {
+              updateData.videos_total = progress.total;
+            }
+            if (progress.videoTitle) {
+              updateData.current_video_title = progress.videoTitle;
+            }
+            if (progress.transcriptsDownloaded !== undefined) {
+              updateData.transcripts_downloaded = progress.transcriptsDownloaded;
+            }
+            if (progress.embeddingsGenerated !== undefined) {
+              updateData.embeddings_generated = progress.embeddingsGenerated;
+            }
+
+            await supabaseAdmin
+              .from('channel_import_jobs')
+              .update(updateData)
+              .eq('id', jobId);
+          },
+        });
       });
-
-      // TODO: Add the full import logic here
-      // This is where we'll move all the import code from the route
 
       // Mark job as completed
       await step.run('mark-job-as-completed', async () => {
@@ -50,7 +83,7 @@ export const importChannelJob = inngest.createFunction(
           .eq('id', jobId);
       });
 
-      return { success: true };
+      return { success: true, jobId };
     } catch (error) {
       // Mark job as failed
       await step.run('mark-job-as-failed', async () => {
