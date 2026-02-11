@@ -27,9 +27,8 @@ export async function GET(request: Request) {
       return new Response('Video not found', { status: 404 });
     }
 
-    // Use channel thumbnail instead of video thumbnail
-    const channelData = video.channels as any;
-    const thumbnailUrl = channelData?.thumbnail_url || `https://img.youtube.com/vi/${video.youtube_video_id}/maxresdefault.jpg`;
+    // Use video thumbnail for link preview
+    const thumbnailUrl = video.thumbnail_url || `https://img.youtube.com/vi/${video.youtube_video_id}/maxresdefault.jpg`;
 
     console.log('[OG IMAGE] Location OG Image - Video ID:', videoId, 'Using thumbnail:', thumbnailUrl);
 
