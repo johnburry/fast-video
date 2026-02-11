@@ -134,12 +134,12 @@ async function getTranscriptFromTranscriptAPI(videoId: string): Promise<Transcri
     const url = `https://transcriptapi.com/api/v2/youtube/transcript?video_url=${videoId}&format=json&include_timestamp=true`;
     console.log(`[TRANSCRIPT] Fetching from TranscriptAPI.com: ${videoId}`);
 
-    // Add 120 second timeout for long videos (sermons can be 1-2 hours)
+    // Add 300 second timeout for long videos (sermons can be 1-2 hours)
     const controller = new AbortController();
     const timeoutId = setTimeout(() => {
-      console.error(`[TRANSCRIPT] TranscriptAPI.com taking too long, aborting after 120s`);
+      console.error(`[TRANSCRIPT] TranscriptAPI.com taking too long, aborting after 300s`);
       controller.abort();
-    }, 120000);
+    }, 300000);
 
     try {
       const fetchStartTime = Date.now();
@@ -195,7 +195,7 @@ async function getTranscriptFromTranscriptAPI(videoId: string): Promise<Transcri
     } catch (fetchError: any) {
       clearTimeout(timeoutId);
       if (fetchError.name === 'AbortError') {
-        console.error(`[TRANSCRIPT] TranscriptAPI.com timed out after 120 seconds for ${videoId} (video might be too long)`);
+        console.error(`[TRANSCRIPT] TranscriptAPI.com timed out after 300 seconds for ${videoId} (video might be too long)`);
       } else {
         console.error(`[TRANSCRIPT] Fetch error from TranscriptAPI.com:`, fetchError);
       }
