@@ -408,9 +408,22 @@ export async function importChannel(options: ImportOptions): Promise<void> {
             duration: segment.duration,
           }));
 
-          const { error: transcriptError } = await supabaseAdmin
-            .from('transcripts')
-            .insert(transcriptRecords);
+          // Insert transcripts in batches to avoid hitting database limits
+          const batchSize = 100;
+          let transcriptError = null;
+
+          for (let i = 0; i < transcriptRecords.length; i += batchSize) {
+            const batch = transcriptRecords.slice(i, i + batchSize);
+            const { error } = await supabaseAdmin
+              .from('transcripts')
+              .insert(batch);
+
+            if (error) {
+              console.error(`Error inserting transcript batch ${i}-${i + batch.length}:`, error);
+              transcriptError = error;
+              break;
+            }
+          }
 
           if (!transcriptError) {
             const hasQualityTranscript = isQualityTranscript(transcript);
@@ -472,9 +485,22 @@ export async function importChannel(options: ImportOptions): Promise<void> {
             duration: segment.duration,
           }));
 
-          const { error: transcriptError } = await supabaseAdmin
-            .from('transcripts')
-            .insert(transcriptRecords);
+          // Insert transcripts in batches to avoid hitting database limits
+          const batchSize = 100;
+          let transcriptError = null;
+
+          for (let i = 0; i < transcriptRecords.length; i += batchSize) {
+            const batch = transcriptRecords.slice(i, i + batchSize);
+            const { error } = await supabaseAdmin
+              .from('transcripts')
+              .insert(batch);
+
+            if (error) {
+              console.error(`Error inserting transcript batch ${i}-${i + batch.length}:`, error);
+              transcriptError = error;
+              break;
+            }
+          }
 
           if (!transcriptError) {
             const hasQualityTranscript = isQualityTranscript(transcript);
