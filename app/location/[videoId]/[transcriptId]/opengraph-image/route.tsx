@@ -39,7 +39,8 @@ export async function GET(request: Request) {
     return new Response(imageBuffer, {
       headers: {
         'Content-Type': 'image/jpeg',
-        'Cache-Control': 'public, max-age=31536000, immutable',
+        // Use shorter cache to allow updates, but still cache for performance
+        'Cache-Control': 'public, max-age=3600, s-maxage=86400',
       },
     });
   } catch (error) {
