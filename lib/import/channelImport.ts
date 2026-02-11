@@ -386,6 +386,20 @@ export async function importChannel(options: ImportOptions): Promise<void> {
         const videoId = newVideo.id;
         processedVideoIds.push(videoId);
 
+        // Log video import
+        if (jobId) {
+          await supabaseAdmin
+            .from('channel_import_logs')
+            .insert({
+              job_id: jobId,
+              video_id: videoId,
+              youtube_video_id: video.videoId,
+              video_title: video.title,
+              video_published_at: publishedAt,
+              action_type: 'video_imported',
+            });
+        }
+
         // Skip transcripts if requested
         if (skipTranscripts) {
           processedCount++;
@@ -455,6 +469,20 @@ export async function importChannel(options: ImportOptions): Promise<void> {
 
             transcriptCount++;
 
+            // Log transcript download
+            if (jobId) {
+              await supabaseAdmin
+                .from('channel_import_logs')
+                .insert({
+                  job_id: jobId,
+                  video_id: videoId,
+                  youtube_video_id: video.videoId,
+                  video_title: video.title,
+                  video_published_at: publishedAt,
+                  action_type: 'transcript_downloaded',
+                });
+            }
+
             // Update job transcript count
             if (jobId) {
               await supabaseAdmin
@@ -463,6 +491,18 @@ export async function importChannel(options: ImportOptions): Promise<void> {
                 .eq('id', jobId);
             }
           }
+        } else if (jobId) {
+          // Log transcript skipped (no transcript available)
+          await supabaseAdmin
+            .from('channel_import_logs')
+            .insert({
+              job_id: jobId,
+              video_id: videoId,
+              youtube_video_id: video.videoId,
+              video_title: video.title,
+              video_published_at: publishedAt,
+              action_type: 'transcript_skipped',
+            });
         }
 
         processedCount++;
@@ -549,6 +589,34 @@ export async function importChannel(options: ImportOptions): Promise<void> {
 
             transcriptCount++;
             processedVideoIds.push(videoId);
+
+            // Log transcript download
+            if (jobId) {
+              const publishedAt = parseRelativeTime(video.publishedAt);
+              await supabaseAdmin
+                .from('channel_import_logs')
+                .insert({
+                  job_id: jobId,
+                  video_id: videoId,
+                  youtube_video_id: video.videoId,
+                  video_title: video.title,
+                  video_published_at: publishedAt,
+                  action_type: 'transcript_downloaded',
+                });
+            }
+          } else if (jobId) {
+            // Log transcript skipped (no transcript available)
+            const publishedAt = parseRelativeTime(video.publishedAt);
+            await supabaseAdmin
+              .from('channel_import_logs')
+              .insert({
+                job_id: jobId,
+                video_id: videoId,
+                youtube_video_id: video.videoId,
+                video_title: video.title,
+                video_published_at: publishedAt,
+                action_type: 'transcript_skipped',
+              });
           }
         }
 

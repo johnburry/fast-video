@@ -46,6 +46,7 @@ export default function ManageChannelPage({
 
   // Import status state
   const [importJob, setImportJob] = useState<any>(null);
+  const [importLogs, setImportLogs] = useState<any[]>([]);
   const [startingImport, setStartingImport] = useState(false);
   const [showImportModal, setShowImportModal] = useState(false);
   const [importLimit, setImportLimit] = useState('50');
@@ -128,14 +129,29 @@ export default function ManageChannelPage({
         const data = await response.json();
         if (data.hasJob) {
           setImportJob(data.job);
+          // Fetch detailed logs for this job
+          fetchImportLogs(data.job.id);
           // Refresh metrics when status updates
           fetchMetrics();
         } else {
           setImportJob(null);
+          setImportLogs([]);
         }
       }
     } catch (err) {
       console.error('Error fetching import status:', err);
+    }
+  };
+
+  const fetchImportLogs = async (jobId: string) => {
+    try {
+      const response = await fetch(`/api/admin/import-logs/${jobId}`);
+      if (response.ok) {
+        const data = await response.json();
+        setImportLogs(data.logs || []);
+      }
+    } catch (err) {
+      console.error('Error fetching import logs:', err);
     }
   };
 
@@ -847,6 +863,62 @@ export default function ManageChannelPage({
               {importJob.status === 'completed' && (
                 <div className="text-sm text-blue-700">
                   Completed on {new Date(importJob.completedAt).toLocaleString()}
+                </div>
+              )}
+
+              {/* Detailed Import Logs */}
+              {importLogs.length > 0 && (
+                <div className="mt-4 pt-4 border-t border-blue-300">
+                  <h4 className="text-sm font-semibold text-blue-900 mb-3">Import Log</h4>
+                  <div className="bg-white rounded-lg border border-blue-200 max-h-96 overflow-y-auto">
+                    <table className="w-full text-xs">
+                      <thead className="bg-blue-100 sticky top-0">
+                        <tr>
+                          <th className="px-3 py-2 text-left text-blue-900 font-semibold">Action</th>
+                          <th className="px-3 py-2 text-left text-blue-900 font-semibold">Video Title</th>
+                          <th className="px-3 py-2 text-left text-blue-900 font-semibold">Published</th>
+                          <th className="px-3 py-2 text-left text-blue-900 font-semibold">Time</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-gray-200">
+                        {importLogs.map((log, index) => (
+                          <tr key={log.id} className="hover:bg-blue-50">
+                            <td className="px-3 py-2">
+                              {log.action_type === 'video_imported' && (
+                                <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800">
+                                  Imported
+                                </span>
+                              )}
+                              {log.action_type === 'transcript_downloaded' && (
+                                <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800">
+                                  Transcript
+                                </span>
+                              )}
+                              {log.action_type === 'transcript_skipped' && (
+                                <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-600">
+                                  Skipped
+                                </span>
+                              )}
+                              {log.action_type === 'error' && (
+                                <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-red-100 text-red-800">
+                                  Error
+                                </span>
+                              )}
+                            </td>
+                            <td className="px-3 py-2 text-gray-900 max-w-xs truncate" title={log.video_title}>
+                              {log.video_title}
+                            </td>
+                            <td className="px-3 py-2 text-gray-600">
+                              {log.video_published_at ? new Date(log.video_published_at).toLocaleDateString() : 'N/A'}
+                            </td>
+                            <td className="px-3 py-2 text-gray-500">
+                              {new Date(log.created_at).toLocaleTimeString()}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
                 </div>
               )}
             </div>
