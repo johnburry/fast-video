@@ -387,7 +387,7 @@ export default function ChannelPage({
             {/* Mobile: Stack vertically, Desktop: Two columns */}
             <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4">
               {/* Left: Thumbnail and Channel Title */}
-              <div className="flex items-center space-x-4">
+              <div className="flex items-center space-x-4" style={{ paddingTop: '10px' }}>
                 {channelData?.channel.thumbnail && (
                   <img
                     src={getThumbnailUrl(channelData.channel.thumbnail)}
