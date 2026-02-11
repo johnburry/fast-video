@@ -121,8 +121,95 @@ async function getTranscriptFromYouTubeTranscriptAPI(videoId: string): Promise<T
 }
 
 /**
+ * Fetch transcript using TranscriptAPI.com
+ */
+async function getTranscriptFromTranscriptAPI(videoId: string): Promise<TranscriptSegment[] | null> {
+  try {
+    const apiKey = process.env.TRANSCRIPTAPI_KEY;
+    if (!apiKey) {
+      console.error('[TRANSCRIPT] TRANSCRIPTAPI_KEY not set in environment');
+      return null;
+    }
+
+    const url = `https://api.transcriptapi.com/youtube/transcript?video_url=${videoId}&format=json&include_timestamp=true`;
+    console.log(`[TRANSCRIPT] Fetching from TranscriptAPI.com: ${videoId}`);
+
+    // Add 30 second timeout
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => {
+      console.error(`[TRANSCRIPT] TranscriptAPI.com taking too long, aborting after 30s`);
+      controller.abort();
+    }, 30000);
+
+    try {
+      const fetchStartTime = Date.now();
+      const response = await fetch(url, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${apiKey}`,
+          'Accept': 'application/json',
+        },
+        signal: controller.signal,
+      });
+
+      clearTimeout(timeoutId);
+      const fetchDuration = Date.now() - fetchStartTime;
+      console.log(`[TRANSCRIPT] TranscriptAPI.com responded in ${fetchDuration}ms with status: ${response.status}`);
+
+      if (!response.ok) {
+        console.error(`[TRANSCRIPT] TranscriptAPI.com request failed: ${response.status}`);
+        const errorText = await response.text();
+        console.error(`[TRANSCRIPT] Error response: ${errorText}`);
+        return null;
+      }
+
+      interface TranscriptAPIResponse {
+        video_id: string;
+        language: string;
+        transcript: Array<{
+          text: string;
+          start: number;
+          duration: number;
+        }>;
+      }
+
+      const data: TranscriptAPIResponse = await response.json();
+
+      if (!data.transcript || data.transcript.length === 0) {
+        console.log(`[TRANSCRIPT] No transcript found for ${videoId}`);
+        return null;
+      }
+
+      console.log(`[TRANSCRIPT] Successfully fetched ${data.transcript.length} segments from TranscriptAPI.com`);
+
+      // Map to our format
+      const result: TranscriptSegment[] = data.transcript
+        .filter(segment => segment.text && segment.text.trim().length > 0)
+        .map(segment => ({
+          text: segment.text.trim(),
+          startTime: segment.start,
+          duration: segment.duration,
+        }));
+
+      return result;
+    } catch (fetchError: any) {
+      clearTimeout(timeoutId);
+      if (fetchError.name === 'AbortError') {
+        console.error(`[TRANSCRIPT] TranscriptAPI.com timed out after 30 seconds for ${videoId}`);
+      } else {
+        console.error(`[TRANSCRIPT] Fetch error from TranscriptAPI.com:`, fetchError);
+      }
+      return null;
+    }
+  } catch (error) {
+    console.error(`[TRANSCRIPT] Error fetching from TranscriptAPI.com:`, error);
+    return null;
+  }
+}
+
+/**
  * Main transcript fetching function
- * Tries YouTubeTranscript API first (faster), falls back to Supadata
+ * Uses TranscriptAPI.com (other services disabled but kept for reference)
  */
 export async function getVideoTranscript(
   videoId: string,
@@ -131,28 +218,38 @@ export async function getVideoTranscript(
 ): Promise<TranscriptSegment[] | null> {
   console.log(`[TRANSCRIPT] Fetching transcript for video ${videoId}...`);
 
-  // Try YouTubeTranscript API first if API key is available
-  if (process.env.YOUTUBE_TRANSCRIPT_API_KEY) {
-    console.log(`[TRANSCRIPT] Trying YouTubeTranscript API first...`);
-    const result = await getTranscriptFromYouTubeTranscriptAPI(videoId);
+  // Use TranscriptAPI.com as primary service
+  if (process.env.TRANSCRIPTAPI_KEY) {
+    console.log(`[TRANSCRIPT] Using TranscriptAPI.com...`);
+    const result = await getTranscriptFromTranscriptAPI(videoId);
     if (result && result.length > 0) {
-      console.log(`[TRANSCRIPT] ✓ Successfully fetched transcript from YouTubeTranscript API`);
-      return result;
-    }
-    console.log(`[TRANSCRIPT] YouTubeTranscript API returned no results, falling back to Supadata...`);
-  }
-
-  // Fall back to Supadata API
-  if (process.env.SUPADATA_API_KEY) {
-    console.log(`[TRANSCRIPT] Trying Supadata API...`);
-    const result = await getTranscriptFromSupadata(videoId);
-    if (result && result.length > 0) {
-      console.log(`[TRANSCRIPT] ✓ Successfully fetched transcript from Supadata API`);
+      console.log(`[TRANSCRIPT] ✓ Successfully fetched transcript from TranscriptAPI.com`);
       return result;
     }
   }
 
-  console.log(`[TRANSCRIPT] No transcript available from any API for video ${videoId}`);
+  // DISABLED: YouTubeTranscript API (kept for reference)
+  // if (process.env.YOUTUBE_TRANSCRIPT_API_KEY) {
+  //   console.log(`[TRANSCRIPT] Trying YouTubeTranscript API first...`);
+  //   const result = await getTranscriptFromYouTubeTranscriptAPI(videoId);
+  //   if (result && result.length > 0) {
+  //     console.log(`[TRANSCRIPT] ✓ Successfully fetched transcript from YouTubeTranscript API`);
+  //     return result;
+  //   }
+  //   console.log(`[TRANSCRIPT] YouTubeTranscript API returned no results, falling back to Supadata...`);
+  // }
+
+  // DISABLED: Supadata API (kept for reference)
+  // if (process.env.SUPADATA_API_KEY) {
+  //   console.log(`[TRANSCRIPT] Trying Supadata API...`);
+  //   const result = await getTranscriptFromSupadata(videoId);
+  //   if (result && result.length > 0) {
+  //     console.log(`[TRANSCRIPT] ✓ Successfully fetched transcript from Supadata API`);
+  //     return result;
+  //   }
+  // }
+
+  console.log(`[TRANSCRIPT] No transcript available for video ${videoId}`);
   return null;
 }
 
