@@ -131,7 +131,7 @@ async function getTranscriptFromTranscriptAPI(videoId: string): Promise<Transcri
       return null;
     }
 
-    const url = `https://api.transcriptapi.com/youtube/transcript?video_url=${videoId}&format=json&include_timestamp=true`;
+    const url = `https://transcriptapi.com/api/v2/youtube/transcript?video_url=${videoId}&format=json&include_timestamp=true`;
     console.log(`[TRANSCRIPT] Fetching from TranscriptAPI.com: ${videoId}`);
 
     // Add 30 second timeout
