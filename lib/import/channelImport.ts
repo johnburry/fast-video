@@ -254,7 +254,8 @@ export async function importChannel(options: ImportOptions): Promise<void> {
       existingNeedingTranscripts: existingVideosWithoutTranscripts.length,
     });
 
-    // Sort new videos by publish date
+    // Sort new videos by publish date (newest first)
+    // This sorts ALL videos together (both live and regular) by their publish date
     newVideos.sort((a, b) => {
       const dateA = parseRelativeTime(a.publishedAt);
       const dateB = parseRelativeTime(b.publishedAt);
@@ -272,20 +273,16 @@ export async function importChannel(options: ImportOptions): Promise<void> {
       videosToImport = [];
       videosForTranscripts = existingVideosWithoutTranscripts.slice(0, videoLimit);
     } else {
-      // Normal mode: Import new videos, then fill remaining slots with transcript-only
+      // Normal mode: Import new videos by date (newest first), then fill remaining slots with transcript-only
       // Strategy:
-      // 1. Import up to videoLimit NEW videos (priority)
+      // 1. Import up to videoLimit NEW videos sorted by publish date (newest first)
+      //    This includes BOTH live and regular videos, sorted together by date
       // 2. If fewer than videoLimit new videos, fill remaining slots with existing videos needing transcripts
       // 3. Total processed should be up to videoLimit (or less if not enough videos available)
 
-      if (includeLiveVideos && liveVideos.length > 0) {
-        const liveVideoIdsSet = new Set(liveVideos.map(v => v.videoId));
-        const liveVideosToImport = newVideos.filter(v => liveVideoIdsSet.has(v.videoId));
-        const regularVideosToImport = newVideos.filter(v => !liveVideoIdsSet.has(v.videoId));
-        videosToImport = [...liveVideosToImport, ...regularVideosToImport].slice(0, videoLimit);
-      } else {
-        videosToImport = newVideos.slice(0, videoLimit);
-      }
+      // Simply take the top N videos by date (already sorted newest first)
+      // This means the most recent videos of ANY type (live or regular) are imported first
+      videosToImport = newVideos.slice(0, videoLimit);
 
       // Fill remaining slots (if any) with existing videos that need transcripts
       if (!skipTranscripts && videosToImport.length < videoLimit) {
