@@ -64,8 +64,8 @@ export async function generateMetadata({
       : quote.quote_text;
     const ogTitle = `Sharing a quote from: ${video.title}`;
     const ogDescription = quoteTitle;
-    // Use channel thumbnail instead of video thumbnail
-    const ogImage = channelData?.thumbnail_url || `https://img.youtube.com/vi/${video.youtube_video_id}/maxresdefault.jpg`;
+    // Use video thumbnail for link preview
+    const ogImage = video.thumbnail_url || `https://img.youtube.com/vi/${video.youtube_video_id}/maxresdefault.jpg`;
 
     console.log('[QUOTE METADATA] Generated - Title:', ogTitle, 'Image:', ogImage, 'Channel:', channelData?.channel_name);
 
