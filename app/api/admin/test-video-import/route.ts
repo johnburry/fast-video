@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { getVideoTranscript } from '@/lib/youtube/transcript';
+import { isQualityTranscript } from '@/lib/transcriptQuality';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
@@ -174,8 +175,27 @@ export async function GET(request: NextRequest) {
 
     log(`\n✓ All transcripts inserted successfully: ${totalInserted}/${transcriptRecords.length}`);
 
-    // Step 6: Verify inserted transcripts
-    log('\nStep 6: Verifying inserted transcripts...');
+    // Step 6: Check transcript quality and update video
+    log('\nStep 6: Checking transcript quality...');
+    const hasQualityTranscript = isQualityTranscript(transcript);
+    log(`Quality check result: ${hasQualityTranscript ? '✓ High quality' : '✗ Low quality'}`);
+
+    const { error: updateError } = await supabase
+      .from('videos')
+      .update({
+        has_transcript: true,
+        has_quality_transcript: hasQualityTranscript
+      })
+      .eq('id', videoId);
+
+    if (updateError) {
+      log(`❌ Error updating video flags: ${JSON.stringify(updateError)}`);
+    } else {
+      log(`✓ Updated video: has_transcript=true, has_quality_transcript=${hasQualityTranscript}`);
+    }
+
+    // Step 7: Verify inserted transcripts
+    log('\nStep 7: Verifying inserted transcripts...');
 
     // Use count query to get accurate total (not limited by Supabase's 1000 row default)
     const { count: transcriptCount, error: countError } = await supabase
@@ -222,8 +242,8 @@ export async function GET(request: NextRequest) {
     // Create a mock verifyTranscripts object for compatibility with the rest of the code
     const verifyTranscripts = { length: transcriptCount || 0 };
 
-    // Step 7: Refresh search index
-    log('\nStep 7: Refreshing search index...');
+    // Step 8: Refresh search index
+    log('\nStep 8: Refreshing search index...');
     const { data: refreshData, error: refreshError } = await supabase
       .rpc('refresh_transcript_search_for_videos', {
         p_video_ids: [videoId]
@@ -235,8 +255,8 @@ export async function GET(request: NextRequest) {
       log('✓ Search index refreshed');
     }
 
-    // Step 8: Verify search index
-    log('\nStep 8: Verifying search index...');
+    // Step 9: Verify search index
+    log('\nStep 9: Verifying search index...');
     const { data: searchContext, error: searchError } = await supabase
       .from('transcript_search_context')
       .select('*')
