@@ -12,12 +12,33 @@ interface TranscriptSegment {
 /**
  * Validates if a transcript contains meaningful speech content
  * Returns true if the transcript is high quality, false if it's just music/filler
+ *
+ * Strategy: Skip the first 20% of the transcript to ignore intro music/worship
+ * Many sermons start with music/singing but contain quality content afterward
  */
 export function isQualityTranscript(transcripts: TranscriptSegment[]): boolean {
   if (!transcripts || transcripts.length === 0) {
     return false;
   }
 
+  // Skip the first 20% of segments to ignore intro music/worship
+  const skipCount = Math.floor(transcripts.length * 0.2);
+  const analyzedTranscripts = transcripts.slice(skipCount);
+
+  if (analyzedTranscripts.length === 0) {
+    // If transcript is too short after skipping, analyze the whole thing
+    return analyzeTranscriptQuality(transcripts);
+  }
+
+  console.log(`[TRANSCRIPT QUALITY] Analyzing ${analyzedTranscripts.length}/${transcripts.length} segments (skipped first ${skipCount} for intro)`);
+
+  return analyzeTranscriptQuality(analyzedTranscripts);
+}
+
+/**
+ * Internal function to analyze transcript quality
+ */
+function analyzeTranscriptQuality(transcripts: TranscriptSegment[]): boolean {
   // Combine all transcript text
   const allText = transcripts.map(t => t.text.toLowerCase()).join(' ');
   const words = allText.split(/\s+/).filter(w => w.length > 0);
