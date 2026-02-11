@@ -47,19 +47,40 @@ export async function GET(request: NextRequest) {
 
     // Step 2: Check existing transcripts
     log('\nStep 2: Checking existing transcripts...');
-    const { data: existingTranscripts, error: existingError } = await supabase
-      .from('transcripts')
-      .select('*')
-      .eq('video_id', videoId)
-      .order('start_time', { ascending: true });
 
-    if (existingError) {
-      log(`❌ Error fetching existing transcripts: ${JSON.stringify(existingError)}`);
+    // Use count query for accurate total
+    const { count: existingCount, error: existingCountError } = await supabase
+      .from('transcripts')
+      .select('*', { count: 'exact', head: true })
+      .eq('video_id', videoId);
+
+    if (existingCountError) {
+      log(`❌ Error counting existing transcripts: ${JSON.stringify(existingCountError)}`);
     } else {
-      log(`Found ${existingTranscripts?.length || 0} existing transcript segments`);
-      if (existingTranscripts && existingTranscripts.length > 0) {
-        log(`First: [${existingTranscripts[0].start_time}s] ${existingTranscripts[0].text.substring(0, 60)}...`);
-        log(`Last: [${existingTranscripts[existingTranscripts.length - 1].start_time}s] ${existingTranscripts[existingTranscripts.length - 1].text.substring(0, 60)}...`);
+      log(`Found ${existingCount || 0} existing transcript segments`);
+
+      if (existingCount && existingCount > 0) {
+        // Fetch first and last for display
+        const { data: firstExisting } = await supabase
+          .from('transcripts')
+          .select('start_time, text')
+          .eq('video_id', videoId)
+          .order('start_time', { ascending: true })
+          .limit(1);
+
+        const { data: lastExisting } = await supabase
+          .from('transcripts')
+          .select('start_time, text')
+          .eq('video_id', videoId)
+          .order('start_time', { ascending: false })
+          .limit(1);
+
+        if (firstExisting && firstExisting.length > 0) {
+          log(`First: [${firstExisting[0].start_time}s] ${firstExisting[0].text.substring(0, 60)}...`);
+        }
+        if (lastExisting && lastExisting.length > 0) {
+          log(`Last: [${lastExisting[0].start_time}s] ${lastExisting[0].text.substring(0, 60)}...`);
+        }
       }
     }
 
@@ -155,29 +176,51 @@ export async function GET(request: NextRequest) {
 
     // Step 6: Verify inserted transcripts
     log('\nStep 6: Verifying inserted transcripts...');
-    const { data: verifyTranscripts, error: verifyError } = await supabase
+
+    // Use count query to get accurate total (not limited by Supabase's 1000 row default)
+    const { count: transcriptCount, error: countError } = await supabase
+      .from('transcripts')
+      .select('*', { count: 'exact', head: true })
+      .eq('video_id', videoId);
+
+    if (countError) {
+      log(`❌ Error counting transcripts: ${JSON.stringify(countError)}`);
+      return NextResponse.json({ error: 'Failed to count transcripts', logs }, { status: 500 });
+    }
+
+    log(`✓ Verified ${transcriptCount || 0} transcripts in database (using COUNT query)`);
+
+    // Fetch a sample of transcripts for display (first 3 and last 3)
+    const { data: firstTranscripts, error: firstError } = await supabase
       .from('transcripts')
       .select('id, start_time, text')
       .eq('video_id', videoId)
-      .order('start_time', { ascending: true });
+      .order('start_time', { ascending: true })
+      .limit(3);
 
-    if (verifyError) {
-      log(`❌ Error verifying transcripts: ${JSON.stringify(verifyError)}`);
-      return NextResponse.json({ error: 'Failed to verify transcripts', logs }, { status: 500 });
-    }
+    const { data: lastTranscripts, error: lastError } = await supabase
+      .from('transcripts')
+      .select('id, start_time, text')
+      .eq('video_id', videoId)
+      .order('start_time', { ascending: false })
+      .limit(3);
 
-    log(`✓ Verified ${verifyTranscripts?.length || 0} transcripts in database`);
-
-    if (verifyTranscripts && verifyTranscripts.length > 0) {
+    if (!firstError && firstTranscripts && firstTranscripts.length > 0) {
       log('\nFirst 3 in database:');
-      verifyTranscripts.slice(0, 3).forEach((t, i) => {
+      firstTranscripts.forEach((t, i) => {
         log(`  ${i + 1}. [${t.start_time}s] ${t.text.substring(0, 60)}...`);
       });
+    }
+
+    if (!lastError && lastTranscripts && lastTranscripts.length > 0) {
       log('\nLast 3 in database:');
-      verifyTranscripts.slice(-3).forEach((t, i) => {
-        log(`  ${verifyTranscripts.length - 3 + i + 1}. [${t.start_time}s] ${t.text.substring(0, 60)}...`);
+      lastTranscripts.reverse().forEach((t, i) => {
+        log(`  ${(transcriptCount || 0) - 3 + i + 1}. [${t.start_time}s] ${t.text.substring(0, 60)}...`);
       });
     }
+
+    // Create a mock verifyTranscripts object for compatibility with the rest of the code
+    const verifyTranscripts = { length: transcriptCount || 0 };
 
     // Step 7: Refresh search index
     log('\nStep 7: Refreshing search index...');

@@ -426,6 +426,23 @@ export async function importChannel(options: ImportOptions): Promise<void> {
           }
 
           if (!transcriptError) {
+            // Verify transcripts were inserted correctly using COUNT (not limited by Supabase's 1000-row default)
+            const { count: insertedCount, error: countError } = await supabaseAdmin
+              .from('transcripts')
+              .select('*', { count: 'exact', head: true })
+              .eq('video_id', videoId);
+
+            if (countError) {
+              console.error(`[IMPORT] Error verifying transcript count for video ${video.videoId}:`, countError);
+            } else if (insertedCount !== transcriptRecords.length) {
+              console.error(`[IMPORT] Transcript count mismatch for video ${video.videoId}: expected ${transcriptRecords.length}, got ${insertedCount}`);
+              transcriptError = new Error(`Transcript verification failed: ${insertedCount}/${transcriptRecords.length} inserted`);
+            } else {
+              console.log(`[IMPORT] Verified ${insertedCount} transcripts inserted for video ${video.videoId}`);
+            }
+          }
+
+          if (!transcriptError) {
             const hasQualityTranscript = isQualityTranscript(transcript);
 
             await supabaseAdmin
@@ -499,6 +516,23 @@ export async function importChannel(options: ImportOptions): Promise<void> {
               console.error(`Error inserting transcript batch ${i}-${i + batch.length}:`, error);
               transcriptError = error;
               break;
+            }
+          }
+
+          if (!transcriptError) {
+            // Verify transcripts were inserted correctly using COUNT (not limited by Supabase's 1000-row default)
+            const { count: insertedCount, error: countError } = await supabaseAdmin
+              .from('transcripts')
+              .select('*', { count: 'exact', head: true })
+              .eq('video_id', videoId);
+
+            if (countError) {
+              console.error(`[IMPORT] Error verifying transcript count for video ${video.videoId}:`, countError);
+            } else if (insertedCount !== transcriptRecords.length) {
+              console.error(`[IMPORT] Transcript count mismatch for video ${video.videoId}: expected ${transcriptRecords.length}, got ${insertedCount}`);
+              transcriptError = new Error(`Transcript verification failed: ${insertedCount}/${transcriptRecords.length} inserted`);
+            } else {
+              console.log(`[IMPORT] Verified ${insertedCount} transcripts inserted for video ${video.videoId}`);
             }
           }
 
