@@ -499,21 +499,28 @@ export async function importChannel(options: ImportOptions): Promise<void> {
     }
 
     // Refresh the search index if we imported/updated any transcripts
-    if (transcriptCount > 0) {
+    if (transcriptCount > 0 && processedVideoIds.length > 0) {
       await onProgress({
         type: 'status',
         message: 'Refreshing search index...'
       });
 
-      console.log('[IMPORT] Refreshing search index after importing transcripts...');
+      console.log(`[IMPORT] Refreshing search index for ${processedVideoIds.length} videos...`);
 
       try {
-        const { error: refreshError } = await supabaseAdmin
-          .rpc('perform_transcript_search_refresh');
+        // Use incremental refresh for just the videos we imported
+        // This is much faster than refreshing the entire materialized view
+        const { data: refreshData, error: refreshError } = await supabaseAdmin
+          .rpc('refresh_transcript_search_for_videos', {
+            p_video_ids: processedVideoIds
+          });
 
         if (refreshError) {
           console.error('[IMPORT] Error refreshing search index:', refreshError);
           // Don't fail the import if search refresh fails, just log it
+        } else if (refreshData && refreshData.length > 0) {
+          const result = refreshData[0];
+          console.log(`[IMPORT] Search index refreshed: ${result.message}`);
         } else {
           console.log('[IMPORT] Search index refreshed successfully');
         }
