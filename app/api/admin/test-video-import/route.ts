@@ -42,7 +42,7 @@ export async function GET(request: NextRequest) {
     }
 
     log(`✓ Video found: ${video.title}`);
-    log(`  YouTube ID: ${video.youtube_id}`);
+    log(`  YouTube ID: ${video.youtube_video_id}`);
     log(`  Channel ID: ${video.channel_id}`);
 
     // Step 2: Check existing transcripts
@@ -65,10 +65,10 @@ export async function GET(request: NextRequest) {
 
     // Step 3: Fetch transcript from API
     log('\nStep 3: Fetching transcript from TranscriptAPI.com...');
-    log(`YouTube ID: ${video.youtube_id}`);
+    log(`YouTube ID: ${video.youtube_video_id}`);
 
     const startTime = Date.now();
-    const transcript = await getVideoTranscript(video.youtube_id, false, videoId);
+    const transcript = await getVideoTranscript(video.youtube_video_id, false, videoId);
     const fetchDuration = Date.now() - startTime;
 
     if (!transcript || transcript.length === 0) {
