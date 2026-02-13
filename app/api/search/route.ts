@@ -4,6 +4,59 @@ import { getServerTenantConfig } from '@/lib/tenant-config';
 import { sendSearchNotification } from '@/lib/mailgun';
 import { extractCompleteSentences } from '@/lib/sentence-extractor';
 
+// Mapping from digit strings to word equivalents (0-20 plus common round numbers)
+const NUMBER_TO_WORD: Record<string, string> = {
+  '0': 'zero', '1': 'one', '2': 'two', '3': 'three', '4': 'four',
+  '5': 'five', '6': 'six', '7': 'seven', '8': 'eight', '9': 'nine',
+  '10': 'ten', '11': 'eleven', '12': 'twelve', '13': 'thirteen',
+  '14': 'fourteen', '15': 'fifteen', '16': 'sixteen', '17': 'seventeen',
+  '18': 'eighteen', '19': 'nineteen', '20': 'twenty',
+  '30': 'thirty', '40': 'forty', '50': 'fifty',
+  '100': 'hundred', '1000': 'thousand',
+};
+
+// Reverse mapping from word to digit string
+const WORD_TO_NUMBER: Record<string, string> = {};
+for (const [num, word] of Object.entries(NUMBER_TO_WORD)) {
+  WORD_TO_NUMBER[word] = num;
+}
+
+/**
+ * Expand a search query to include both numeric and word forms of numbers.
+ * e.g. "3 year average" → "3 year average OR three year average"
+ * Uses websearch OR syntax so PostgreSQL searches for both variants.
+ */
+function expandNumbersInQuery(query: string): string {
+  // Don't expand if query uses quotes (complex websearch syntax that could break)
+  if (query.includes('"')) return query;
+
+  const words = query.split(/\s+/);
+  let hasSwappable = false;
+
+  for (const word of words) {
+    const lower = word.toLowerCase();
+    if (NUMBER_TO_WORD[lower] || WORD_TO_NUMBER[lower]) {
+      hasSwappable = true;
+      break;
+    }
+  }
+
+  if (!hasSwappable) return query;
+
+  // Create a variant with all numbers swapped to their alternate form
+  const variantWords = words.map(word => {
+    const lower = word.toLowerCase();
+    if (NUMBER_TO_WORD[lower]) return NUMBER_TO_WORD[lower];
+    if (WORD_TO_NUMBER[lower]) return WORD_TO_NUMBER[lower];
+    return word;
+  });
+
+  const variant = variantWords.join(' ');
+  if (variant.toLowerCase() === query.toLowerCase()) return query;
+
+  return `${query} OR ${variant}`;
+}
+
 export async function GET(request: NextRequest) {
   try {
     const searchParams = request.nextUrl.searchParams;
@@ -31,13 +84,16 @@ export async function GET(request: NextRequest) {
 
     const tenantId = tenantData?.id;
 
+    // Expand numbers in query to match both "3" and "three" etc.
+    const expandedQuery = expandNumbersInQuery(query);
+
     // Search transcripts using cross-segment search context
     // This allows finding phrases that span across segment boundaries
     // Try the main table first, fallback to _new if migration incomplete
     let transcriptSearchQuery = supabaseAdmin
       .from('transcript_search_context')
       .select('*, video_id')
-      .textSearch('search_text', query, {
+      .textSearch('search_text', expandedQuery, {
         type: 'websearch',
         config: 'english',
       })
@@ -68,7 +124,7 @@ export async function GET(request: NextRequest) {
       let fallbackQuery = supabaseAdmin
         .from('transcript_search_context_new')
         .select('*, video_id')
-        .textSearch('search_text', query, {
+        .textSearch('search_text', expandedQuery, {
           type: 'websearch',
           config: 'english',
         })
@@ -118,7 +174,7 @@ export async function GET(request: NextRequest) {
           tenant_id
         )
       `)
-      .textSearch('title', query, {
+      .textSearch('title', expandedQuery, {
         type: 'websearch',
         config: 'english',
       });
