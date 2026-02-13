@@ -12,8 +12,9 @@
 -- (POST /api/admin/refresh-search-index) to rebuild the search index in batches.
 
 -- Step 1: Drop whatever currently exists
-DROP VIEW IF EXISTS transcript_search_context CASCADE;
+-- MATERIALIZED VIEW must be dropped first because DROP VIEW errors on matviews
 DROP MATERIALIZED VIEW IF EXISTS transcript_search_context CASCADE;
+DROP VIEW IF EXISTS transcript_search_context CASCADE;
 DROP TABLE IF EXISTS transcript_search_context CASCADE;
 
 -- Step 2: Create as a TABLE
