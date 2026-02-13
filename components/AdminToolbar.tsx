@@ -64,6 +64,16 @@ export function AdminToolbar() {
               Search Analytics
             </Link>
             <Link
+              href="/admin/rebuild-search-index"
+              className={`text-sm font-medium transition-colors ${
+                pathname === '/admin/rebuild-search-index'
+                  ? 'text-white'
+                  : 'text-gray-400 hover:text-white'
+              }`}
+            >
+              Search Index
+            </Link>
+            <Link
               href="/admin/migrations"
               className={`text-sm font-medium transition-colors ${
                 pathname?.startsWith('/admin/migrate') || pathname === '/admin/migrations' || pathname === '/admin/check-migration'

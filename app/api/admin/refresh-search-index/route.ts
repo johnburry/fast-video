@@ -5,88 +5,86 @@ const BATCH_SIZE = 20;
 
 /**
  * Rebuild the transcript search index table in batches.
- * Each batch processes BATCH_SIZE videos at a time to avoid timeouts.
- * The endpoint loops through all batches and returns when complete.
+ * Streams progress as newline-delimited JSON so the admin UI can show a live log.
  */
 export async function POST(request: NextRequest) {
-  try {
-    console.log('[SEARCH INDEX] Starting batched rebuild of transcript_search_context...');
-    const startTime = Date.now();
+  const encoder = new TextEncoder();
+  const stream = new ReadableStream({
+    async start(controller) {
+      const send = (data: any) => {
+        controller.enqueue(encoder.encode(JSON.stringify(data) + '\n'));
+      };
 
-    let offset = 0;
-    let totalVideos = 0;
-    let totalRowsInserted = 0;
-    let batchCount = 0;
-    let done = false;
+      try {
+        send({ type: 'status', message: 'Starting search index rebuild...' });
 
-    while (!done) {
-      const { data, error } = await supabaseAdmin
-        .rpc('populate_search_context_batch', {
-          p_batch_size: BATCH_SIZE,
-          p_offset: offset,
+        let offset = 0;
+        let totalVideos = 0;
+        let batchCount = 0;
+        let done = false;
+
+        while (!done) {
+          const { data, error } = await supabaseAdmin
+            .rpc('populate_search_context_batch', {
+              p_batch_size: BATCH_SIZE,
+              p_offset: offset,
+            });
+
+          if (error) {
+            send({ type: 'error', message: `Batch error at offset ${offset}: ${error.message}` });
+            break;
+          }
+
+          const result = data?.[0] || data;
+
+          if (!result?.success) {
+            send({ type: 'error', message: result?.message || 'Batch failed' });
+            break;
+          }
+
+          totalVideos = result.total_eligible || 0;
+          const videosInBatch = result.videos_in_batch || 0;
+          batchCount++;
+
+          send({
+            type: 'batch',
+            batch: batchCount,
+            videosInBatch,
+            totalVideos,
+            offset,
+            message: result.message,
+          });
+
+          if (videosInBatch === 0 || videosInBatch < BATCH_SIZE) {
+            done = true;
+          } else {
+            offset += BATCH_SIZE;
+          }
+        }
+
+        send({
+          type: 'complete',
+          totalVideos,
+          batchCount,
+          message: `Search index rebuilt: ${totalVideos} videos processed in ${batchCount} batches`,
         });
-
-      if (error) {
-        console.error(`[SEARCH INDEX] Error at batch offset ${offset}:`, error);
-        return NextResponse.json(
-          {
-            success: false,
-            error: error.message,
-            batchesCompleted: batchCount,
-            offset,
-          },
-          { status: 500 }
-        );
+      } catch (error) {
+        send({
+          type: 'error',
+          message: error instanceof Error ? error.message : 'Unknown error',
+        });
+      } finally {
+        controller.close();
       }
+    },
+  });
 
-      const result = data?.[0] || data;
-
-      if (!result?.success) {
-        console.error(`[SEARCH INDEX] Batch failed at offset ${offset}:`, result?.message);
-        return NextResponse.json(
-          {
-            success: false,
-            error: result?.message || 'Batch failed',
-            batchesCompleted: batchCount,
-            offset,
-          },
-          { status: 500 }
-        );
-      }
-
-      totalVideos = result.total_eligible || 0;
-      const videosInBatch = result.videos_in_batch || 0;
-      batchCount++;
-
-      console.log(`[SEARCH INDEX] Batch ${batchCount}: ${result.message}`);
-
-      if (videosInBatch === 0 || videosInBatch < BATCH_SIZE) {
-        done = true;
-      } else {
-        offset += BATCH_SIZE;
-      }
-    }
-
-    const duration = Date.now() - startTime;
-    console.log(`[SEARCH INDEX] Rebuild completed: ${batchCount} batches, ${totalVideos} videos in ${duration}ms`);
-
-    return NextResponse.json({
-      success: true,
-      message: `Search index rebuilt: ${totalVideos} videos processed in ${batchCount} batches`,
-      totalVideos,
-      batchCount,
-      duration,
-    });
-  } catch (error) {
-    console.error('[SEARCH INDEX] Fatal error:', error);
-    return NextResponse.json(
-      {
-        success: false,
-        error: error instanceof Error ? error.message : 'Unknown error',
-      },
-      { status: 500 }
-    );
-  }
+  return new Response(stream, {
+    headers: {
+      'Content-Type': 'text/plain; charset=utf-8',
+      'Transfer-Encoding': 'chunked',
+    },
+  });
 }
 
 /**
@@ -94,7 +92,6 @@ export async function POST(request: NextRequest) {
  */
 export async function GET(request: NextRequest) {
   try {
-    // Count rows in the search index table
     const { count, error: countError } = await supabaseAdmin
       .from('transcript_search_context')
       .select('*', { count: 'exact', head: true });
@@ -106,7 +103,7 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Count total eligible transcripts for comparison
+    // Count total eligible videos
     const { data: videoCount } = await supabaseAdmin
       .rpc('populate_search_context_batch', {
         p_batch_size: 0,
