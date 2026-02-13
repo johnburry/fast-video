@@ -118,7 +118,7 @@ export default function LocationPage({
           <div className="relative w-full bg-black rounded-lg overflow-hidden" style={{ paddingBottom: '56.25%' }}>
             <iframe
               className="absolute top-0 left-0 w-full h-full"
-              src={`https://www.youtube.com/embed/${videoData.youtube_video_id}?start=${startTime}&autoplay=0`}
+              src={`https://www.youtube.com/embed/${videoData.youtube_video_id}?start=${startTime}&autoplay=1`}
               title={videoData.title}
               frameBorder="0"
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
