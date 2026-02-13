@@ -1,78 +1,121 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase/server';
 
+const BATCH_SIZE = 20;
+
 /**
- * Refresh the transcript search index (materialized view)
- * This can be called:
- * 1. Manually via admin panel
- * 2. Automatically after transcript imports
- * 3. Via cron job
+ * Rebuild the transcript search index table in batches.
+ * Streams progress as newline-delimited JSON so the admin UI can show a live log.
  */
 export async function POST(request: NextRequest) {
-  try {
-    console.log('[SEARCH INDEX] Starting refresh of transcript_search_context...');
-    const startTime = Date.now();
+  const encoder = new TextEncoder();
+  const stream = new ReadableStream({
+    async start(controller) {
+      const send = (data: any) => {
+        controller.enqueue(encoder.encode(JSON.stringify(data) + '\n'));
+      };
 
-    // Call the database function to perform the refresh
-    const { data, error } = await supabaseAdmin
-      .rpc('perform_transcript_search_refresh');
+      try {
+        send({ type: 'status', message: 'Starting search index rebuild...' });
 
-    const duration = Date.now() - startTime;
+        let offset = 0;
+        let totalVideos = 0;
+        let batchCount = 0;
+        let done = false;
 
-    if (error) {
-      console.error('[SEARCH INDEX] Error refreshing:', error);
-      return NextResponse.json(
-        {
-          success: false,
-          error: error.message,
-          duration,
-        },
-        { status: 500 }
-      );
-    }
+        while (!done) {
+          const { data, error } = await supabaseAdmin
+            .rpc('populate_search_context_batch', {
+              p_batch_size: BATCH_SIZE,
+              p_offset: offset,
+            });
 
-    console.log(`[SEARCH INDEX] Refresh completed successfully in ${duration}ms`);
+          if (error) {
+            send({ type: 'error', message: `Batch error at offset ${offset}: ${error.message}` });
+            break;
+          }
 
-    return NextResponse.json({
-      success: true,
-      message: 'Search index refreshed successfully',
-      duration,
-      data,
-    });
-  } catch (error) {
-    console.error('[SEARCH INDEX] Fatal error:', error);
-    return NextResponse.json(
-      {
-        success: false,
-        error: error instanceof Error ? error.message : 'Unknown error',
-      },
-      { status: 500 }
-    );
-  }
+          const result = data?.[0] || data;
+
+          if (!result?.success) {
+            send({ type: 'error', message: result?.message || 'Batch failed' });
+            break;
+          }
+
+          totalVideos = result.total_eligible || 0;
+          const videosInBatch = result.videos_in_batch || 0;
+          batchCount++;
+
+          send({
+            type: 'batch',
+            batch: batchCount,
+            videosInBatch,
+            totalVideos,
+            offset,
+            message: result.message,
+          });
+
+          if (videosInBatch === 0 || videosInBatch < BATCH_SIZE) {
+            done = true;
+          } else {
+            offset += BATCH_SIZE;
+          }
+        }
+
+        send({
+          type: 'complete',
+          totalVideos,
+          batchCount,
+          message: `Search index rebuilt: ${totalVideos} videos processed in ${batchCount} batches`,
+        });
+      } catch (error) {
+        send({
+          type: 'error',
+          message: error instanceof Error ? error.message : 'Unknown error',
+        });
+      } finally {
+        controller.close();
+      }
+    },
+  });
+
+  return new Response(stream, {
+    headers: {
+      'Content-Type': 'text/plain; charset=utf-8',
+      'Transfer-Encoding': 'chunked',
+    },
+  });
 }
 
 /**
- * Check if refresh is needed
+ * Check current state of the search index
  */
 export async function GET(request: NextRequest) {
   try {
-    const { data, error } = await supabaseAdmin
-      .from('transcript_search_refresh_status')
-      .select('*')
-      .eq('id', 1)
-      .single();
+    const { count, error: countError } = await supabaseAdmin
+      .from('transcript_search_context')
+      .select('*', { count: 'exact', head: true });
 
-    if (error) {
+    if (countError) {
       return NextResponse.json(
-        { error: error.message },
+        { error: countError.message },
         { status: 500 }
       );
     }
 
+    // Count total eligible videos
+    const { data: videoCount } = await supabaseAdmin
+      .rpc('populate_search_context_batch', {
+        p_batch_size: 0,
+        p_offset: 0,
+      });
+
+    const totalEligible = videoCount?.[0]?.total_eligible || videoCount?.total_eligible || null;
+
     return NextResponse.json({
-      needsRefresh: data?.needs_refresh || false,
-      lastRefreshedAt: data?.last_refreshed_at || null,
-      refreshInProgress: data?.refresh_in_progress || false,
+      indexedRows: count || 0,
+      totalEligibleVideos: totalEligible,
+      needsRebuild: count === 0,
     });
   } catch (error) {
     return NextResponse.json(
