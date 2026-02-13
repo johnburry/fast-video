@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { supabase } from '@/lib/supabase/client';
 import { supabaseAdmin } from '@/lib/supabase/server';
 import { getServerTenantConfig } from '@/lib/tenant-config';
 import { sendSearchNotification } from '@/lib/mailgun';
@@ -24,7 +23,7 @@ export async function GET(request: NextRequest) {
     const tenantConfig = await getServerTenantConfig(hostname);
 
     // Get tenant_id from database
-    const { data: tenantData } = await supabase
+    const { data: tenantData } = await supabaseAdmin
       .from('tenants')
       .select('id')
       .eq('domain', tenantConfig.domain)
@@ -35,7 +34,7 @@ export async function GET(request: NextRequest) {
     // Search transcripts using cross-segment search context
     // This allows finding phrases that span across segment boundaries
     // Try the main table first, fallback to _new if migration incomplete
-    let transcriptSearchQuery = supabase
+    let transcriptSearchQuery = supabaseAdmin
       .from('transcript_search_context')
       .select('*, video_id')
       .textSearch('search_text', query, {
@@ -66,7 +65,7 @@ export async function GET(request: NextRequest) {
     if (transcriptError && transcriptError.code === 'PGRST205') {
       console.log('[SEARCH] Main table not found, falling back to transcript_search_context_new');
 
-      let fallbackQuery = supabase
+      let fallbackQuery = supabaseAdmin
         .from('transcript_search_context_new')
         .select('*, video_id')
         .textSearch('search_text', query, {
@@ -102,7 +101,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Search video titles
-    let videoQuery = supabase
+    let videoQuery = supabaseAdmin
       .from('videos')
       .select(`
         id,
