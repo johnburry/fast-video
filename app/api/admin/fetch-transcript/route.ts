@@ -66,6 +66,15 @@ export async function POST(request: NextRequest) {
       .update({ has_transcript: true })
       .eq('id', videoId);
 
+    // Refresh search index for this video
+    await supabaseAdmin
+      .rpc('refresh_transcript_search_for_videos', {
+        p_video_ids: [videoId],
+      })
+      .then(({ error }) => {
+        if (error) console.error(`[SEARCH INDEX] Failed to refresh for video ${videoId}:`, error);
+      });
+
     // Generate embeddings
     if (process.env.OPENAI_API_KEY) {
       try {

@@ -238,6 +238,7 @@ export async function POST(request: NextRequest) {
             }
 
             let importedCount = 0;
+            const importedVideoDbIds: string[] = [];
 
             // Import each new video
             for (const video of newVideos) {
@@ -342,6 +343,7 @@ export async function POST(request: NextRequest) {
                     }
 
                     log(`[SUCCESS] Video imported successfully`);
+                    importedVideoDbIds.push(videoId);
                   }
                 } else {
                   log(`[ERROR] No transcript available`);
@@ -352,6 +354,20 @@ export async function POST(request: NextRequest) {
               } catch (error) {
                 log(`[ERROR] Failed to import video: ${error instanceof Error ? error.message : 'Unknown error'}`);
                 metrics.errors.push(`${channel.channel_name}: Error importing ${video.title}`);
+              }
+            }
+
+            // Refresh search index for newly imported videos
+            if (importedVideoDbIds.length > 0) {
+              log(`[INFO] Refreshing search index for ${importedVideoDbIds.length} videos...`);
+              const { error: refreshError } = await supabaseAdmin
+                .rpc('refresh_transcript_search_for_videos', {
+                  p_video_ids: importedVideoDbIds,
+                });
+              if (refreshError) {
+                log(`[ERROR] Search index refresh failed: ${refreshError.message}`);
+              } else {
+                log(`[SUCCESS] Search index refreshed for ${importedVideoDbIds.length} videos`);
               }
             }
 
