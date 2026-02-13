@@ -767,7 +767,7 @@ export default function ChannelPage({
                   <iframe
                     src={`https://www.youtube.com/embed/${selectedVideo.youtubeVideoId}${
                       selectedVideo.startTime
-                        ? `?start=${Math.floor(selectedVideo.startTime)}`
+                        ? `?start=${Math.floor(selectedVideo.startTime)}&autoplay=1`
                         : ''
                     }`}
                     className="w-full h-full"
