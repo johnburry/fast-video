@@ -526,7 +526,7 @@ export async function POST(request: NextRequest) {
             console.log(`[TIMING] R2 upload took ${Date.now() - r2Start}ms`);
 
         // Create new video (all videos in videosToProcess are new)
-        const publishedAt = parseRelativeTime(video.publishedAt);
+        const publishedAt = parseRelativeTime(video.publishedAt) || new Date().toISOString();
         const { data: newVideo, error: videoError } = await supabaseAdmin
           .from('videos')
           .insert({

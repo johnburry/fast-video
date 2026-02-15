@@ -52,7 +52,8 @@ function parseRelativeTime(relativeTime: string): string | null {
 function isWithinHours(publishedAt: string, hours: number): boolean {
   const publishedDate = parseRelativeTime(publishedAt);
   if (!publishedDate) {
-    return false;
+    // If we can't parse the date (e.g. live streaming video), treat as recent
+    return true;
   }
 
   const now = new Date();

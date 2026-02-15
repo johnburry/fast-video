@@ -55,7 +55,8 @@ function parseRelativeTime(relativeTime: string): string | null {
 function isWithinHours(publishedAt: string, hours: number): boolean {
   const publishedDate = parseRelativeTime(publishedAt);
   if (!publishedDate) {
-    return false;
+    // If we can't parse the date (e.g. live streaming video), treat as recent
+    return true;
   }
 
   const now = new Date();
@@ -257,7 +258,7 @@ export async function POST(request: NextRequest) {
                 const r2ThumbnailUrl = await uploadThumbnailToR2(video.videoId, video.thumbnailUrl);
 
                 // Create video record
-                const publishedAt = parseRelativeTime(video.publishedAt);
+                const publishedAt = parseRelativeTime(video.publishedAt) || new Date().toISOString();
                 const { data: newVideo, error: videoError } = await supabaseAdmin
                   .from('videos')
                   .insert({

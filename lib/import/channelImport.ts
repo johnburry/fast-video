@@ -356,7 +356,7 @@ export async function importChannel(options: ImportOptions): Promise<void> {
         );
 
         // Create video record
-        const publishedAt = parseRelativeTime(video.publishedAt);
+        const publishedAt = parseRelativeTime(video.publishedAt) || new Date().toISOString();
         const { data: newVideo, error: videoError } = await supabaseAdmin
           .from('videos')
           .insert({
@@ -589,7 +589,7 @@ export async function importChannel(options: ImportOptions): Promise<void> {
 
             // Log transcript download
             if (jobId) {
-              const publishedAt = parseRelativeTime(video.publishedAt);
+              const publishedAt = parseRelativeTime(video.publishedAt) || new Date().toISOString();
               await supabaseAdmin
                 .from('channel_import_logs')
                 .insert({
@@ -603,7 +603,7 @@ export async function importChannel(options: ImportOptions): Promise<void> {
             }
           } else if (jobId) {
             // Log transcript skipped (no transcript available)
-            const publishedAt = parseRelativeTime(video.publishedAt);
+            const publishedAt = parseRelativeTime(video.publishedAt) || new Date().toISOString();
             await supabaseAdmin
               .from('channel_import_logs')
               .insert({

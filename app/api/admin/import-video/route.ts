@@ -69,7 +69,7 @@ export async function POST(request: NextRequest) {
     );
 
     // Create new video
-    const publishedAt = parseRelativeTime(video.publishedAt);
+    const publishedAt = parseRelativeTime(video.publishedAt) || new Date().toISOString();
     const { data: newVideo, error: videoError } = await supabaseAdmin
       .from('videos')
       .insert({
