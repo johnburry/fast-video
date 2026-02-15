@@ -74,6 +74,16 @@ export function AdminToolbar() {
               Search Index
             </Link>
             <Link
+              href="/admin/delete-video"
+              className={`text-sm font-medium transition-colors ${
+                pathname === '/admin/delete-video'
+                  ? 'text-white'
+                  : 'text-gray-400 hover:text-white'
+              }`}
+            >
+              Delete Video
+            </Link>
+            <Link
               href="/admin/migrations"
               className={`text-sm font-medium transition-colors ${
                 pathname?.startsWith('/admin/migrate') || pathname === '/admin/migrations' || pathname === '/admin/check-migration'
