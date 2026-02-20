@@ -5,6 +5,30 @@ import { formatTimestamp } from '@/lib/youtube/transcript';
 import MuxPlayer from '@mux/mux-player-react';
 import { getThumbnailUrl } from '@/lib/thumbnail';
 
+// Helper function to highlight search query matches in text
+function highlightMatches(text: string, query: string): ReactElement {
+  if (!query.trim()) return <>{text}</>;
+
+  // Split query into individual words and escape regex special characters
+  const words = query.trim().split(/\s+/).filter(Boolean);
+  const escaped = words.map(w => w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
+  const pattern = new RegExp(`(${escaped.join('|')})`, 'gi');
+
+  const parts = text.split(pattern);
+
+  return (
+    <>
+      {parts.map((part, i) =>
+        pattern.test(part) ? (
+          <mark key={i} className="bg-yellow-200 text-gray-900 rounded-sm px-0.5">{part}</mark>
+        ) : (
+          <span key={i}>{part}</span>
+        )
+      )}
+    </>
+  );
+}
+
 // Helper function to process channel names with line break character
 function formatChannelName(name: string): ReactElement[] {
   const parts = name.split('|');
@@ -566,7 +590,7 @@ export default function ChannelPage({
                               </svg>
                               <span className="text-sm" style={{ color: '#FF0000' }}>Play from here</span>
                             </div>
-                            <p className="text-gray-700">{match.text}</p>
+                            <p className="text-gray-700">{highlightMatches(match.text, searchQuery)}</p>
                           </div>
                         ))}
                         {result.matches.length > 3 && (
@@ -717,7 +741,7 @@ export default function ChannelPage({
                       </svg>
                       <span className="text-sm font-medium hover:underline" style={{ color: '#FF0000' }}>Play from here</span>
                     </div>
-                    <p className="text-sm text-gray-700">{selectedVideo.matchText}</p>
+                    <p className="text-sm text-gray-700">{highlightMatches(selectedVideo.matchText, searchQuery)}</p>
                   </div>
                   <button
                     onClick={() => {
