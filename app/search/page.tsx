@@ -27,6 +27,24 @@ interface SearchResult {
   }>;
 }
 
+function highlightMatches(text: string, query: string) {
+  if (!query || !text) return text;
+  // Split query into individual words, filter out empty strings
+  const words = query.trim().split(/\s+/).filter(Boolean);
+  if (words.length === 0) return text;
+  // Escape regex special characters and build pattern matching any query word
+  const escaped = words.map((w) => w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
+  const pattern = new RegExp(`(${escaped.join('|')})`, 'gi');
+  const parts = text.split(pattern);
+  return parts.map((part, i) =>
+    pattern.test(part) ? (
+      <mark key={i} style={{ backgroundColor: '#facc15', padding: 0 }}>{part}</mark>
+    ) : (
+      part
+    )
+  );
+}
+
 function SearchContent() {
   const searchParams = useSearchParams();
   const query = searchParams.get('q');
@@ -221,7 +239,7 @@ function SearchContent() {
                               </svg>
                               <span className="text-sm" style={{ color: '#FF0000' }}>Play from here</span>
                             </div>
-                            <p className="text-gray-700">{match.text}</p>
+                            <p className="text-gray-700">{highlightMatches(match.text, query || '')}</p>
                           </div>
                         ))}
                         {result.matches.length > 3 && (
@@ -316,7 +334,7 @@ function SearchContent() {
                       </svg>
                       <span className="text-sm font-medium hover:underline" style={{ color: '#FF0000' }}>Play from here</span>
                     </button>
-                    <p className="text-sm text-gray-700">{selectedVideo.matchText}</p>
+                    <p className="text-sm text-gray-700">{highlightMatches(selectedVideo.matchText || '', query || '')}</p>
                   </div>
                 </div>
               )}
