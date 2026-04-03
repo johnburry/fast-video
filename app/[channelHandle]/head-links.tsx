@@ -22,26 +22,27 @@ export default function HeadLinks({ title, description, image }: HeadLinksProps 
     const svgFavicons = document.querySelectorAll('link[href*=".svg"]');
     svgFavicons.forEach(icon => icon.remove());
 
-    // Add PNG favicon links with cache-busting
-    if (!document.querySelector('link[href*="/icon"]')) {
+    const faviconUrl = 'http://shared.video/favicon.ico';
+
+    // Add favicon links with cache-busting
+    if (!document.querySelector(`link[href*="${faviconUrl}"]`)) {
       const iconLink = document.createElement('link');
       iconLink.rel = 'icon';
-      iconLink.type = 'image/png';
-      iconLink.href = `/icon?v=${timestamp}`;
+      iconLink.href = `${faviconUrl}?v=${timestamp}`;
       document.head.appendChild(iconLink);
     }
 
-    if (!document.querySelector('link[href="/favicon.ico"]')) {
+    if (!document.querySelector('link[rel="shortcut icon"]')) {
       const faviconLink = document.createElement('link');
       faviconLink.rel = 'shortcut icon';
-      faviconLink.href = `/favicon.ico?v=${timestamp}`;
+      faviconLink.href = `${faviconUrl}?v=${timestamp}`;
       document.head.appendChild(faviconLink);
     }
 
-    if (!document.querySelector('link[href*="/apple-icon"]')) {
+    if (!document.querySelector('link[rel="apple-touch-icon"]')) {
       const appleLink = document.createElement('link');
       appleLink.rel = 'apple-touch-icon';
-      appleLink.href = `/apple-icon?v=${timestamp}`;
+      appleLink.href = `${faviconUrl}?v=${timestamp}`;
       document.head.appendChild(appleLink);
     }
 

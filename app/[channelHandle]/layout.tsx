@@ -27,9 +27,9 @@ export async function generateMetadata({
       return {
         title: 'Channel Not Found',
         icons: {
-          icon: '/icon',
-          shortcut: '/favicon.ico',
-          apple: '/apple-icon',
+          icon: 'http://shared.video/favicon.ico',
+          shortcut: 'http://shared.video/favicon.ico',
+          apple: 'http://shared.video/favicon.ico',
         },
       }
     }
@@ -43,9 +43,9 @@ export async function generateMetadata({
       title,
       description,
       icons: {
-        icon: '/icon',
-        shortcut: '/favicon.ico',
-        apple: '/apple-icon',
+        icon: 'http://shared.video/favicon.ico',
+        shortcut: 'http://shared.video/favicon.ico',
+        apple: 'http://shared.video/favicon.ico',
       },
       openGraph: {
         title,
@@ -72,18 +72,18 @@ export async function generateMetadata({
       return {
         title: tenantConfig.name,
         icons: {
-          icon: '/icon',
-          shortcut: '/favicon.ico',
-          apple: '/apple-icon',
+          icon: 'http://shared.video/favicon.ico',
+          shortcut: 'http://shared.video/favicon.ico',
+          apple: 'http://shared.video/favicon.ico',
         },
       }
     } catch {
       return {
         title: 'Channel Not Found',
         icons: {
-          icon: '/icon',
-          shortcut: '/favicon.ico',
-          apple: '/apple-icon',
+          icon: 'http://shared.video/favicon.ico',
+          shortcut: 'http://shared.video/favicon.ico',
+          apple: 'http://shared.video/favicon.ico',
         },
       }
     }

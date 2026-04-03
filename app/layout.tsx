@@ -53,9 +53,9 @@ export async function generateMetadata(): Promise<Metadata> {
     title: pageTitle,
     description: description,
     icons: {
-      icon: '/icon',
-      shortcut: '/favicon.ico',
-      apple: '/apple-icon',
+      icon: 'http://shared.video/favicon.ico',
+      shortcut: 'http://shared.video/favicon.ico',
+      apple: 'http://shared.video/favicon.ico',
     },
     openGraph: {
       title: ogTitle,
@@ -94,9 +94,9 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
-        <link rel="icon" type="image/png" href="/icon" />
-        <link rel="shortcut icon" href="/favicon.ico" />
-        <link rel="apple-touch-icon" href="/apple-icon" />
+        <link rel="icon" href="http://shared.video/favicon.ico" />
+        <link rel="shortcut icon" href="http://shared.video/favicon.ico" />
+        <link rel="apple-touch-icon" href="http://shared.video/favicon.ico" />
       </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
